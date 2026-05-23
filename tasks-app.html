@@ -6,521 +6,879 @@
 <title>My Tasks</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css" />
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #ffffff;
-    --bg2: #f3f0fb;
-    --bg3: #ede8f7;
-    --text: #2a2040;
-    --text2: #6b6388;
-    --text3: #a89fc2;
-    --border: rgba(120,100,180,0.13);
-    --border2: rgba(120,100,180,0.26);
-    --accent: #9b87d6;
-    --accent-light: #ebe5fa;
-    --accent-mid: #c4b8ef;
-    --radius: 8px;
-    --radius-lg: 12px;
-  }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); font-size: 14px; height: 100vh; overflow: hidden; }
-  .app { display: flex; height: 100vh; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f3f0fb; --bg3: #ede8f7;
+  --text: #2a2040; --text2: #6b6388; --text3: #a89fc2;
+  --border: rgba(120,100,180,0.13); --border2: rgba(120,100,180,0.26);
+  --accent: #9b87d6; --accent-light: #ebe5fa; --accent-mid: #c4b8ef;
+  --radius: 8px; --radius-lg: 12px;
+  --common: #9ca3af; --uncommon: #34d399; --rare: #60a5fa;
+  --epic: #a78bfa; --legendary: #fbbf24; --mythic: #f87171; --cosmic: #e879f9;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); font-size: 14px; height: 100vh; overflow: hidden; }
 
-  /* ── Sidebar ── */
-  .sidebar { width: 240px; min-width: 240px; background: #f5f1fd; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
-  .sidebar-header { padding: 22px 20px 16px; border-bottom: 0.5px solid var(--border); }
-  .app-name { font-size: 17px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
-  .app-tagline { font-size: 11px; color: var(--text3); margin-top: 3px; }
-  .sidebar-section { padding: 16px 12px 8px; }
-  .sidebar-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 8px; margin-bottom: 4px; }
-  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius); cursor: pointer; color: var(--text2); font-size: 13px; transition: background 0.12s; user-select: none; }
-  .sidebar-item:hover { background: var(--accent-light); color: var(--text); }
-  .sidebar-item.active { background: #e0d7f8; color: var(--text); font-weight: 500; }
-  .sidebar-item i { font-size: 16px; }
-  .sidebar-badge { margin-left: auto; background: var(--bg2); border: 0.5px solid var(--border); color: var(--text2); font-size: 11px; padding: 1px 7px; border-radius: 10px; }
-  .sidebar-badge.urgent { background: #FCEBEB; color: #A32D2D; border-color: #F09595; }
-  .upcoming-panel { padding: 12px; border-top: 0.5px solid var(--border); margin-top: auto; }
-  .upcoming-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
-  .upcoming-item { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; background: var(--accent-light); border-radius: var(--radius); margin-bottom: 6px; border: 0.5px solid transparent; transition: border-color 0.12s; }
-  .upcoming-item:hover { border-color: var(--border2); }
-  .upcoming-name { font-size: 12px; font-weight: 500; color: var(--text); }
-  .upcoming-date { font-size: 11px; color: var(--text3); }
+/* ── App shell ── */
+.app-shell { display: flex; flex-direction: column; height: 100vh; }
+.nav-bar { background: var(--bg); border-bottom: 0.5px solid var(--border); display: flex; align-items: center; padding: 0 24px; height: 52px; gap: 4px; flex-shrink: 0; }
+.nav-logo { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; margin-right: 20px; }
+.nav-item { display: flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: var(--radius); cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500; transition: all 0.12s; user-select: none; border: none; background: none; }
+.nav-item:hover { background: var(--accent-light); color: var(--text); }
+.nav-item.active { background: var(--accent-light); color: var(--accent); }
+.nav-item i { font-size: 17px; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.nav-stat { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--text2); background: var(--bg2); padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border); }
+.nav-stat i { font-size: 14px; }
+.nav-stat.xp { color: #7c5cbf; }
+.nav-stat.coins { color: #b45309; }
+.nav-stat.streak { color: #ea580c; }
 
-  /* ── Main ── */
-  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-  .topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .topbar-left { flex: 1; min-width: 0; }
-  .topbar-date { font-size: 12px; color: var(--text3); }
-  .topbar-title { font-size: 19px; font-weight: 600; letter-spacing: -0.3px; }
-  .view-tabs { display: flex; gap: 2px; background: var(--bg2); padding: 3px; border-radius: var(--radius); }
-  .view-tab { padding: 5px 14px; font-size: 12px; border-radius: 6px; cursor: pointer; color: var(--text2); transition: all 0.12s; user-select: none; }
-  .view-tab.active { background: var(--bg); color: var(--text); font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-  .add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: #fff; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s; white-space: nowrap; }
-  .add-btn:hover { opacity: 0.82; }
+/* ── Pages ── */
+.page { display: none; flex: 1; overflow: hidden; }
+.page.active { display: flex; }
 
-  /* ── Progress ── */
-  .progress-section { padding: 14px 24px; background: var(--bg); border-bottom: 0.5px solid var(--border); }
-  .progress-meta { display: flex; justify-content: space-between; margin-bottom: 7px; }
-  .progress-label { font-size: 12px; color: var(--text2); }
-  .progress-count { font-size: 12px; font-weight: 500; color: var(--text); }
-  .progress-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
+/* ════════════════════════════════
+   TASKS PAGE
+════════════════════════════════ */
+.sidebar { width: 220px; min-width: 220px; background: #f5f1fd; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
+.sidebar-header { padding: 18px 16px 14px; border-bottom: 0.5px solid var(--border); }
+.app-tagline { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.sidebar-section { padding: 14px 10px 6px; }
+.sidebar-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; padding: 0 8px; margin-bottom: 4px; }
+.sidebar-item { display: flex; align-items: center; gap: 9px; padding: 6px 9px; border-radius: var(--radius); cursor: pointer; color: var(--text2); font-size: 13px; transition: background 0.12s; user-select: none; }
+.sidebar-item:hover { background: var(--accent-light); color: var(--text); }
+.sidebar-item.active { background: #e0d7f8; color: var(--text); font-weight: 500; }
+.sidebar-item i { font-size: 15px; }
+.sidebar-badge { margin-left: auto; background: var(--bg2); border: 0.5px solid var(--border); color: var(--text2); font-size: 11px; padding: 1px 6px; border-radius: 10px; }
+.upcoming-panel { padding: 10px; border-top: 0.5px solid var(--border); margin-top: auto; }
+.upcoming-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.upcoming-item { display: flex; flex-direction: column; gap: 2px; padding: 7px 9px; background: var(--accent-light); border-radius: var(--radius); margin-bottom: 5px; border: 0.5px solid transparent; transition: border-color 0.12s; cursor: pointer; }
+.upcoming-item:hover { border-color: var(--border2); }
+.upcoming-name { font-size: 12px; font-weight: 500; color: var(--text); }
+.upcoming-date { font-size: 11px; color: var(--text3); }
 
-  /* ── Filter bar ── */
-  .filter-bar { display: flex; align-items: center; gap: 8px; padding: 14px 24px 10px; flex-wrap: wrap; }
-  .filter-btn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: var(--radius); font-size: 12px; cursor: pointer; background: var(--bg); border: 0.5px solid var(--border); color: var(--text2); transition: all 0.12s; user-select: none; }
-  .filter-btn:hover { background: var(--accent-light); border-color: var(--accent-mid); color: var(--text); }
-  .filter-btn.active { background: var(--accent-light); border-color: var(--accent-mid); color: var(--text); font-weight: 500; }
-  .filter-btn i { font-size: 14px; }
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.topbar-left { flex: 1; min-width: 0; }
+.topbar-date { font-size: 11px; color: var(--text3); }
+.topbar-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.topbar-nav { display: flex; align-items: center; gap: 6px; }
+.nav-arrow { width: 28px; height: 28px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.12s; }
+.nav-arrow:hover { background: var(--accent-light); color: var(--text); }
+.view-tabs { display: flex; gap: 2px; background: var(--bg2); padding: 3px; border-radius: var(--radius); }
+.view-tab { padding: 4px 12px; font-size: 12px; border-radius: 6px; cursor: pointer; color: var(--text2); transition: all 0.12s; user-select: none; }
+.view-tab.active { background: var(--bg); color: var(--text); font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.add-btn { display: flex; align-items: center; gap: 5px; padding: 7px 14px; background: var(--accent); color: #fff; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.15s; white-space: nowrap; }
+.add-btn:hover { opacity: 0.82; }
 
-  /* ── Task area ── */
-  .task-area { flex: 1; overflow-y: auto; padding: 8px 24px 24px; }
-  .category-group { margin-bottom: 22px; }
-  .category-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-top: 8px; }
-  .category-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .category-name { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; }
-  .category-count { font-size: 11px; color: var(--text3); }
+.progress-section { padding: 12px 20px; background: var(--bg); border-bottom: 0.5px solid var(--border); }
+.progress-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.progress-label { font-size: 12px; color: var(--text2); }
+.progress-count { font-size: 12px; font-weight: 500; color: var(--text); }
+.progress-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
 
-  /* ── Task card ── */
-  .task-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 13px 15px; margin-bottom: 7px; transition: border-color 0.12s; }
-  .task-card:hover { border-color: var(--border2); }
-  .task-card.done-card { opacity: 0.48; }
-  .task-card.overdue { border-color: #F09595; background: #fffafa; }
-  .task-top { display: flex; align-items: flex-start; gap: 11px; }
-  .task-checkbox { width: 19px; height: 19px; min-width: 19px; border-radius: 50%; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-top: 1px; flex-shrink: 0; }
-  .task-checkbox:hover { border-color: var(--accent); }
-  .task-checkbox.checked { background: var(--accent); border-color: var(--accent); }
-  .task-checkbox.checked::after { content: ''; width: 6px; height: 6px; background: white; border-radius: 50%; }
-  .task-content { flex: 1; min-width: 0; }
-  .task-name { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4; }
-  .task-name.done-text { text-decoration: line-through; color: var(--text3); }
-  .task-meta { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
-  .task-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
-  .tag-life { background: #E1F5EE; color: #0F6E56; }
-  .tag-work { background: #E6F1FB; color: #185FA5; }
-  .tag-health { background: #EAF3DE; color: #3B6D11; }
-  .tag-home { background: #FAEEDA; color: #854F0B; }
-  .task-due { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
-  .task-due.overdue-label { color: #A32D2D; font-weight: 500; }
-  .task-due.today-label { color: #7c5cbf; font-weight: 500; }
-  .task-freq { font-size: 11px; color: var(--text3); }
-  .task-actions { display: flex; gap: 4px; margin-left: 4px; opacity: 0; transition: opacity 0.15s; }
-  .task-card:hover .task-actions { opacity: 1; }
-  .task-action-btn { background: none; border: none; color: var(--text3); cursor: pointer; padding: 2px 5px; border-radius: 5px; font-size: 14px; transition: all 0.12s; }
-  .task-action-btn:hover { background: var(--accent-light); color: var(--text2); }
-  .task-action-btn.delete:hover { background: #FCEBEB; color: #A32D2D; }
-  .priority-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.filter-bar { display: flex; align-items: center; gap: 7px; padding: 12px 20px 8px; flex-wrap: wrap; }
+.filter-btn { display: flex; align-items: center; gap: 4px; padding: 4px 11px; border-radius: var(--radius); font-size: 12px; cursor: pointer; background: var(--bg); border: 0.5px solid var(--border); color: var(--text2); transition: all 0.12s; user-select: none; }
+.filter-btn:hover, .filter-btn.active { background: var(--accent-light); border-color: var(--accent-mid); color: var(--text); font-weight: 500; }
 
-  /* ── Subtasks ── */
-  .subtasks { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
-  .subtask-progress-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .subtask-track { flex: 1; height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
-  .subtask-fill { height: 100%; background: #b8a9e8; border-radius: 2px; transition: width 0.3s; }
-  .subtask-label { font-size: 11px; color: var(--text3); white-space: nowrap; }
-  .subtask-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-  .subtask-box { width: 14px; height: 14px; min-width: 14px; border-radius: 3px; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
-  .subtask-box:hover { border-color: var(--accent); }
-  .subtask-box.checked { background: #b8a9e8; border-color: #b8a9e8; }
-  .subtask-box.checked::after { content: '✓'; color: white; font-size: 9px; line-height: 1; }
-  .subtask-text { font-size: 12px; color: var(--text2); }
-  .subtask-text.done { text-decoration: line-through; color: var(--text3); }
+.task-area { flex: 1; overflow-y: auto; padding: 8px 20px 20px; }
+.category-group { margin-bottom: 20px; }
+.category-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-top: 8px; }
+.category-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.category-name { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; }
+.category-count { font-size: 11px; color: var(--text3); }
 
-  /* ── Empty state ── */
-  .empty-state { text-align: center; padding: 56px 24px; color: var(--text3); font-size: 13px; }
-  .empty-state i { font-size: 36px; display: block; margin-bottom: 12px; color: var(--accent-mid); }
-  .empty-state p { margin-bottom: 6px; }
+.task-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 6px; transition: border-color 0.12s; }
+.task-card:hover { border-color: var(--border2); }
+.task-card.done-card { opacity: 0.45; }
+.task-card.overdue { border-color: #F09595; background: #fffafa; }
+.task-top { display: flex; align-items: flex-start; gap: 10px; }
+.task-checkbox { width: 18px; height: 18px; min-width: 18px; border-radius: 50%; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-top: 2px; flex-shrink: 0; }
+.task-checkbox:hover { border-color: var(--accent); }
+.task-checkbox.checked { background: var(--accent); border-color: var(--accent); }
+.task-checkbox.checked::after { content: ''; width: 5px; height: 5px; background: white; border-radius: 50%; }
+.task-content { flex: 1; min-width: 0; }
+.task-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.4; }
+.task-name.done-text { text-decoration: line-through; color: var(--text3); }
+.task-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.task-tag { font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+.task-due { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
+.task-due.overdue-label { color: #A32D2D; font-weight: 500; }
+.task-due.today-label { color: #7c5cbf; font-weight: 500; }
+.task-freq { font-size: 11px; color: var(--text3); }
+.task-actions { display: flex; gap: 3px; margin-left: 4px; opacity: 0; transition: opacity 0.15s; }
+.task-card:hover .task-actions { opacity: 1; }
+.task-action-btn { background: none; border: none; color: var(--text3); cursor: pointer; padding: 2px 4px; border-radius: 5px; font-size: 13px; transition: all 0.12s; }
+.task-action-btn:hover { background: var(--accent-light); color: var(--text2); }
+.task-action-btn.delete:hover { background: #FCEBEB; color: #A32D2D; }
+.priority-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
 
-  /* ── Modal ── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(40,30,70,0.22); z-index: 200; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 24px; width: 460px; max-width: 95vw; max-height: 92vh; overflow-y: auto; }
-  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; color: var(--text); }
-  .form-row { margin-bottom: 14px; }
-  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; }
-  .form-input { width: 100%; padding: 8px 12px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.12s; }
-  .form-input:focus { border-color: var(--accent); }
-  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-  .btn-cancel { padding: 8px 16px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text2); cursor: pointer; font-family: inherit; transition: background 0.12s; }
-  .btn-cancel:hover { background: var(--bg2); }
-  .btn-save { padding: 8px 18px; font-size: 13px; border: none; border-radius: var(--radius); background: var(--accent); color: white; cursor: pointer; font-weight: 500; font-family: inherit; transition: opacity 0.15s; }
-  .btn-save:hover { opacity: 0.85; }
-  .subtask-inputs { margin-top: 6px; }
-  .subtask-input-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
-  .subtask-input-row .form-input { flex: 1; }
-  .remove-sub { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; padding: 2px 5px; line-height: 1; border-radius: 4px; transition: all 0.12s; }
-  .remove-sub:hover { background: #FCEBEB; color: #A32D2D; }
-  .add-sub-btn { font-size: 12px; color: var(--text2); background: none; border: 0.5px dashed var(--border2); border-radius: var(--radius); padding: 6px 12px; cursor: pointer; width: 100%; margin-top: 2px; font-family: inherit; transition: background 0.12s; display: flex; align-items: center; justify-content: center; gap: 5px; }
-  .add-sub-btn:hover { background: var(--accent-light); }
-  .freq-note { font-size: 11px; color: var(--text3); margin-top: 5px; font-style: italic; }
+.subtasks { margin-top: 9px; padding-top: 9px; border-top: 0.5px solid var(--border); }
+.subtask-progress-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.subtask-track { flex: 1; height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.subtask-fill { height: 100%; background: #b8a9e8; border-radius: 2px; transition: width 0.3s; }
+.subtask-label { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.subtask-item { display: flex; align-items: center; gap: 7px; padding: 3px 0; }
+.subtask-box { width: 13px; height: 13px; min-width: 13px; border-radius: 3px; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+.subtask-box:hover { border-color: var(--accent); }
+.subtask-box.checked { background: #b8a9e8; border-color: #b8a9e8; }
+.subtask-box.checked::after { content: '✓'; color: white; font-size: 8px; line-height: 1; }
+.subtask-text { font-size: 12px; color: var(--text2); }
+.subtask-text.done { text-decoration: line-through; color: var(--text3); }
 
-  /* ── Confirm delete modal ── */
-  .confirm-modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 24px; width: 340px; max-width: 95vw; }
-  .confirm-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-  .confirm-body { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
-  .btn-delete { padding: 8px 18px; font-size: 13px; border: none; border-radius: var(--radius); background: #E24B4A; color: white; cursor: pointer; font-weight: 500; font-family: inherit; }
-  .btn-delete:hover { opacity: 0.85; }
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text3); font-size: 13px; }
+.empty-state i { font-size: 32px; display: block; margin-bottom: 10px; color: var(--accent-mid); }
+.empty-state p { margin-bottom: 5px; }
+
+/* ════════════════════════════════
+   GAMIFICATION PAGE
+════════════════════════════════ */
+.game-page { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.game-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.game-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+.game-card-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.game-card-title i { font-size: 15px; }
+
+/* XP card */
+.xp-level { font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; }
+.xp-label { font-size: 12px; color: var(--text2); margin-top: 3px; margin-bottom: 14px; }
+.xp-bar-wrap { margin-bottom: 6px; }
+.xp-bar-track { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #c4b8ef); border-radius: 4px; transition: width 0.5s ease; }
+.xp-bar-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-top: 5px; }
+.benefit-tag { display: inline-block; font-size: 11px; background: var(--accent-light); color: var(--accent); padding: 3px 9px; border-radius: 10px; margin-top: 10px; font-weight: 500; }
+
+/* Streak card */
+.streak-num { font-size: 40px; font-weight: 700; color: #ea580c; line-height: 1; }
+.streak-fire { font-size: 28px; }
+.streak-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+.streak-mult { font-size: 13px; font-weight: 600; color: #ea580c; margin-top: 10px; background: #fff7ed; padding: 4px 10px; border-radius: 8px; display: inline-block; }
+.streak-pct { font-size: 12px; color: var(--text2); margin-top: 8px; }
+.streak-days { display: flex; gap: 4px; margin-top: 12px; flex-wrap: wrap; }
+.streak-day { width: 22px; height: 22px; border-radius: 5px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text3); font-weight: 600; }
+.streak-day.done { background: #ea580c; color: white; }
+.streak-day.today { background: #fed7aa; color: #ea580c; border: 1.5px solid #ea580c; }
+
+/* Coins card */
+.coins-num { font-size: 36px; font-weight: 700; color: #b45309; line-height: 1; }
+.coins-sub { font-size: 12px; color: var(--text2); margin-top: 3px; margin-bottom: 14px; }
+.coin-capacity { margin-bottom: 8px; }
+.coin-cap-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.coin-cap-label { font-size: 11px; color: var(--text2); width: 56px; flex-shrink: 0; }
+.coin-cap-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.coin-cap-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.coin-cap-fill.low { background: #97C459; }
+.coin-cap-fill.med { background: #EF9F27; }
+.coin-cap-fill.high { background: #E24B4A; }
+.coin-cap-count { font-size: 11px; color: var(--text3); width: 36px; text-align: right; flex-shrink: 0; }
+
+/* Weekly rewards card */
+.week-reward { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--bg2); border-radius: var(--radius); margin-bottom: 8px; }
+.week-reward-pct { font-size: 20px; font-weight: 700; color: var(--accent); min-width: 48px; }
+.week-reward-info { flex: 1; }
+.week-reward-label { font-size: 12px; font-weight: 500; color: var(--text); }
+.week-reward-sub { font-size: 11px; color: var(--text3); }
+.week-bar { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; margin-top: 12px; }
+.week-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+
+/* Daily summary */
+.summary-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+.summary-row:last-child { border-bottom: none; }
+.summary-label { font-size: 13px; color: var(--text2); }
+.summary-val { font-size: 13px; font-weight: 600; color: var(--text); }
+.summary-val.positive { color: #059669; }
+
+/* ════════════════════════════════
+   COLLECTION PAGE
+════════════════════════════════ */
+.collection-page { flex: 1; overflow-y: auto; padding: 24px; }
+.collection-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.collection-title { font-size: 18px; font-weight: 600; }
+.collection-progress { font-size: 13px; color: var(--text2); }
+.rarity-section { margin-bottom: 28px; }
+.rarity-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.rarity-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+.rarity-count { font-size: 12px; color: var(--text2); }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.coll-card { border-radius: var(--radius-lg); padding: 14px 10px 10px; text-align: center; border: 1.5px solid; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; position: relative; aspect-ratio: 2/3; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+.coll-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+.coll-card.locked { filter: grayscale(1); opacity: 0.35; cursor: default; }
+.coll-card.locked:hover { transform: none; box-shadow: none; }
+.coll-card-icon { font-size: 28px; margin-bottom: 6px; }
+.coll-card-name { font-size: 10px; font-weight: 600; line-height: 1.3; }
+.coll-card-num { font-size: 9px; opacity: 0.7; margin-top: 3px; }
+.dupe-badge { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.5); color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 8px; }
+
+/* Rarity styles */
+.r-common { border-color: #d1d5db; background: #f9fafb; color: #374151; }
+.r-uncommon { border-color: #6ee7b7; background: #ecfdf5; color: #065f46; }
+.r-rare { border-color: #93c5fd; background: #eff6ff; color: #1e40af; }
+.r-epic { border-color: #c4b5fd; background: #f5f3ff; color: #5b21b6; }
+.r-legendary { border-color: #fcd34d; background: #fffbeb; color: #92400e; }
+.r-mythic { border-color: #fca5a5; background: #fff1f2; color: #9f1239; }
+.r-cosmic { border-color: #f0abfc; background: #fdf4ff; color: #701a75; }
+
+/* Duplicate points bar */
+.dupe-points-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.dupe-label { font-size: 11px; color: var(--text2); flex: 1; }
+.dupe-bar-wrap { flex: 2; }
+.dupe-bar-track { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.dupe-bar-fill { height: 100%; border-radius: 2px; }
+.dupe-pts { font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+/* ════════════════════════════════
+   LOTTERY PAGE
+════════════════════════════════ */
+.lottery-page { flex: 1; overflow-y: auto; padding: 24px; }
+.lottery-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.lottery-title { font-size: 18px; font-weight: 600; }
+.lottery-coins { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #b45309; background: #fef3c7; padding: 5px 12px; border-radius: 20px; }
+.lottery-section-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; margin-top: 20px; }
+.lottery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.lottery-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; transition: border-color 0.12s; }
+.lottery-card:hover { border-color: var(--border2); }
+.lottery-card.weekly-card { border-color: var(--accent-mid); background: linear-gradient(135deg, #faf8ff, #f0ebff); }
+.lottery-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.lottery-reward { font-size: 14px; font-weight: 600; color: var(--text); }
+.lottery-weekly-badge { font-size: 10px; font-weight: 700; background: var(--accent); color: white; padding: 2px 7px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+.lottery-meta { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.lottery-meta-item { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 3px; }
+.lottery-time { font-size: 12px; font-weight: 500; color: var(--text3); margin-bottom: 12px; display: flex; align-items: center; gap: 4px; }
+.lottery-time.urgent { color: #dc2626; }
+.entry-row { display: flex; align-items: center; gap: 8px; }
+.entry-dots { display: flex; gap: 3px; flex: 1; }
+.entry-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border2); transition: background 0.15s; }
+.entry-dot.filled { background: var(--accent); border-color: var(--accent); }
+.entry-btn { padding: 5px 12px; font-size: 12px; font-weight: 500; background: var(--accent); color: white; border: none; border-radius: var(--radius); cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+.entry-btn:hover { opacity: 0.85; }
+.entry-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.entry-cost { font-size: 11px; color: var(--text3); }
+
+/* ════════════════════════════════
+   MODALS
+════════════════════════════════ */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(40,30,70,0.22); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 24px; width: 460px; max-width: 95vw; max-height: 92vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; color: var(--text); }
+.form-row { margin-bottom: 14px; }
+.form-label { font-size: 12px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; }
+.form-input { width: 100%; padding: 8px 12px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.12s; }
+.form-input:focus { border-color: var(--accent); }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.btn-cancel { padding: 7px 14px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text2); cursor: pointer; font-family: inherit; }
+.btn-cancel:hover { background: var(--bg2); }
+.btn-save { padding: 7px 16px; font-size: 13px; border: none; border-radius: var(--radius); background: var(--accent); color: white; cursor: pointer; font-weight: 500; font-family: inherit; }
+.btn-save:hover { opacity: 0.85; }
+.subtask-inputs { margin-top: 6px; }
+.subtask-input-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+.subtask-input-row .form-input { flex: 1; }
+.remove-sub { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 2px 4px; border-radius: 4px; }
+.remove-sub:hover { background: #FCEBEB; color: #A32D2D; }
+.add-sub-btn { font-size: 12px; color: var(--text2); background: none; border: 0.5px dashed var(--border2); border-radius: var(--radius); padding: 5px 12px; cursor: pointer; width: 100%; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.add-sub-btn:hover { background: var(--accent-light); }
+.freq-note { font-size: 11px; color: var(--text3); margin-top: 5px; font-style: italic; }
+.confirm-modal { background: var(--bg); border-radius: var(--radius-lg); padding: 24px; width: 340px; max-width: 95vw; }
+.confirm-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.confirm-body { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+.btn-delete { padding: 7px 16px; font-size: 13px; border: none; border-radius: var(--radius); background: #E24B4A; color: white; cursor: pointer; font-weight: 500; font-family: inherit; }
+
+/* XP award toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 12px 18px; border-radius: var(--radius-lg); font-size: 13px; font-weight: 500; z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* Category color chips */
+.color-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.color-chip { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.12s; }
+.color-chip.selected { border-color: var(--text); }
 </style>
 </head>
 <body>
-<div class="app">
+<div class="app-shell">
 
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div class="app-name">My Tasks</div>
-      <div class="app-tagline">Today is a good day to be productive.</div>
+  <!-- Nav bar -->
+  <nav class="nav-bar">
+    <div class="nav-logo">My Tasks</div>
+    <button class="nav-item active" id="nav-tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i> Tasks</button>
+    <button class="nav-item" id="nav-game" onclick="showPage('game')"><i class="ti ti-sword"></i> Progress</button>
+    <button class="nav-item" id="nav-collection" onclick="showPage('collection')"><i class="ti ti-cards"></i> Collection</button>
+    <button class="nav-item" id="nav-lottery" onclick="showPage('lottery')"><i class="ti ti-ticket"></i> Lottery</button>
+    <div class="nav-right">
+      <div class="nav-stat xp"><i class="ti ti-star"></i> <span id="nav-xp">0</span> XP</div>
+      <div class="nav-stat coins"><i class="ti ti-coin"></i> <span id="nav-coins">0</span></div>
+      <div class="nav-stat streak"><i class="ti ti-flame"></i> <span id="nav-streak">0</span></div>
     </div>
+  </nav>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Views</div>
-      <div class="sidebar-item active" id="view-today" onclick="setView('today')">
-        <i class="ti ti-calendar-today"></i> Today
-        <span class="sidebar-badge" id="badge-today">0</span>
+  <!-- ══ TASKS PAGE ══ -->
+  <div class="page active" id="page-tasks" style="overflow:hidden;">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="app-tagline">Today is a good day to be productive.</div>
       </div>
-      <div class="sidebar-item" id="view-week" onclick="setView('week')">
-        <i class="ti ti-calendar-week"></i> This Week
-        <span class="sidebar-badge" id="badge-week">0</span>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Views</div>
+        <div class="sidebar-item active" id="view-today" onclick="setView('today')"><i class="ti ti-calendar-today"></i> Today <span class="sidebar-badge" id="badge-today">0</span></div>
+        <div class="sidebar-item" id="view-week" onclick="setView('week')"><i class="ti ti-calendar-week"></i> This Week <span class="sidebar-badge" id="badge-week">0</span></div>
+        <div class="sidebar-item" id="view-month" onclick="setView('month')"><i class="ti ti-calendar-month"></i> This Month <span class="sidebar-badge" id="badge-month">0</span></div>
+        <div class="sidebar-item" id="view-all" onclick="setView('all')"><i class="ti ti-list"></i> All Tasks <span class="sidebar-badge" id="badge-all">0</span></div>
       </div>
-      <div class="sidebar-item" id="view-month" onclick="setView('month')">
-        <i class="ti ti-calendar-month"></i> This Month
-        <span class="sidebar-badge" id="badge-month">0</span>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Categories</div>
+        <div id="cat-sidebar-list"></div>
+        <div class="sidebar-item" onclick="openAddCatModal()" style="color:var(--text3);font-size:12px;"><i class="ti ti-plus"></i> New category</div>
       </div>
-      <div class="sidebar-item" id="view-all" onclick="setView('all')">
-        <i class="ti ti-list"></i> All Tasks
-        <span class="sidebar-badge" id="badge-all">0</span>
-      </div>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-label">Categories</div>
-      <div class="sidebar-item" id="cat-work" onclick="setCategory('work')">
-        <i class="ti ti-briefcase"></i> Work
-      </div>
-      <div class="sidebar-item" id="cat-health" onclick="setCategory('health')">
-        <i class="ti ti-heart"></i> Health
-      </div>
-      <div class="sidebar-item" id="cat-home" onclick="setCategory('home')">
-        <i class="ti ti-home"></i> Home
-      </div>
-      <div class="sidebar-item" id="cat-life" onclick="setCategory('life')">
-        <i class="ti ti-sparkles"></i> Life
+      <div class="upcoming-panel">
+        <div class="upcoming-title">Upcoming</div>
+        <div id="upcoming-list"></div>
       </div>
     </div>
 
-    <div class="upcoming-panel">
-      <div class="upcoming-title">Upcoming</div>
-      <div id="upcoming-list"></div>
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-date" id="topbar-date"></div>
+          <div class="topbar-title" id="topbar-title">Today</div>
+        </div>
+        <div class="topbar-nav">
+          <div class="nav-arrow" onclick="shiftView(-1)"><i class="ti ti-chevron-left"></i></div>
+          <div class="nav-arrow" onclick="shiftView(1)"><i class="ti ti-chevron-right"></i></div>
+        </div>
+        <div class="view-tabs">
+          <div class="view-tab active" id="tab-day" onclick="setTab('day')">Day</div>
+          <div class="view-tab" id="tab-week" onclick="setTab('week')">Week</div>
+          <div class="view-tab" id="tab-month" onclick="setTab('month')">Month</div>
+        </div>
+        <button class="add-btn" onclick="openAddModal()"><i class="ti ti-plus"></i> Add Task</button>
+      </div>
+      <div class="progress-section">
+        <div class="progress-meta">
+          <span class="progress-label">Daily progress</span>
+          <span class="progress-count" id="progress-text">0 of 0 completed</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-btn active" id="sort-all" onclick="setSort('all')"><i class="ti ti-layout-list"></i> All</div>
+        <div class="filter-btn" id="sort-priority" onclick="setSort('priority')"><i class="ti ti-flag"></i> Priority</div>
+        <div class="filter-btn" id="sort-due" onclick="setSort('due')"><i class="ti ti-clock"></i> Due date</div>
+        <div class="filter-btn" id="sort-incomplete" onclick="setSort('incomplete')"><i class="ti ti-circle"></i> Incomplete</div>
+      </div>
+      <div class="task-area" id="task-area"></div>
     </div>
   </div>
 
-  <!-- Main -->
-  <div class="main">
-    <div class="topbar">
-      <div class="topbar-left">
-        <div class="topbar-date" id="topbar-date"></div>
-        <div class="topbar-title" id="topbar-title">Today</div>
-      </div>
-      <div class="view-tabs">
-        <div class="view-tab active" id="tab-day" onclick="setTab('day')">Day</div>
-        <div class="view-tab" id="tab-week" onclick="setTab('week')">Week</div>
-        <div class="view-tab" id="tab-month" onclick="setTab('month')">Month</div>
-      </div>
-      <button class="add-btn" onclick="openAddModal()">
-        <i class="ti ti-plus"></i> Add Task
-      </button>
-    </div>
+  <!-- ══ GAMIFICATION PAGE ══ -->
+  <div class="page" id="page-game">
+    <div class="game-page">
+      <div class="game-row">
 
-    <div class="progress-section">
-      <div class="progress-meta">
-        <span class="progress-label" id="progress-label">Today's progress</span>
-        <span class="progress-count" id="progress-text">0 of 0 completed</span>
+        <!-- XP / Level -->
+        <div class="game-card">
+          <div class="game-card-title"><i class="ti ti-star" style="color:var(--accent)"></i> Level & XP</div>
+          <div class="xp-level" id="g-level">1</div>
+          <div class="xp-label">Level <span id="g-level2">1</span></div>
+          <div class="xp-bar-wrap">
+            <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+            <div class="xp-bar-meta"><span id="xp-current">0</span> XP<span id="xp-next">100 XP to next level</span></div>
+          </div>
+          <div class="benefit-tag" id="level-benefit">Basics Unlocked</div>
+        </div>
+
+        <!-- Streak -->
+        <div class="game-card">
+          <div class="game-card-title"><i class="ti ti-flame" style="color:#ea580c"></i> Streak</div>
+          <div style="display:flex;align-items:flex-end;gap:8px">
+            <div class="streak-num" id="g-streak">7</div>
+            <div class="streak-fire">🔥</div>
+          </div>
+          <div class="streak-sub">day streak</div>
+          <div class="streak-mult" id="streak-mult">1.34x XP multiplier</div>
+          <div class="streak-pct" id="streak-pct">Need 75% completion to maintain</div>
+          <div class="streak-days" id="streak-days"></div>
+        </div>
+
+        <!-- Coins -->
+        <div class="game-card">
+          <div class="game-card-title"><i class="ti ti-coin" style="color:#b45309"></i> Coins</div>
+          <div class="coins-num" id="g-coins">142</div>
+          <div class="coins-sub">available coins</div>
+          <div class="coin-capacity">
+            <div class="coin-cap-row">
+              <span class="coin-cap-label">Low (×2)</span>
+              <div class="coin-cap-track"><div class="coin-cap-fill low" id="cap-low" style="width:60%"></div></div>
+              <span class="coin-cap-count" id="cap-low-txt">12/20</span>
+            </div>
+            <div class="coin-cap-row">
+              <span class="coin-cap-label">Med (×4)</span>
+              <div class="coin-cap-track"><div class="coin-cap-fill med" id="cap-med" style="width:50%"></div></div>
+              <span class="coin-cap-count" id="cap-med-txt">6/12</span>
+            </div>
+            <div class="coin-cap-row">
+              <span class="coin-cap-label">High (×7)</span>
+              <div class="coin-cap-track"><div class="coin-cap-fill high" id="cap-high" style="width:37%"></div></div>
+              <span class="coin-cap-count" id="cap-high-txt">3/8</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+
+      <div class="game-row" style="grid-template-columns:1fr 1fr;">
+
+        <!-- Weekly reward -->
+        <div class="game-card">
+          <div class="game-card-title"><i class="ti ti-trophy" style="color:#b45309"></i> Weekly Reward</div>
+          <div class="week-bar"><div class="week-bar-fill" id="week-bar" style="width:65%"></div></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:5px;margin-bottom:14px;">65% of weekly tasks completed</div>
+          <div class="week-reward">
+            <div class="week-reward-pct">≥50%</div>
+            <div class="week-reward-info"><div class="week-reward-label">Common Box</div><div class="week-reward-sub">Complete 50% of weekly tasks</div></div>
+          </div>
+          <div class="week-reward">
+            <div class="week-reward-pct">≥75%</div>
+            <div class="week-reward-info"><div class="week-reward-label">Uncommon Box</div><div class="week-reward-sub">Complete 75% of weekly tasks</div></div>
+          </div>
+          <div class="week-reward">
+            <div class="week-reward-pct">100%</div>
+            <div class="week-reward-info"><div class="week-reward-label">Rare Box</div><div class="week-reward-sub">Complete all weekly tasks</div></div>
+          </div>
+        </div>
+
+        <!-- Today's summary -->
+        <div class="game-card">
+          <div class="game-card-title"><i class="ti ti-chart-bar" style="color:var(--accent)"></i> Today's Summary</div>
+          <div class="summary-row"><span class="summary-label">Tasks completed</span><span class="summary-val" id="s-done">0</span></div>
+          <div class="summary-row"><span class="summary-label">Total tasks today</span><span class="summary-val" id="s-total">0</span></div>
+          <div class="summary-row"><span class="summary-label">Completion rate</span><span class="summary-val" id="s-pct">0%</span></div>
+          <div class="summary-row"><span class="summary-label">Base XP (end of day)</span><span class="summary-val positive" id="s-xp">+0 XP</span></div>
+          <div class="summary-row"><span class="summary-label">With streak multiplier</span><span class="summary-val positive" id="s-xp-mult">+0 XP</span></div>
+          <div class="summary-row"><span class="summary-label">Coins earned today</span><span class="summary-val positive" id="s-coins">+0</span></div>
+        </div>
       </div>
     </div>
-
-    <div class="filter-bar">
-      <div class="filter-btn active" id="sort-all" onclick="setSort('all')"><i class="ti ti-layout-list"></i> All</div>
-      <div class="filter-btn" id="sort-priority" onclick="setSort('priority')"><i class="ti ti-flag"></i> Priority</div>
-      <div class="filter-btn" id="sort-due" onclick="setSort('due')"><i class="ti ti-clock"></i> Due date</div>
-      <div class="filter-btn" id="sort-incomplete" onclick="setSort('incomplete')"><i class="ti ti-circle"></i> Incomplete only</div>
-    </div>
-
-    <div class="task-area" id="task-area"></div>
   </div>
+
+  <!-- ══ COLLECTION PAGE ══ -->
+  <div class="page" id="page-collection">
+    <div class="collection-page">
+      <div class="collection-header">
+        <div>
+          <div class="collection-title">My Collection</div>
+          <div class="collection-progress" id="coll-progress">0 / 160 cards collected</div>
+        </div>
+      </div>
+      <!-- Duplicate points -->
+      <div class="game-card" style="margin-bottom:20px;">
+        <div class="game-card-title"><i class="ti ti-copy" style="color:var(--accent)"></i> Duplicate Points — Craft a Box (100 pts each)</div>
+        <div id="dupe-points-display"></div>
+      </div>
+      <div id="collection-display"></div>
+    </div>
+  </div>
+
+  <!-- ══ LOTTERY PAGE ══ -->
+  <div class="page" id="page-lottery">
+    <div class="lottery-page">
+      <div class="lottery-header">
+        <div class="lottery-title">Lotteries</div>
+        <div class="lottery-coins"><i class="ti ti-coin"></i> <span id="lottery-coins-display">0</span> coins available</div>
+      </div>
+      <div class="lottery-section-title">📅 Daily Lotteries</div>
+      <div class="lottery-grid" id="daily-lotteries"></div>
+      <div class="lottery-section-title">⭐ Weekly Lottery</div>
+      <div class="lottery-grid" id="weekly-lotteries"></div>
+    </div>
+  </div>
+
 </div>
 
-<!-- Add / Edit Task Modal -->
+<!-- Task Modal -->
 <div class="modal-overlay" id="task-modal" onclick="closeModalOutside(event,'task-modal')">
   <div class="modal">
     <div class="modal-title" id="modal-title">New Task</div>
-    <input type="hidden" id="edit-id" value="" />
-
-    <div class="form-row">
-      <label class="form-label">Task name</label>
-      <input class="form-input" id="new-name" placeholder="e.g. Vacuum the living room" />
-    </div>
-
+    <input type="hidden" id="edit-id" />
+    <div class="form-row"><label class="form-label">Task name</label><input class="form-input" id="new-name" placeholder="e.g. Vacuum the living room" /></div>
     <div class="form-row-2">
-      <div>
-        <label class="form-label">Category</label>
-        <select class="form-input" id="new-cat">
-          <option value="life">Life</option>
-          <option value="work">Work</option>
-          <option value="health">Health</option>
-          <option value="home">Home</option>
-        </select>
-      </div>
-      <div>
-        <label class="form-label">Priority</label>
+      <div><label class="form-label">Category</label><select class="form-input" id="new-cat"></select></div>
+      <div><label class="form-label">Priority</label>
         <select class="form-input" id="new-priority">
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
+          <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
         </select>
       </div>
     </div>
-
-    <div class="form-row">
-      <label class="form-label">Frequency</label>
+    <div class="form-row"><label class="form-label">Frequency</label>
       <select class="form-input" id="new-freq" onchange="handleFreqChange()">
-        <option value="once">One time</option>
-        <option value="daily">Daily (repeats every day)</option>
-        <option value="weekly">Weekly (repeats every week)</option>
-        <option value="monthly">Monthly (repeats every month)</option>
+        <option value="once">One time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
       </select>
     </div>
-
     <div id="date-fields">
       <div class="form-row-2">
-        <div>
-          <label class="form-label">Due date</label>
-          <input class="form-input" id="new-date" type="date" />
-        </div>
-        <div>
-          <label class="form-label">Due time (optional)</label>
-          <input class="form-input" id="new-time" type="time" />
-        </div>
+        <div><label class="form-label">Due date</label><input class="form-input" id="new-date" type="date" /></div>
+        <div><label class="form-label">Due time (optional)</label><input class="form-input" id="new-time" type="time" /></div>
       </div>
     </div>
-
-    <div id="recurring-note" style="display:none" class="freq-note">
-      Recurring tasks will appear in every relevant view automatically.
+    <div id="recurring-note" style="display:none" class="freq-note">Recurring tasks appear in every relevant view automatically.</div>
+    <div class="form-row"><label class="form-label">Subtasks (optional)</label>
+      <div id="subtask-inputs"></div>
+      <button class="add-sub-btn" onclick="addSubtaskInput()"><i class="ti ti-plus"></i> Add subtask</button>
     </div>
-
-    <div class="form-row">
-      <label class="form-label">Subtasks (optional)</label>
-      <div class="subtask-inputs" id="subtask-inputs"></div>
-      <button class="add-sub-btn" onclick="addSubtaskInput()">
-        <i class="ti ti-plus"></i> Add subtask item
-      </button>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
-      <button class="btn-save" onclick="saveTask()">Save task</button>
-    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeTaskModal()">Cancel</button><button class="btn-save" onclick="saveTask()">Save task</button></div>
   </div>
 </div>
 
-<!-- Confirm Delete Modal -->
+<!-- Add Category Modal -->
+<div class="modal-overlay" id="cat-modal" onclick="closeModalOutside(event,'cat-modal')">
+  <div class="modal" style="width:360px;">
+    <div class="modal-title">New Category</div>
+    <div class="form-row"><label class="form-label">Category name</label><input class="form-input" id="cat-name" placeholder="e.g. Finance" /></div>
+    <div class="form-row"><label class="form-label">Color</label>
+      <div class="color-chips" id="color-chips"></div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeCatModal()">Cancel</button><button class="btn-save" onclick="saveCategory()">Create</button></div>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
 <div class="modal-overlay" id="confirm-modal" onclick="closeModalOutside(event,'confirm-modal')">
   <div class="confirm-modal">
     <div class="confirm-title">Delete task?</div>
-    <div class="confirm-body" id="confirm-body">This will permanently remove the task.</div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeConfirmModal()">Cancel</button>
-      <button class="btn-delete" onclick="confirmDelete()">Delete</button>
-    </div>
+    <div class="confirm-body" id="confirm-body"></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeConfirmModal()">Cancel</button><button class="btn-delete" onclick="confirmDelete()">Delete</button></div>
   </div>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
-// ── Constants ──
-const catColors    = { life:'#1D9E75', work:'#378ADD', health:'#639922', home:'#BA7517' };
-const catTagClass  = { life:'tag-life', work:'tag-work', health:'tag-health', home:'tag-home' };
-const priorityOrder = { high:0, medium:1, low:2 };
-const priorityColors = { high:'#E24B4A', medium:'#EF9F27', low:'#97C459' };
+// ══════════════════════════════════════
+// CONSTANTS & DATA
+// ══════════════════════════════════════
+const RARITY_COLORS = { common:'#9ca3af', uncommon:'#34d399', rare:'#60a5fa', epic:'#a78bfa', legendary:'#fbbf24', mythic:'#f87171', cosmic:'#e879f9' };
+const RARITY_CLASS  = { common:'r-common', uncommon:'r-uncommon', rare:'r-rare', epic:'r-epic', legendary:'r-legendary', mythic:'r-mythic', cosmic:'r-cosmic' };
+const RARITY_ICONS  = { common:'🃏', uncommon:'🌿', rare:'💧', epic:'💜', legendary:'⭐', mythic:'🔥', cosmic:'🌌' };
+const PRIORITY_COLORS = { high:'#E24B4A', medium:'#EF9F27', low:'#97C459' };
+const PRIORITY_COINS  = { low:2, medium:4, high:7 };
 
-// ── State ──
-let currentView = 'today';
-let currentSort = 'all';
-let deleteTargetId = null;
+const LEVEL_DATA = [
+  { level:1,  xpNeeded:0,    totalXP:0,     benefit:'Basics Unlocked at Start' },
+  { level:2,  xpNeeded:100,  totalXP:100,   benefit:'Common Collectable Boxes' },
+  { level:3,  xpNeeded:150,  totalXP:250,   benefit:'Daily Lotteries' },
+  { level:4,  xpNeeded:200,  totalXP:450,   benefit:'50 Coins Bonus' },
+  { level:5,  xpNeeded:300,  totalXP:750,   benefit:'Uncommon Collectable Boxes' },
+  { level:6,  xpNeeded:400,  totalXP:1150,  benefit:'Coin Task Increases' },
+  { level:7,  xpNeeded:500,  totalXP:1650,  benefit:'Weekly Lotteries' },
+  { level:8,  xpNeeded:650,  totalXP:2300,  benefit:'Rare Collectable Boxes' },
+  { level:9,  xpNeeded:800,  totalXP:3100,  benefit:'100 Coins Bonus' },
+  { level:10, xpNeeded:950,  totalXP:4050,  benefit:'Epic Collectable Boxes' },
+  { level:11, xpNeeded:1150, totalXP:5200,  benefit:'Coin Task Increases' },
+  { level:12, xpNeeded:1350, totalXP:6550,  benefit:'Free Epic Card (your choice)' },
+  { level:13, xpNeeded:1550, totalXP:8100,  benefit:'Legendary Collectable Boxes' },
+  { level:14, xpNeeded:1800, totalXP:9900,  benefit:'150 Coins Bonus' },
+  { level:15, xpNeeded:2050, totalXP:11950, benefit:'Mythic Collectable Boxes' },
+  { level:16, xpNeeded:2300, totalXP:14250, benefit:'Coin Task Increases' },
+  { level:17, xpNeeded:2600, totalXP:16850, benefit:'Free Mythic Card (your choice)' },
+  { level:18, xpNeeded:2900, totalXP:19750, benefit:'Cosmic Collectable Boxes' },
+  { level:19, xpNeeded:3200, totalXP:22950, benefit:'250 Coins Bonus' },
+  { level:20, xpNeeded:3550, totalXP:26500, benefit:'Free Cosmic Card (your choice)' },
+];
 
-// ── Date helpers ──
-function todayStr() {
-  return new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-}
-function weekEndStr() {
-  const d = new Date();
-  d.setDate(d.getDate() + (6 - d.getDay())); // end of this week (Saturday)
-  return d.toISOString().split('T')[0];
-}
-function monthEndStr() {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
-}
-function formatDisplayDate(dateStr) {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  const today = new Date(); today.setHours(0,0,0,0);
-  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-  if (date.getTime() === today.getTime()) return 'Today';
-  if (date.getTime() === tomorrow.getTime()) return 'Tomorrow';
-  return date.toLocaleDateString('en-US', { month:'short', day:'numeric', year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined });
-}
-function isOverdue(t) {
-  if (t.done || !t.date || t.freq !== 'once') return false;
-  return t.date < todayStr();
-}
-function isToday(dateStr) {
-  return dateStr === todayStr();
-}
+// XP table (rows=completed, cols=total tasks 1-20)
+const XP_TABLE = [
+  [45,30,24,20,17,16,15,14,13,12,11,10,10,9,8,8,7,7,6,6],
+  [0,56,45,38,33,31,30,28,26,23,22,20,20,18,16,16,14,14,12,12],
+  [0,0,65,56,49,46,44,42,39,34,33,30,29,27,24,24,21,21,18,18],
+  [0,0,0,73,65,60,58,54,51,44,43,40,38,36,32,31,28,28,24,24],
+  [0,0,0,0,80,74,71,66,62,54,53,49,46,44,40,38,35,35,30,29],
+  [0,0,0,0,0,86,82,77,73,64,62,58,54,52,47,45,42,41,36,34],
+  [0,0,0,0,0,0,91,87,82,73,71,66,62,59,54,51,48,47,42,39],
+  [0,0,0,0,0,0,0,95,90,82,79,74,69,66,61,57,54,53,48,44],
+  [0,0,0,0,0,0,0,0,98,91,87,81,76,72,67,63,60,59,54,49],
+  [0,0,0,0,0,0,0,0,0,100,94,88,82,78,73,69,66,64,60,54],
+  [0,0,0,0,0,0,0,0,0,0,100,94,88,84,79,75,72,69,65,59],
+  [0,0,0,0,0,0,0,0,0,0,0,100,94,90,85,80,78,74,70,64],
+  [0,0,0,0,0,0,0,0,0,0,0,0,100,95,90,85,83,79,75,69],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,100,95,90,88,84,80,74],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,95,92,88,84,79],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,96,92,88,84],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,96,92,88],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,96,92],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,96],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100],
+];
 
-// ── Sample tasks (with real dates relative to today) ──
-const today = todayStr();
-const [ty, tm, td] = today.split('-').map(Number);
+const STREAK_DATA = [
+  {day:1,mult:1.05,pct:70},{day:2,mult:1.10,pct:70},{day:3,mult:1.15,pct:70},{day:4,mult:1.20,pct:70},
+  {day:5,mult:1.25,pct:75},{day:6,mult:1.30,pct:75},{day:7,mult:1.34,pct:75},{day:8,mult:1.38,pct:75},
+  {day:9,mult:1.42,pct:80},{day:10,mult:1.46,pct:80},{day:11,mult:1.50,pct:80},{day:12,mult:1.53,pct:80},
+  {day:13,mult:1.56,pct:84},{day:14,mult:1.59,pct:84},{day:15,mult:1.62,pct:84},{day:16,mult:1.65,pct:84},
+  {day:17,mult:1.68,pct:88},{day:18,mult:1.71,pct:88},{day:19,mult:1.74,pct:88},{day:20,mult:1.76,pct:88},
+  {day:21,mult:1.78,pct:90},{day:22,mult:1.80,pct:90},{day:23,mult:1.82,pct:90},{day:24,mult:1.84,pct:90},
+  {day:25,mult:1.86,pct:92},{day:26,mult:1.88,pct:92},{day:27,mult:1.90,pct:92},{day:28,mult:1.92,pct:92},
+  {day:29,mult:1.94,pct:94},{day:30,mult:1.95,pct:94},{day:31,mult:1.96,pct:94},{day:32,mult:1.97,pct:94},
+  {day:33,mult:1.98,pct:95},{day:34,mult:1.99,pct:95},{day:35,mult:2.00,pct:95},
+];
+
+const CAT_COLORS = ['#9b87d6','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c','#a78bfa','#f472b6','#2dd4bf','#94a3b8'];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let categories = [
+  { id:'work',    name:'Work',    color:'#60a5fa' },
+  { id:'health',  name:'Health',  color:'#34d399' },
+  { id:'home',    name:'Home',    color:'#fb923c' },
+  { id:'life',    name:'Life',    color:'#9b87d6' },
+  { id:'fitness', name:'Fitness', color:'#f87171' },
+  { id:'events',  name:'Events',  color:'#fbbf24' },
+];
+
+let player = {
+  totalXP: 340, coins: 142, streak: 7,
+  coinsEarnedToday: 8,
+  capLow: 12, capMed: 6, capHigh: 3,
+  dupePoints: { uncommon:40, rare:25, epic:10, legendary:0, mythic:0, cosmic:0 },
+};
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
 function dateOffset(days) {
-  const d = new Date(ty, tm - 1, td + days);
-  return d.toISOString().split('T')[0];
+  const [y,m,d] = todayStr().split('-').map(Number);
+  return new Date(y, m-1, d+days).toISOString().split('T')[0];
 }
 
 let tasks = [
-  { id:1, name:'Go to bed by 11pm',      cat:'life',   priority:'high',   date: today,          time:'23:00', freq:'daily',   done:false, subtasks:[] },
-  { id:2, name:'Apply to 3 jobs',         cat:'work',   priority:'high',   date: today,          time:'',      freq:'once',    done:false, subtasks:[
-    {text:'Software engineer at Stripe', done:true},
-    {text:'Frontend role at Linear',     done:false},
-    {text:'Full-stack at Vercel',        done:false}
-  ]},
-  { id:3, name:'Vacuum the living room',  cat:'home',   priority:'medium', date: dateOffset(2),  time:'',      freq:'weekly',  done:false, subtasks:[] },
-  { id:4, name:'30 min walk',             cat:'health', priority:'medium', date: today,          time:'08:00', freq:'daily',   done:false, subtasks:[] },
-  { id:5, name:'Review Q2 report',        cat:'work',   priority:'high',   date: today,          time:'14:00', freq:'once',    done:false, subtasks:[
-    {text:'Read executive summary', done:true},
-    {text:'Check revenue figures',  done:false},
-    {text:'Note action items',      done:false}
-  ]},
-  { id:6, name:'Call Mom',                cat:'life',   priority:'medium', date: dateOffset(1),  time:'18:00', freq:'weekly',  done:false, subtasks:[] },
-  { id:7, name:'Drink 8 glasses of water',cat:'health', priority:'low',    date: today,          time:'',      freq:'daily',   done:false, subtasks:[] },
-  { id:8, name:'Take out trash',          cat:'home',   priority:'low',    date: dateOffset(3),  time:'',      freq:'weekly',  done:false, subtasks:[] },
-  { id:9, name:'Dentist appointment',     cat:'health', priority:'high',   date: dateOffset(10), time:'10:00', freq:'once',    done:false, subtasks:[] },
-  { id:10,name:'Renew car insurance',     cat:'life',   priority:'high',   date: dateOffset(14), time:'',      freq:'once',    done:false, subtasks:[] },
+  { id:1, name:'Go to bed by 11pm',       cat:'life',    priority:'high',   date:todayStr(),    time:'23:00', freq:'daily',   done:false, subtasks:[] },
+  { id:2, name:'Apply to 3 jobs',          cat:'work',    priority:'high',   date:todayStr(),    time:'',      freq:'once',    done:false, subtasks:[{text:'Software engineer at Stripe',done:true},{text:'Frontend role at Linear',done:false},{text:'Full-stack at Vercel',done:false}] },
+  { id:3, name:'Vacuum the living room',   cat:'home',    priority:'medium', date:dateOffset(2), time:'',      freq:'weekly',  done:false, subtasks:[] },
+  { id:4, name:'30 min walk',              cat:'fitness', priority:'medium', date:todayStr(),    time:'08:00', freq:'daily',   done:false, subtasks:[] },
+  { id:5, name:'Review Q2 report',         cat:'work',    priority:'high',   date:todayStr(),    time:'14:00', freq:'once',    done:false, subtasks:[{text:'Read executive summary',done:true},{text:'Check revenue figures',done:false},{text:'Note action items',done:false}] },
+  { id:6, name:'Call Mom',                 cat:'life',    priority:'medium', date:dateOffset(1), time:'18:00', freq:'weekly',  done:false, subtasks:[] },
+  { id:7, name:'Drink 8 glasses of water', cat:'health',  priority:'low',    date:todayStr(),    time:'',      freq:'daily',   done:false, subtasks:[] },
+  { id:8, name:'Take out trash',           cat:'home',    priority:'low',    date:dateOffset(3), time:'',      freq:'weekly',  done:false, subtasks:[] },
+  { id:9, name:'Dentist appointment',      cat:'health',  priority:'high',   date:dateOffset(10),time:'10:00', freq:'once',    done:false, subtasks:[] },
+  { id:10,name:'Gym session',              cat:'fitness', priority:'medium', date:todayStr(),    time:'07:00', freq:'daily',   done:true,  subtasks:[] },
 ];
 let nextId = 11;
+let currentView = 'today';
+let currentSort = 'all';
+let viewOffset = 0;
+let deleteTargetId = null;
+let selectedColor = CAT_COLORS[0];
 
-// ── Filter & sort ──
-function getVisibleTasks() {
-  const t = todayStr();
-  const we = weekEndStr();
-  const me = monthEndStr();
-
-  let list = tasks.filter(task => {
-    if (currentView === 'today') {
-      // Show: daily/recurring tasks always, one-time tasks due today or overdue
-      return task.freq === 'daily' || task.freq === 'weekly' || task.freq === 'monthly'
-        || !task.date || task.date <= t;
+// Generate collection
+function makeCollection() {
+  const rarities = [
+    { key:'common',    count:30 },
+    { key:'uncommon',  count:30 },
+    { key:'rare',      count:25 },
+    { key:'epic',      count:25 },
+    { key:'legendary', count:20 },
+    { key:'mythic',    count:20 },
+    { key:'cosmic',    count:10 },
+  ];
+  const coll = [];
+  rarities.forEach(r => {
+    for (let i = 1; i <= r.count; i++) {
+      coll.push({ id:`${r.key}-${i}`, rarity:r.key, name:`${r.key.charAt(0).toUpperCase()+r.key.slice(1)} Card ${i}`, owned: Math.random() < (r.key==='common'?0.6:r.key==='uncommon'?0.35:r.key==='rare'?0.2:0.05), dupes:0 });
     }
-    if (currentView === 'week') {
-      return task.freq === 'daily' || task.freq === 'weekly' || task.freq === 'monthly'
-        || !task.date || task.date <= we;
-    }
-    if (currentView === 'month') {
-      return task.freq === 'daily' || task.freq === 'weekly' || task.freq === 'monthly'
-        || !task.date || task.date <= me;
-    }
-    if (currentView.startsWith('cat:')) {
-      return task.cat === currentView.split(':')[1];
-    }
-    return true; // 'all'
   });
+  return coll;
+}
+let collection = makeCollection();
 
-  if (currentSort === 'priority')  list.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-  if (currentSort === 'due')       list.sort((a, b) => (a.date || '9999') < (b.date || '9999') ? -1 : 1);
+// Generate lotteries
+function makeLotteries() {
+  const dailyRewards = [
+    { name:'Common Box', cost:5, maxEntries:7, winners:10, weekly:false },
+    { name:'Common Card', cost:10, maxEntries:6, winners:10, weekly:false },
+    { name:'Uncommon Box', cost:5, maxEntries:7, winners:8, weekly:false },
+    { name:'Rare Box', cost:10, maxEntries:6, winners:7, weekly:false },
+    { name:'Rare Card', cost:15, maxEntries:5, winners:7, weekly:false },
+    { name:'Epic Box', cost:10, maxEntries:6, winners:5, weekly:false },
+    { name:'Legendary Box', cost:15, maxEntries:5, winners:3, weekly:false },
+  ];
+  const weeklyRewards = [
+    { name:'Epic Box', cost:15, maxEntries:4, winners:8, weekly:true },
+    { name:'Legendary Box', cost:20, maxEntries:4, winners:5, weekly:true },
+    { name:'Mythic Box', cost:25, maxEntries:3, winners:3, weekly:true },
+    { name:'Cosmic Box', cost:35, maxEntries:2, winners:2, weekly:true },
+    { name:'Cosmic Card', cost:40, maxEntries:1, winners:1, weekly:true },
+  ];
+  const pick = (arr, n) => arr.sort(() => 0.5-Math.random()).slice(0,n);
+  const daily = pick(dailyRewards, 4).map((r,i) => ({...r, entries:0, hoursLeft: 18 - i*4 + Math.floor(Math.random()*3)}));
+  const weekly = [pick(weeklyRewards,1)[0]].map(r => ({...r, entries:0, daysLeft: 5}));
+  return { daily, weekly };
+}
+let lotteries = makeLotteries();
+
+// ══════════════════════════════════════
+// PAGE NAVIGATION
+// ══════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if (name === 'game') renderGamePage();
+  if (name === 'collection') renderCollection();
+  if (name === 'lottery') renderLotteries();
+}
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function getLevel() {
+  let level = 1;
+  for (let i = LEVEL_DATA.length-1; i >= 0; i--) {
+    if (player.totalXP >= LEVEL_DATA[i].totalXP) { level = LEVEL_DATA[i].level; break; }
+  }
+  return Math.min(level, 20);
+}
+function getStreakData() {
+  const idx = Math.min(player.streak, 35) - 1;
+  return idx >= 0 ? STREAK_DATA[idx] : { mult:1.0, pct:70 };
+}
+function calcBaseXP(done, total) {
+  if (total === 0) return 0;
+  const col = Math.min(total, 20) - 1;
+  const row = Math.min(done, total, 20) - 1;
+  if (row < 0) return 0;
+  return XP_TABLE[row][col] || 0;
+}
+function getTodayTasks() {
+  const t = todayStr();
+  return tasks.filter(x => x.freq === 'daily' || x.freq === 'weekly' || x.freq === 'monthly' || (x.date && x.date <= t));
+}
+function formatDisplayDate(dateStr) {
+  if (!dateStr) return '';
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m-1, d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate()+1);
+  if (date.getTime() === today.getTime()) return 'Today';
+  if (date.getTime() === tomorrow.getTime()) return 'Tomorrow';
+  return date.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+function isOverdue(t) { return !t.done && t.date && t.freq==='once' && t.date < todayStr(); }
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+function getCatById(id) { return categories.find(c => c.id === id) || { name: id, color: '#aaa' }; }
+
+// ══════════════════════════════════════
+// NAV STATS
+// ══════════════════════════════════════
+function updateNavStats() {
+  document.getElementById('nav-xp').textContent = player.totalXP;
+  document.getElementById('nav-coins').textContent = player.coins;
+  document.getElementById('nav-streak').textContent = player.streak;
+  document.getElementById('lottery-coins-display').textContent = player.coins;
+}
+
+// ══════════════════════════════════════
+// TASKS PAGE
+// ══════════════════════════════════════
+function getViewRange() {
+  const base = new Date(); base.setHours(0,0,0,0);
+  if (currentView === 'today') {
+    base.setDate(base.getDate() + viewOffset);
+    return { start: base.toISOString().split('T')[0], end: base.toISOString().split('T')[0], label: viewOffset===0?'Today': base.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}) };
+  }
+  if (currentView === 'week') {
+    const start = new Date(base); start.setDate(base.getDate() - base.getDay() + viewOffset*7);
+    const end = new Date(start); end.setDate(start.getDate()+6);
+    return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0], label:`Week of ${start.toLocaleDateString('en-US',{month:'short',day:'numeric'})}` };
+  }
+  if (currentView === 'month') {
+    const d = new Date(base.getFullYear(), base.getMonth() + viewOffset, 1);
+    const end = new Date(d.getFullYear(), d.getMonth()+1, 0);
+    return { start: d.toISOString().split('T')[0], end: end.toISOString().split('T')[0], label: d.toLocaleDateString('en-US',{month:'long',year:'numeric'}) };
+  }
+  return { start:'', end:'9999-12-31', label:'All Tasks' };
+}
+
+function getVisibleTasks() {
+  const range = getViewRange();
+  let list = tasks.filter(t => {
+    if (currentView === 'all') return true;
+    if (t.freq !== 'once') return true;
+    return t.date && t.date >= range.start && t.date <= range.end;
+  });
+  if (currentView.startsWith('cat:')) list = tasks.filter(t => t.cat === currentView.split(':')[1]);
+  if (currentSort === 'priority') list.sort((a,b) => ({high:0,medium:1,low:2}[a.priority]-{high:0,medium:1,low:2}[b.priority]));
+  if (currentSort === 'due') list.sort((a,b) => (a.date||'9999').localeCompare(b.date||'9999'));
   if (currentSort === 'incomplete') list = list.filter(t => !t.done);
-
   return list;
 }
 
-// ── Render ──
 function render() {
+  renderCatSidebar();
   renderTasks();
   updateProgress();
   updateBadges();
   updateUpcoming();
-  document.getElementById('topbar-date').textContent =
-    new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  updateNavStats();
+  const range = getViewRange();
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('topbar-title').textContent = range.label;
+}
+
+function renderCatSidebar() {
+  const el = document.getElementById('cat-sidebar-list');
+  el.innerHTML = categories.map(c => `
+    <div class="sidebar-item ${currentView==='cat:'+c.id?'active':''}" onclick="setCategory('${c.id}')">
+      <div style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0;"></div>
+      ${c.name}
+    </div>`).join('');
+  // Also rebuild category select in modal
+  const sel = document.getElementById('new-cat');
+  if (sel) sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
 function updateBadges() {
-  const t = todayStr(), we = weekEndStr(), me = monthEndStr();
-  const count = (fn) => tasks.filter(fn).length;
-  document.getElementById('badge-today').textContent  = count(x => x.freq !== 'once' || !x.date || x.date <= t);
-  document.getElementById('badge-week').textContent   = count(x => x.freq !== 'once' || !x.date || x.date <= we);
-  document.getElementById('badge-month').textContent  = count(x => x.freq !== 'once' || !x.date || x.date <= me);
+  const t = todayStr();
+  const we = (() => { const d=new Date(); d.setDate(d.getDate()+(6-d.getDay())); return d.toISOString().split('T')[0]; })();
+  const me = (() => { const d=new Date(); return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0]; })();
+  document.getElementById('badge-today').textContent  = tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=t).length;
+  document.getElementById('badge-week').textContent   = tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=we).length;
+  document.getElementById('badge-month').textContent  = tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=me).length;
   document.getElementById('badge-all').textContent    = tasks.length;
 }
 
 function updateUpcoming() {
   const t = todayStr();
-  // Tasks in the future (not today, not done), sorted by date
-  const future = tasks
-    .filter(x => !x.done && x.date && x.date > t && x.freq === 'once')
-    .sort((a, b) => a.date < b.date ? -1 : 1)
-    .slice(0, 4);
+  const future = tasks.filter(x=>!x.done&&x.date&&x.date>t&&x.freq==='once').sort((a,b)=>a.date<b.date?-1:1).slice(0,4);
   const ul = document.getElementById('upcoming-list');
-  if (future.length === 0) {
-    ul.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 2px;">No upcoming tasks.</div>';
-    return;
-  }
-  ul.innerHTML = future.map(t => `
-    <div class="upcoming-item">
-      <div class="upcoming-name">${t.name}</div>
-      <div class="upcoming-date"><i class="ti ti-calendar" style="font-size:11px"></i> ${formatDisplayDate(t.date)}${t.time ? ' · ' + t.time : ''}</div>
-    </div>`).join('');
+  ul.innerHTML = future.length ? future.map(t=>`<div class="upcoming-item"><div class="upcoming-name">${t.name}</div><div class="upcoming-date"><i class="ti ti-calendar" style="font-size:10px"></i> ${formatDisplayDate(t.date)}${t.time?' · '+t.time:''}</div></div>`).join('') : '<div style="font-size:12px;color:var(--text3);">No upcoming tasks.</div>';
 }
 
 function updateProgress() {
-  // Progress always reflects today's tasks
-  const t = todayStr();
-  const todayTasks = tasks.filter(x =>
-    x.freq === 'daily' || x.freq === 'weekly' || x.freq === 'monthly' || (x.date && x.date <= t)
-  );
-  const done = todayTasks.filter(x => x.done).length;
-  const total = todayTasks.length;
-  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-  document.getElementById('progress-fill').style.width = pct + '%';
+  const today = getTodayTasks();
+  const done = today.filter(t=>t.done).length;
+  const total = today.length;
+  const pct = total===0?0:Math.round((done/total)*100);
+  document.getElementById('progress-fill').style.width = pct+'%';
   document.getElementById('progress-text').textContent = `${done} of ${total} completed`;
 }
 
 function renderTasks() {
   const area = document.getElementById('task-area');
   const list = getVisibleTasks();
-
-  if (list.length === 0) {
-    area.innerHTML = `<div class="empty-state">
-      <i class="ti ti-circle-check"></i>
-      <p>No tasks here.</p>
-      <p>Hit "Add Task" to get started!</p>
-    </div>`;
-    return;
-  }
-
-  // Group by category
+  if (list.length===0) { area.innerHTML=`<div class="empty-state"><i class="ti ti-circle-check"></i><p>No tasks here.</p><p>Hit "Add Task" to get started!</p></div>`; return; }
   const groups = {};
-  list.forEach(t => { if (!groups[t.cat]) groups[t.cat] = []; groups[t.cat].push(t); });
-
-  area.innerHTML = '';
-  Object.keys(groups).forEach(cat => {
-    const g = document.createElement('div'); g.className = 'category-group';
-    const h = document.createElement('div'); h.className = 'category-header';
-    h.innerHTML = `
-      <div class="category-dot" style="background:${catColors[cat]}"></div>
-      <span class="category-name">${cat}</span>
-      <span class="category-count">&nbsp;· ${groups[cat].length} task${groups[cat].length !== 1 ? 's' : ''}</span>`;
+  list.forEach(t=>{ if(!groups[t.cat])groups[t.cat]=[]; groups[t.cat].push(t); });
+  area.innerHTML='';
+  Object.keys(groups).forEach(cat=>{
+    const cat_info = getCatById(cat);
+    const g=document.createElement('div'); g.className='category-group';
+    const h=document.createElement('div'); h.className='category-header';
+    h.innerHTML=`<div class="category-dot" style="background:${cat_info.color}"></div><span class="category-name">${cat_info.name}</span><span class="category-count">&nbsp;· ${groups[cat].length} task${groups[cat].length!==1?'s':''}</span>`;
     g.appendChild(h);
-    groups[cat].forEach(t => g.appendChild(makeCard(t)));
+    groups[cat].forEach(t=>g.appendChild(makeCard(t)));
     area.appendChild(g);
   });
 }
@@ -528,231 +886,352 @@ function renderTasks() {
 function makeCard(t) {
   const card = document.createElement('div');
   const overdue = isOverdue(t);
-  card.className = 'task-card' + (t.done ? ' done-card' : '') + (overdue ? ' overdue' : '');
-
-  // Date label
-  let dateLabel = '';
-  if (t.date) {
-    const display = formatDisplayDate(t.date);
-    const cls = overdue ? 'overdue-label' : isToday(t.date) ? 'today-label' : '';
-    const icon = overdue ? 'ti-alert-circle' : 'ti-calendar';
-    const prefix = overdue ? 'Overdue · ' : '';
-    dateLabel = `<span class="task-due ${cls}"><i class="ti ${icon}" style="font-size:11px"></i>&nbsp;${prefix}${display}${t.time ? ' ' + t.time : ''}</span>`;
+  card.className='task-card'+(t.done?' done-card':'')+(overdue?' overdue':'');
+  const cat_info = getCatById(t.cat);
+  let dateLabel='';
+  if(t.date){
+    const display=formatDisplayDate(t.date);
+    const cls=overdue?'overdue-label':t.date===todayStr()?'today-label':'';
+    dateLabel=`<span class="task-due ${cls}"><i class="ti ${overdue?'ti-alert-circle':'ti-calendar'}" style="font-size:10px"></i>&nbsp;${overdue?'Overdue · ':''}${display}${t.time?' '+t.time:''}</span>`;
   }
-
-  let metaHtml = `<span class="task-tag ${catTagClass[t.cat]}">${t.cat}</span>`;
-  metaHtml += dateLabel;
-  if (t.freq && t.freq !== 'once') metaHtml += `<span class="task-freq">· ${t.freq}</span>`;
-
-  let subtasksHtml = '';
-  if (t.subtasks.length > 0) {
-    const doneCount = t.subtasks.filter(s => s.done).length;
-    const pct = Math.round((doneCount / t.subtasks.length) * 100);
-    const items = t.subtasks.map((s, i) => `
-      <div class="subtask-item">
-        <div class="subtask-box ${s.done ? 'checked' : ''}" onclick="toggleSub(${t.id},${i})"></div>
-        <span class="subtask-text ${s.done ? 'done' : ''}">${s.text}</span>
-      </div>`).join('');
-    subtasksHtml = `
-      <div class="subtasks">
-        <div class="subtask-progress-row">
-          <div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div>
-          <span class="subtask-label">${doneCount}/${t.subtasks.length} done</span>
-        </div>${items}
-      </div>`;
+  let metaHtml=`<span class="task-tag" style="background:${cat_info.color}22;color:${cat_info.color}">${cat_info.name}</span>${dateLabel}`;
+  if(t.freq&&t.freq!=='once') metaHtml+=`<span class="task-freq">· ${t.freq}</span>`;
+  let subtasksHtml='';
+  if(t.subtasks.length>0){
+    const dc=t.subtasks.filter(s=>s.done).length;
+    const pct=Math.round((dc/t.subtasks.length)*100);
+    subtasksHtml=`<div class="subtasks"><div class="subtask-progress-row"><div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div><span class="subtask-label">${dc}/${t.subtasks.length} done</span></div>${t.subtasks.map((s,i)=>`<div class="subtask-item"><div class="subtask-box ${s.done?'checked':''}" onclick="toggleSub(${t.id},${i})"></div><span class="subtask-text ${s.done?'done':''}">${s.text}</span></div>`).join('')}</div>`;
   }
-
-  card.innerHTML = `
-    <div class="task-top">
-      <div class="task-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
-      <div class="task-content">
-        <div class="task-name ${t.done ? 'done-text' : ''}">${t.name}</div>
-        <div class="task-meta">${metaHtml}</div>
-      </div>
-      <div class="task-actions">
-        <button class="task-action-btn" onclick="openEditModal(${t.id})" title="Edit"><i class="ti ti-pencil"></i></button>
-        <button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})" title="Delete"><i class="ti ti-trash"></i></button>
-      </div>
-      <div class="priority-dot" style="background:${priorityColors[t.priority]}" title="${t.priority} priority"></div>
-    </div>${subtasksHtml}`;
+  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${t.done?'checked':''}" onclick="toggleTask(${t.id})"></div><div class="task-content"><div class="task-name ${t.done?'done-text':''}">${t.name}</div><div class="task-meta">${metaHtml}</div></div><div class="task-actions"><button class="task-action-btn" onclick="openEditModal(${t.id})" title="Edit"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})" title="Delete"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}" title="${t.priority} priority"></div></div>${subtasksHtml}`;
   return card;
 }
 
-// ── Interactions ──
 function toggleTask(id) {
-  const t = tasks.find(t => t.id === id);
-  if (t) { t.done = !t.done; render(); }
+  const t = tasks.find(t=>t.id===id); if(!t) return;
+  t.done = !t.done;
+  if(t.done) {
+    const coins = PRIORITY_COINS[t.priority];
+    player.coins += coins;
+    player.coinsEarnedToday += coins;
+    showToast(`<i class="ti ti-coin"></i> +${coins} coins for completing "${t.name}"`);
+  }
+  render();
 }
-
 function toggleSub(taskId, subIdx) {
-  const t = tasks.find(t => t.id === taskId);
-  if (t && t.subtasks[subIdx] !== undefined) {
-    t.subtasks[subIdx].done = !t.subtasks[subIdx].done;
-    render();
-  }
+  const t=tasks.find(t=>t.id===taskId); if(!t||t.subtasks[subIdx]===undefined) return;
+  t.subtasks[subIdx].done=!t.subtasks[subIdx].done; render();
 }
 
-// ── View / Sort switching ──
 function setView(v) {
-  currentView = v;
-  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  const el = document.getElementById('view-' + v);
-  if (el) el.classList.add('active');
-  const titles = { today:'Today', week:'This Week', month:'This Month', all:'All Tasks' };
-  document.getElementById('topbar-title').textContent = titles[v] || 'Tasks';
-  // Sync tab
-  const tabMap = { today:'day', week:'week', month:'month' };
-  if (tabMap[v]) {
-    document.querySelectorAll('.view-tab').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + tabMap[v])?.classList.add('active');
-  }
+  currentView=v; viewOffset=0;
+  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v)?.classList.add('active');
+  const tabMap={today:'day',week:'week',month:'month'};
+  if(tabMap[v]){ document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active')); document.getElementById('tab-'+tabMap[v])?.classList.add('active'); }
   render();
 }
-
 function setCategory(cat) {
-  currentView = 'cat:' + cat;
-  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  document.getElementById('cat-' + cat)?.classList.add('active');
-  document.getElementById('topbar-title').textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+  currentView='cat:'+cat; viewOffset=0;
+  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));
+  document.querySelector(`[onclick="setCategory('${cat}')"]`)?.classList.add('active');
   render();
 }
-
 function setTab(tab) {
-  document.querySelectorAll('.view-tab').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  const map = { day:'today', week:'week', month:'month' };
-  setView(map[tab]);
+  document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  setView({day:'today',week:'week',month:'month'}[tab]);
 }
-
 function setSort(s) {
-  currentSort = s;
-  document.querySelectorAll('.filter-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById('sort-' + s).classList.add('active');
+  currentSort=s;
+  document.querySelectorAll('.filter-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('sort-'+s).classList.add('active');
   render();
 }
+function shiftView(dir) {
+  viewOffset += dir; render();
+}
 
-// ── Modal ──
+// ══════════════════════════════════════
+// GAMIFICATION PAGE
+// ══════════════════════════════════════
+function renderGamePage() {
+  const level = getLevel();
+  const levelInfo = LEVEL_DATA[level-1];
+  const nextLevelInfo = LEVEL_DATA[Math.min(level, 19)];
+  const xpInLevel = player.totalXP - levelInfo.totalXP;
+  const xpNeeded = level < 20 ? nextLevelInfo.xpNeeded : 0;
+  const xpPct = level < 20 ? Math.round((xpInLevel/xpNeeded)*100) : 100;
+
+  document.getElementById('g-level').textContent = level;
+  document.getElementById('g-level2').textContent = level;
+  document.getElementById('xp-bar').style.width = xpPct+'%';
+  document.getElementById('xp-current').textContent = player.totalXP;
+  document.getElementById('xp-next').textContent = level<20 ? `${xpNeeded-xpInLevel} XP to level ${level+1}` : 'Max Level!';
+  document.getElementById('level-benefit').textContent = levelInfo.benefit;
+
+  // Streak
+  const sd = getStreakData();
+  document.getElementById('g-streak').textContent = player.streak;
+  document.getElementById('streak-mult').textContent = `${sd.mult.toFixed(2)}x XP multiplier`;
+  document.getElementById('streak-pct').textContent = `Need ${sd.pct}% completion to maintain`;
+
+  // Streak last 7 days visual
+  const days = document.getElementById('streak-days');
+  days.innerHTML = '';
+  const dayNames = ['S','M','T','W','T','F','S'];
+  const today = new Date().getDay();
+  for(let i=6;i>=0;i--){
+    const dayIdx=(today-i+7)%7;
+    const done=i<player.streak;
+    const isToday=i===0;
+    const el=document.createElement('div');
+    el.className='streak-day'+(isToday?' today':done?' done':'');
+    el.textContent=dayNames[dayIdx];
+    days.appendChild(el);
+  }
+
+  // Coins
+  document.getElementById('g-coins').textContent = player.coins;
+  const maxLow=20,maxMed=12,maxHigh=8;
+  document.getElementById('cap-low').style.width=(player.capLow/maxLow*100)+'%';
+  document.getElementById('cap-med').style.width=(player.capMed/maxMed*100)+'%';
+  document.getElementById('cap-high').style.width=(player.capHigh/maxHigh*100)+'%';
+  document.getElementById('cap-low-txt').textContent=`${player.capLow}/${maxLow}`;
+  document.getElementById('cap-med-txt').textContent=`${player.capMed}/${maxMed}`;
+  document.getElementById('cap-high-txt').textContent=`${player.capHigh}/${maxHigh}`;
+
+  // Summary
+  const today2=getTodayTasks();
+  const done=today2.filter(t=>t.done).length;
+  const total=today2.length;
+  const pct=total?Math.round((done/total)*100):0;
+  const baseXP=calcBaseXP(done,total);
+  const multXP=Math.round(baseXP*(player.streak>0?sd.mult:1));
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-total').textContent=total;
+  document.getElementById('s-pct').textContent=pct+'%';
+  document.getElementById('s-xp').textContent='+'+baseXP+' XP';
+  document.getElementById('s-xp-mult').textContent='+'+multXP+' XP';
+  document.getElementById('s-coins').textContent='+'+player.coinsEarnedToday;
+
+  // Weekly bar
+  const weekDone=tasks.filter(t=>t.done).length;
+  const weekTotal=tasks.length;
+  const weekPct=weekTotal?Math.round((weekDone/weekTotal)*100):0;
+  document.getElementById('week-bar').style.width=weekPct+'%';
+}
+
+// ══════════════════════════════════════
+// COLLECTION PAGE
+// ══════════════════════════════════════
+function renderCollection() {
+  const owned = collection.filter(c=>c.owned).length;
+  document.getElementById('coll-progress').textContent = `${owned} / 160 cards collected`;
+
+  // Dupe points
+  const dupeEl = document.getElementById('dupe-points-display');
+  const rarities = ['uncommon','rare','epic','legendary','mythic','cosmic'];
+  dupeEl.innerHTML = rarities.map(r => {
+    const pts = player.dupePoints[r]||0;
+    const pct = Math.round((pts/100)*100);
+    return `<div class="dupe-points-row">
+      <span class="dupe-label" style="color:${RARITY_COLORS[r]};font-weight:600;">${r.charAt(0).toUpperCase()+r.slice(1)}</span>
+      <div class="dupe-bar-wrap"><div class="dupe-bar-track"><div class="dupe-bar-fill" style="width:${pct}%;background:${RARITY_COLORS[r]}"></div></div></div>
+      <span class="dupe-pts">${pts}/100</span>
+      <button style="padding:3px 10px;font-size:11px;border:none;border-radius:6px;background:${pts>=100?RARITY_COLORS[r]:'var(--bg3)'};color:${pts>=100?'white':'var(--text3)'};cursor:${pts>=100?'pointer':'default'};font-family:inherit;" onclick="craftBox('${r}')" ${pts<100?'disabled':''}>Craft</button>
+    </div>`;
+  }).join('');
+
+  // Cards by rarity
+  const rarityOrder = ['common','uncommon','rare','epic','legendary','mythic','cosmic'];
+  const display = document.getElementById('collection-display');
+  display.innerHTML = rarityOrder.map(r => {
+    const cards = collection.filter(c=>c.rarity===r);
+    const ownedCount = cards.filter(c=>c.owned).length;
+    return `<div class="rarity-section">
+      <div class="rarity-header">
+        <span class="rarity-badge" style="background:${RARITY_COLORS[r]}22;color:${RARITY_COLORS[r]};border:1px solid ${RARITY_COLORS[r]}55">${r.toUpperCase()}</span>
+        <span class="rarity-count">${ownedCount}/${cards.length} collected</span>
+      </div>
+      <div class="cards-grid">
+        ${cards.map(c=>`
+          <div class="coll-card ${RARITY_CLASS[r]} ${c.owned?'':'locked'}">
+            ${c.dupes>0?`<div class="dupe-badge">×${c.dupes+1}</div>`:''}
+            <div class="coll-card-icon">${RARITY_ICONS[r]}</div>
+            <div>
+              <div class="coll-card-name">${c.owned?c.name:'???'}</div>
+              <div class="coll-card-num">${r.charAt(0).toUpperCase()+r.slice(1)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function craftBox(rarity) {
+  if((player.dupePoints[rarity]||0) < 100) return;
+  player.dupePoints[rarity] -= 100;
+  showToast(`<i class="ti ti-package"></i> Crafted a ${rarity} box!`);
+  renderCollection();
+}
+
+// ══════════════════════════════════════
+// LOTTERY PAGE
+// ══════════════════════════════════════
+function renderLotteries() {
+  document.getElementById('lottery-coins-display').textContent = player.coins;
+
+  function lotteryCard(l) {
+    const dots = Array.from({length:l.maxEntries},(_,i)=>`<div class="entry-dot ${i<l.entries?'filled':''}"></div>`).join('');
+    const timeStr = l.weekly ? `${l.daysLeft}d left` : l.hoursLeft<=2?`${l.hoursLeft}h left — closing soon!`:`${l.hoursLeft}h left`;
+    const urgent = !l.weekly && l.hoursLeft<=2;
+    return `<div class="lottery-card ${l.weekly?'weekly-card':''}">
+      <div class="lottery-card-top">
+        <div class="lottery-reward">${l.name}</div>
+        ${l.weekly?'<span class="lottery-weekly-badge">⭐ Weekly</span>':''}
+      </div>
+      <div class="lottery-meta">
+        <span class="lottery-meta-item"><i class="ti ti-users"></i> ${l.winners} winners</span>
+        <span class="lottery-meta-item"><i class="ti ti-coin"></i> ${l.cost} coins/entry</span>
+        <span class="lottery-meta-item"><i class="ti ti-door-enter"></i> Max ${l.maxEntries}</span>
+      </div>
+      <div class="lottery-time ${urgent?'urgent':''}"><i class="ti ti-clock"></i> ${timeStr}</div>
+      <div class="entry-row">
+        <div class="entry-dots">${dots}</div>
+        <div>
+          <div class="entry-cost">${l.entries}/${l.maxEntries} entries</div>
+          <button class="entry-btn" onclick="enterLottery(this,'${l.name}',${l.cost},${l.weekly})" ${l.entries>=l.maxEntries||player.coins<l.cost?'disabled':''}>
+            Enter ${l.cost} <i class="ti ti-coin" style="font-size:11px"></i>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('daily-lotteries').innerHTML = lotteries.daily.sort((a,b)=>a.hoursLeft-b.hoursLeft).map(lotteryCard).join('');
+  document.getElementById('weekly-lotteries').innerHTML = lotteries.weekly.map(lotteryCard).join('');
+}
+
+function enterLottery(btn, name, cost, weekly) {
+  if(player.coins < cost) return;
+  player.coins -= cost;
+  const arr = weekly ? lotteries.weekly : lotteries.daily;
+  const l = arr.find(x=>x.name===name);
+  if(l && l.entries < l.maxEntries) l.entries++;
+  showToast(`<i class="ti ti-ticket"></i> Entered the ${name} lottery!`);
+  updateNavStats();
+  renderLotteries();
+}
+
+// ══════════════════════════════════════
+// TASK MODAL
+// ══════════════════════════════════════
 function handleFreqChange() {
-  const freq = document.getElementById('new-freq').value;
-  const isRecurring = freq !== 'once';
-  document.getElementById('date-fields').style.display = isRecurring ? 'none' : '';
-  document.getElementById('recurring-note').style.display = isRecurring ? 'block' : 'none';
+  const freq=document.getElementById('new-freq').value;
+  const rec=freq!=='once';
+  document.getElementById('date-fields').style.display=rec?'none':'';
+  document.getElementById('recurring-note').style.display=rec?'block':'none';
 }
-
 function openAddModal() {
-  document.getElementById('modal-title').textContent = 'New Task';
-  document.getElementById('edit-id').value = '';
+  document.getElementById('modal-title').textContent='New Task';
+  document.getElementById('edit-id').value='';
   resetTaskForm();
-  // Default due date to today
-  document.getElementById('new-date').value = todayStr();
+  document.getElementById('new-date').value=todayStr();
   document.getElementById('task-modal').classList.add('open');
-  setTimeout(() => document.getElementById('new-name').focus(), 50);
+  setTimeout(()=>document.getElementById('new-name').focus(),50);
 }
-
 function openEditModal(id) {
-  const t = tasks.find(t => t.id === id);
-  if (!t) return;
-  document.getElementById('modal-title').textContent = 'Edit Task';
-  document.getElementById('edit-id').value = id;
-  document.getElementById('new-name').value = t.name;
-  document.getElementById('new-cat').value = t.cat;
-  document.getElementById('new-priority').value = t.priority;
-  document.getElementById('new-freq').value = t.freq;
-  document.getElementById('new-date').value = t.date || todayStr();
-  document.getElementById('new-time').value = t.time || '';
-  document.getElementById('subtask-inputs').innerHTML = '';
-  t.subtasks.forEach(s => addSubtaskInput(s.text));
+  const t=tasks.find(t=>t.id===id); if(!t) return;
+  document.getElementById('modal-title').textContent='Edit Task';
+  document.getElementById('edit-id').value=id;
+  document.getElementById('new-name').value=t.name;
+  document.getElementById('new-cat').value=t.cat;
+  document.getElementById('new-priority').value=t.priority;
+  document.getElementById('new-freq').value=t.freq;
+  document.getElementById('new-date').value=t.date||todayStr();
+  document.getElementById('new-time').value=t.time||'';
+  document.getElementById('subtask-inputs').innerHTML='';
+  t.subtasks.forEach(s=>addSubtaskInput(s.text));
   handleFreqChange();
   document.getElementById('task-modal').classList.add('open');
-  setTimeout(() => document.getElementById('new-name').focus(), 50);
+  setTimeout(()=>document.getElementById('new-name').focus(),50);
 }
-
-function closeTaskModal() {
-  document.getElementById('task-modal').classList.remove('open');
-  resetTaskForm();
-}
-
+function closeTaskModal() { document.getElementById('task-modal').classList.remove('open'); resetTaskForm(); }
 function resetTaskForm() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('new-name').value = '';
-  document.getElementById('new-cat').value = 'life';
-  document.getElementById('new-priority').value = 'low';
-  document.getElementById('new-freq').value = 'once';
-  document.getElementById('new-date').value = todayStr();
-  document.getElementById('new-time').value = '';
-  document.getElementById('subtask-inputs').innerHTML = '';
-  document.getElementById('date-fields').style.display = '';
-  document.getElementById('recurring-note').style.display = 'none';
+  ['edit-id','new-name','new-time'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('new-cat').value=categories[0]?.id||'work';
+  document.getElementById('new-priority').value='low';
+  document.getElementById('new-freq').value='once';
+  document.getElementById('new-date').value=todayStr();
+  document.getElementById('subtask-inputs').innerHTML='';
+  document.getElementById('date-fields').style.display='';
+  document.getElementById('recurring-note').style.display='none';
 }
-
-function addSubtaskInput(val = '') {
-  const c = document.getElementById('subtask-inputs');
-  const row = document.createElement('div'); row.className = 'subtask-input-row';
-  row.innerHTML = `<input class="form-input" placeholder="Subtask item..." value="${val}" /><button class="remove-sub" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;
-  c.appendChild(row);
-  row.querySelector('input').focus();
+function addSubtaskInput(val='') {
+  const c=document.getElementById('subtask-inputs');
+  const row=document.createElement('div'); row.className='subtask-input-row';
+  row.innerHTML=`<input class="form-input" placeholder="Subtask item..." value="${val}" /><button class="remove-sub" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;
+  c.appendChild(row); row.querySelector('input').focus();
 }
-
 function saveTask() {
-  const name = document.getElementById('new-name').value.trim();
-  if (!name) { document.getElementById('new-name').focus(); return; }
-
-  const freq = document.getElementById('new-freq').value;
-  const subs = [...document.querySelectorAll('#subtask-inputs input')]
-    .map(i => i.value.trim()).filter(Boolean);
-  const editId = document.getElementById('edit-id').value;
-
-  if (editId) {
-    const t = tasks.find(t => t.id === parseInt(editId));
-    if (t) {
-      const oldSubs = t.subtasks;
-      t.name = name;
-      t.cat = document.getElementById('new-cat').value;
-      t.priority = document.getElementById('new-priority').value;
-      t.freq = freq;
-      t.date = freq === 'once' ? document.getElementById('new-date').value : null;
-      t.time = document.getElementById('new-time').value;
-      t.subtasks = subs.map(text => oldSubs.find(s => s.text === text) || { text, done: false });
-    }
+  const name=document.getElementById('new-name').value.trim(); if(!name){document.getElementById('new-name').focus();return;}
+  const freq=document.getElementById('new-freq').value;
+  const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);
+  const editId=document.getElementById('edit-id').value;
+  if(editId){
+    const t=tasks.find(t=>t.id===parseInt(editId)); if(!t) return;
+    const old=t.subtasks;
+    t.name=name; t.cat=document.getElementById('new-cat').value; t.priority=document.getElementById('new-priority').value;
+    t.freq=freq; t.date=freq==='once'?document.getElementById('new-date').value:null; t.time=document.getElementById('new-time').value;
+    t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});
   } else {
-    tasks.push({
-      id: nextId++,
-      name,
-      cat: document.getElementById('new-cat').value,
-      priority: document.getElementById('new-priority').value,
-      freq,
-      date: freq === 'once' ? document.getElementById('new-date').value : null,
-      time: document.getElementById('new-time').value,
-      done: false,
-      subtasks: subs.map(text => ({ text, done: false }))
-    });
+    tasks.push({id:nextId++,name,cat:document.getElementById('new-cat').value,priority:document.getElementById('new-priority').value,freq,date:freq==='once'?document.getElementById('new-date').value:null,time:document.getElementById('new-time').value,done:false,subtasks:subs.map(text=>({text,done:false}))});
   }
-
-  closeTaskModal();
-  render();
+  closeTaskModal(); render();
 }
 
-// ── Delete ──
+// ══════════════════════════════════════
+// CATEGORY MODAL
+// ══════════════════════════════════════
+function openAddCatModal() {
+  document.getElementById('cat-name').value='';
+  selectedColor=CAT_COLORS[0];
+  const chips=document.getElementById('color-chips');
+  chips.innerHTML=CAT_COLORS.map(c=>`<div class="color-chip ${c===selectedColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');
+  document.getElementById('cat-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('cat-name').focus(),50);
+}
+function selectColor(c) {
+  selectedColor=c;
+  document.querySelectorAll('.color-chip').forEach(el=>{ el.classList.toggle('selected', el.style.background===c||el.style.backgroundColor===c); });
+}
+function closeCatModal() { document.getElementById('cat-modal').classList.remove('open'); }
+function saveCategory() {
+  const name=document.getElementById('cat-name').value.trim(); if(!name) return;
+  const id=name.toLowerCase().replace(/\s+/g,'-')+'-'+Date.now();
+  categories.push({id,name,color:selectedColor});
+  closeCatModal(); render();
+}
+
+// ══════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════
 function openDeleteConfirm(id) {
-  const t = tasks.find(t => t.id === id);
-  if (!t) return;
-  deleteTargetId = id;
-  document.getElementById('confirm-body').textContent = `"${t.name}" will be permanently removed.`;
+  const t=tasks.find(t=>t.id===id); if(!t) return;
+  deleteTargetId=id;
+  document.getElementById('confirm-body').textContent=`"${t.name}" will be permanently removed.`;
   document.getElementById('confirm-modal').classList.add('open');
 }
-function closeConfirmModal() {
-  document.getElementById('confirm-modal').classList.remove('open');
-  deleteTargetId = null;
-}
+function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('open'); deleteTargetId=null; }
 function confirmDelete() {
-  if (deleteTargetId !== null) { tasks = tasks.filter(t => t.id !== deleteTargetId); deleteTargetId = null; }
-  closeConfirmModal();
-  render();
+  if(deleteTargetId!==null){tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}
+  closeConfirmModal(); render();
 }
-function closeModalOutside(e, modalId) {
-  if (e.target.id === modalId) {
-    if (modalId === 'task-modal') closeTaskModal();
-    if (modalId === 'confirm-modal') closeConfirmModal();
+function closeModalOutside(e,id) {
+  if(e.target.id===id){
+    if(id==='task-modal') closeTaskModal();
+    if(id==='cat-modal') closeCatModal();
+    if(id==='confirm-modal') closeConfirmModal();
   }
 }
 
