@@ -84,6 +84,7 @@
   .task-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 13px 15px; margin-bottom: 7px; transition: border-color 0.12s; }
   .task-card:hover { border-color: var(--border2); }
   .task-card.done-card { opacity: 0.48; }
+  .task-card.overdue { border-color: #F09595; background: #fffafa; }
   .task-top { display: flex; align-items: flex-start; gap: 11px; }
   .task-checkbox { width: 19px; height: 19px; min-width: 19px; border-radius: 50%; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-top: 1px; flex-shrink: 0; }
   .task-checkbox:hover { border-color: var(--accent); }
@@ -98,7 +99,9 @@
   .tag-work { background: #E6F1FB; color: #185FA5; }
   .tag-health { background: #EAF3DE; color: #3B6D11; }
   .tag-home { background: #FAEEDA; color: #854F0B; }
-  .task-time { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
+  .task-due { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
+  .task-due.overdue-label { color: #A32D2D; font-weight: 500; }
+  .task-due.today-label { color: #7c5cbf; font-weight: 500; }
   .task-freq { font-size: 11px; color: var(--text3); }
   .task-actions { display: flex; gap: 4px; margin-left: 4px; opacity: 0; transition: opacity 0.15s; }
   .task-card:hover .task-actions { opacity: 1; }
@@ -106,9 +109,6 @@
   .task-action-btn:hover { background: var(--accent-light); color: var(--text2); }
   .task-action-btn.delete:hover { background: #FCEBEB; color: #A32D2D; }
   .priority-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
-  .p-high { background: #E24B4A; }
-  .p-med { background: #EF9F27; }
-  .p-low { background: #97C459; }
 
   /* ── Subtasks ── */
   .subtasks { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border); }
@@ -139,6 +139,7 @@
   .form-input { width: 100%; padding: 8px 12px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.12s; }
   .form-input:focus { border-color: var(--accent); }
   .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
   .btn-cancel { padding: 8px 16px; font-size: 13px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text2); cursor: pointer; font-family: inherit; transition: background 0.12s; }
   .btn-cancel:hover { background: var(--bg2); }
@@ -151,6 +152,7 @@
   .remove-sub:hover { background: #FCEBEB; color: #A32D2D; }
   .add-sub-btn { font-size: 12px; color: var(--text2); background: none; border: 0.5px dashed var(--border2); border-radius: var(--radius); padding: 6px 12px; cursor: pointer; width: 100%; margin-top: 2px; font-family: inherit; transition: background 0.12s; display: flex; align-items: center; justify-content: center; gap: 5px; }
   .add-sub-btn:hover { background: var(--accent-light); }
+  .freq-note { font-size: 11px; color: var(--text3); margin-top: 5px; font-style: italic; }
 
   /* ── Confirm delete modal ── */
   .confirm-modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 24px; width: 340px; max-width: 95vw; }
@@ -231,7 +233,7 @@
 
     <div class="progress-section">
       <div class="progress-meta">
-        <span class="progress-label">Daily progress</span>
+        <span class="progress-label" id="progress-label">Today's progress</span>
         <span class="progress-count" id="progress-text">0 of 0 completed</span>
       </div>
       <div class="progress-track">
@@ -242,7 +244,7 @@
     <div class="filter-bar">
       <div class="filter-btn active" id="sort-all" onclick="setSort('all')"><i class="ti ti-layout-list"></i> All</div>
       <div class="filter-btn" id="sort-priority" onclick="setSort('priority')"><i class="ti ti-flag"></i> Priority</div>
-      <div class="filter-btn" id="sort-due" onclick="setSort('due')"><i class="ti ti-clock"></i> Due time</div>
+      <div class="filter-btn" id="sort-due" onclick="setSort('due')"><i class="ti ti-clock"></i> Due date</div>
       <div class="filter-btn" id="sort-incomplete" onclick="setSort('incomplete')"><i class="ti ti-circle"></i> Incomplete only</div>
     </div>
 
@@ -251,14 +253,16 @@
 </div>
 
 <!-- Add / Edit Task Modal -->
-<div class="modal-overlay" id="task-modal" onclick="closeModalOutside(event, 'task-modal')">
+<div class="modal-overlay" id="task-modal" onclick="closeModalOutside(event,'task-modal')">
   <div class="modal">
     <div class="modal-title" id="modal-title">New Task</div>
     <input type="hidden" id="edit-id" value="" />
+
     <div class="form-row">
       <label class="form-label">Task name</label>
       <input class="form-input" id="new-name" placeholder="e.g. Vacuum the living room" />
     </div>
+
     <div class="form-row-2">
       <div>
         <label class="form-label">Category</label>
@@ -278,21 +282,34 @@
         </select>
       </div>
     </div>
-    <div class="form-row-2">
-      <div>
-        <label class="form-label">Due time (optional)</label>
-        <input class="form-input" id="new-time" type="time" />
-      </div>
-      <div>
-        <label class="form-label">Frequency</label>
-        <select class="form-input" id="new-freq">
-          <option value="once">One time</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
+
+    <div class="form-row">
+      <label class="form-label">Frequency</label>
+      <select class="form-input" id="new-freq" onchange="handleFreqChange()">
+        <option value="once">One time</option>
+        <option value="daily">Daily (repeats every day)</option>
+        <option value="weekly">Weekly (repeats every week)</option>
+        <option value="monthly">Monthly (repeats every month)</option>
+      </select>
+    </div>
+
+    <div id="date-fields">
+      <div class="form-row-2">
+        <div>
+          <label class="form-label">Due date</label>
+          <input class="form-input" id="new-date" type="date" />
+        </div>
+        <div>
+          <label class="form-label">Due time (optional)</label>
+          <input class="form-input" id="new-time" type="time" />
+        </div>
       </div>
     </div>
+
+    <div id="recurring-note" style="display:none" class="freq-note">
+      Recurring tasks will appear in every relevant view automatically.
+    </div>
+
     <div class="form-row">
       <label class="form-label">Subtasks (optional)</label>
       <div class="subtask-inputs" id="subtask-inputs"></div>
@@ -300,6 +317,7 @@
         <i class="ti ti-plus"></i> Add subtask item
       </button>
     </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeTaskModal()">Cancel</button>
       <button class="btn-save" onclick="saveTask()">Save task</button>
@@ -308,7 +326,7 @@
 </div>
 
 <!-- Confirm Delete Modal -->
-<div class="modal-overlay" id="confirm-modal" onclick="closeModalOutside(event, 'confirm-modal')">
+<div class="modal-overlay" id="confirm-modal" onclick="closeModalOutside(event,'confirm-modal')">
   <div class="confirm-modal">
     <div class="confirm-title">Delete task?</div>
     <div class="confirm-body" id="confirm-body">This will permanently remove the task.</div>
@@ -320,71 +338,107 @@
 </div>
 
 <script>
-// ── State ──
-const catColors = { life:'#1D9E75', work:'#378ADD', health:'#639922', home:'#BA7517' };
-const catTagClass = { life:'tag-life', work:'tag-work', health:'tag-health', home:'tag-home' };
+// ── Constants ──
+const catColors    = { life:'#1D9E75', work:'#378ADD', health:'#639922', home:'#BA7517' };
+const catTagClass  = { life:'tag-life', work:'tag-work', health:'tag-health', home:'tag-home' };
 const priorityOrder = { high:0, medium:1, low:2 };
+const priorityColors = { high:'#E24B4A', medium:'#EF9F27', low:'#97C459' };
 
-let currentView = 'today';   // today | week | month | all | cat:work etc.
-let currentSort = 'all';     // all | priority | due | incomplete
+// ── State ──
+let currentView = 'today';
+let currentSort = 'all';
 let deleteTargetId = null;
 
-let tasks = [
-  { id:1, name:'Go to bed by 11pm', cat:'life', priority:'high', time:'23:00', freq:'daily', done:false, subtasks:[] },
-  { id:2, name:'Apply to 3 jobs', cat:'work', priority:'high', time:'', freq:'once', done:false, subtasks:[
-    {text:'Software engineer at Stripe', done:true},
-    {text:'Frontend role at Linear', done:false},
-    {text:'Full-stack at Vercel', done:false}
-  ]},
-  { id:3, name:'Vacuum the living room', cat:'home', priority:'medium', time:'', freq:'weekly', done:true, subtasks:[] },
-  { id:4, name:'30 min walk', cat:'health', priority:'medium', time:'08:00', freq:'daily', done:false, subtasks:[] },
-  { id:5, name:'Review Q2 report', cat:'work', priority:'high', time:'14:00', freq:'once', done:false, subtasks:[
-    {text:'Read executive summary', done:true},
-    {text:'Check revenue figures', done:false},
-    {text:'Note action items', done:false}
-  ]},
-  { id:6, name:'Call Mom', cat:'life', priority:'medium', time:'18:00', freq:'weekly', done:false, subtasks:[] },
-  { id:7, name:'Drink 8 glasses of water', cat:'health', priority:'low', time:'', freq:'daily', done:false, subtasks:[] },
-  { id:8, name:'Take out trash', cat:'home', priority:'low', time:'', freq:'weekly', done:false, subtasks:[] }
-];
-let nextId = 9;
-
 // ── Date helpers ──
-function getToday() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+function todayStr() {
+  return new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+}
+function weekEndStr() {
+  const d = new Date();
+  d.setDate(d.getDate() + (6 - d.getDay())); // end of this week (Saturday)
+  return d.toISOString().split('T')[0];
+}
+function monthEndStr() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
+}
+function formatDisplayDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  if (date.getTime() === today.getTime()) return 'Today';
+  if (date.getTime() === tomorrow.getTime()) return 'Tomorrow';
+  return date.toLocaleDateString('en-US', { month:'short', day:'numeric', year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined });
+}
+function isOverdue(t) {
+  if (t.done || !t.date || t.freq !== 'once') return false;
+  return t.date < todayStr();
+}
+function isToday(dateStr) {
+  return dateStr === todayStr();
 }
 
-function formatDate(d) {
-  return d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+// ── Sample tasks (with real dates relative to today) ──
+const today = todayStr();
+const [ty, tm, td] = today.split('-').map(Number);
+function dateOffset(days) {
+  const d = new Date(ty, tm - 1, td + days);
+  return d.toISOString().split('T')[0];
 }
 
-// ── Filter tasks based on current view ──
+let tasks = [
+  { id:1, name:'Go to bed by 11pm',      cat:'life',   priority:'high',   date: today,          time:'23:00', freq:'daily',   done:false, subtasks:[] },
+  { id:2, name:'Apply to 3 jobs',         cat:'work',   priority:'high',   date: today,          time:'',      freq:'once',    done:false, subtasks:[
+    {text:'Software engineer at Stripe', done:true},
+    {text:'Frontend role at Linear',     done:false},
+    {text:'Full-stack at Vercel',        done:false}
+  ]},
+  { id:3, name:'Vacuum the living room',  cat:'home',   priority:'medium', date: dateOffset(2),  time:'',      freq:'weekly',  done:false, subtasks:[] },
+  { id:4, name:'30 min walk',             cat:'health', priority:'medium', date: today,          time:'08:00', freq:'daily',   done:false, subtasks:[] },
+  { id:5, name:'Review Q2 report',        cat:'work',   priority:'high',   date: today,          time:'14:00', freq:'once',    done:false, subtasks:[
+    {text:'Read executive summary', done:true},
+    {text:'Check revenue figures',  done:false},
+    {text:'Note action items',      done:false}
+  ]},
+  { id:6, name:'Call Mom',                cat:'life',   priority:'medium', date: dateOffset(1),  time:'18:00', freq:'weekly',  done:false, subtasks:[] },
+  { id:7, name:'Drink 8 glasses of water',cat:'health', priority:'low',    date: today,          time:'',      freq:'daily',   done:false, subtasks:[] },
+  { id:8, name:'Take out trash',          cat:'home',   priority:'low',    date: dateOffset(3),  time:'',      freq:'weekly',  done:false, subtasks:[] },
+  { id:9, name:'Dentist appointment',     cat:'health', priority:'high',   date: dateOffset(10), time:'10:00', freq:'once',    done:false, subtasks:[] },
+  { id:10,name:'Renew car insurance',     cat:'life',   priority:'high',   date: dateOffset(14), time:'',      freq:'once',    done:false, subtasks:[] },
+];
+let nextId = 11;
+
+// ── Filter & sort ──
 function getVisibleTasks() {
-  let list = [...tasks];
+  const t = todayStr();
+  const we = weekEndStr();
+  const me = monthEndStr();
 
-  if (currentView === 'today') {
-    // show daily tasks + one-time tasks (all for now since no date field yet)
-    list = list.filter(t => t.freq === 'daily' || t.freq === 'once');
-  } else if (currentView === 'week') {
-    list = list.filter(t => t.freq === 'daily' || t.freq === 'weekly' || t.freq === 'once');
-  } else if (currentView === 'month') {
-    // all frequencies show in month view
-    list = [...tasks];
-  } else if (currentView.startsWith('cat:')) {
-    const cat = currentView.split(':')[1];
-    list = list.filter(t => t.cat === cat);
-  }
-  // 'all' shows everything
+  let list = tasks.filter(task => {
+    if (currentView === 'today') {
+      // Show: daily/recurring tasks always, one-time tasks due today or overdue
+      return task.freq === 'daily' || task.freq === 'weekly' || task.freq === 'monthly'
+        || !task.date || task.date <= t;
+    }
+    if (currentView === 'week') {
+      return task.freq === 'daily' || task.freq === 'weekly' || task.freq === 'monthly'
+        || !task.date || task.date <= we;
+    }
+    if (currentView === 'month') {
+      return task.freq === 'daily' || task.freq === 'weekly' || task.freq === 'monthly'
+        || !task.date || task.date <= me;
+    }
+    if (currentView.startsWith('cat:')) {
+      return task.cat === currentView.split(':')[1];
+    }
+    return true; // 'all'
+  });
 
-  // Apply sort / filter
-  if (currentSort === 'priority') {
-    list.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-  } else if (currentSort === 'due') {
-    list.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
-  } else if (currentSort === 'incomplete') {
-    list = list.filter(t => !t.done);
-  }
+  if (currentSort === 'priority')  list.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  if (currentSort === 'due')       list.sort((a, b) => (a.date || '9999') < (b.date || '9999') ? -1 : 1);
+  if (currentSort === 'incomplete') list = list.filter(t => !t.done);
 
   return list;
 }
@@ -395,34 +449,49 @@ function render() {
   updateProgress();
   updateBadges();
   updateUpcoming();
-  renderDateHeader();
-}
-
-function renderDateHeader() {
-  document.getElementById('topbar-date').textContent = formatDate(getToday());
+  document.getElementById('topbar-date').textContent =
+    new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
 }
 
 function updateBadges() {
-  const daily = tasks.filter(t => t.freq === 'daily' || t.freq === 'once');
-  const weekly = tasks.filter(t => ['daily','weekly','once'].includes(t.freq));
-  document.getElementById('badge-today').textContent = daily.length;
-  document.getElementById('badge-week').textContent = weekly.length;
-  document.getElementById('badge-month').textContent = tasks.length;
-  document.getElementById('badge-all').textContent = tasks.length;
+  const t = todayStr(), we = weekEndStr(), me = monthEndStr();
+  const count = (fn) => tasks.filter(fn).length;
+  document.getElementById('badge-today').textContent  = count(x => x.freq !== 'once' || !x.date || x.date <= t);
+  document.getElementById('badge-week').textContent   = count(x => x.freq !== 'once' || !x.date || x.date <= we);
+  document.getElementById('badge-month').textContent  = count(x => x.freq !== 'once' || !x.date || x.date <= me);
+  document.getElementById('badge-all').textContent    = tasks.length;
 }
 
 function updateUpcoming() {
-  const upcoming = tasks.filter(t => !t.done && t.time).slice(0, 4);
+  const t = todayStr();
+  // Tasks in the future (not today, not done), sorted by date
+  const future = tasks
+    .filter(x => !x.done && x.date && x.date > t && x.freq === 'once')
+    .sort((a, b) => a.date < b.date ? -1 : 1)
+    .slice(0, 4);
   const ul = document.getElementById('upcoming-list');
-  if (upcoming.length === 0) {
-    ul.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0;">No upcoming tasks.</div>';
+  if (future.length === 0) {
+    ul.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 2px;">No upcoming tasks.</div>';
     return;
   }
-  ul.innerHTML = upcoming.map(t => `
+  ul.innerHTML = future.map(t => `
     <div class="upcoming-item">
       <div class="upcoming-name">${t.name}</div>
-      <div class="upcoming-date"><i class="ti ti-clock" style="font-size:11px"></i> ${t.time} · ${t.freq}</div>
+      <div class="upcoming-date"><i class="ti ti-calendar" style="font-size:11px"></i> ${formatDisplayDate(t.date)}${t.time ? ' · ' + t.time : ''}</div>
     </div>`).join('');
+}
+
+function updateProgress() {
+  // Progress always reflects today's tasks
+  const t = todayStr();
+  const todayTasks = tasks.filter(x =>
+    x.freq === 'daily' || x.freq === 'weekly' || x.freq === 'monthly' || (x.date && x.date <= t)
+  );
+  const done = todayTasks.filter(x => x.done).length;
+  const total = todayTasks.length;
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${done} of ${total} completed`;
 }
 
 function renderTasks() {
@@ -440,24 +509,17 @@ function renderTasks() {
 
   // Group by category
   const groups = {};
-  list.forEach(t => {
-    if (!groups[t.cat]) groups[t.cat] = [];
-    groups[t.cat].push(t);
-  });
+  list.forEach(t => { if (!groups[t.cat]) groups[t.cat] = []; groups[t.cat].push(t); });
 
   area.innerHTML = '';
   Object.keys(groups).forEach(cat => {
-    const g = document.createElement('div');
-    g.className = 'category-group';
-
-    const h = document.createElement('div');
-    h.className = 'category-header';
+    const g = document.createElement('div'); g.className = 'category-group';
+    const h = document.createElement('div'); h.className = 'category-header';
     h.innerHTML = `
       <div class="category-dot" style="background:${catColors[cat]}"></div>
       <span class="category-name">${cat}</span>
       <span class="category-count">&nbsp;· ${groups[cat].length} task${groups[cat].length !== 1 ? 's' : ''}</span>`;
     g.appendChild(h);
-
     groups[cat].forEach(t => g.appendChild(makeCard(t)));
     area.appendChild(g);
   });
@@ -465,10 +527,21 @@ function renderTasks() {
 
 function makeCard(t) {
   const card = document.createElement('div');
-  card.className = 'task-card' + (t.done ? ' done-card' : '');
+  const overdue = isOverdue(t);
+  card.className = 'task-card' + (t.done ? ' done-card' : '') + (overdue ? ' overdue' : '');
+
+  // Date label
+  let dateLabel = '';
+  if (t.date) {
+    const display = formatDisplayDate(t.date);
+    const cls = overdue ? 'overdue-label' : isToday(t.date) ? 'today-label' : '';
+    const icon = overdue ? 'ti-alert-circle' : 'ti-calendar';
+    const prefix = overdue ? 'Overdue · ' : '';
+    dateLabel = `<span class="task-due ${cls}"><i class="ti ${icon}" style="font-size:11px"></i>&nbsp;${prefix}${display}${t.time ? ' ' + t.time : ''}</span>`;
+  }
 
   let metaHtml = `<span class="task-tag ${catTagClass[t.cat]}">${t.cat}</span>`;
-  if (t.time) metaHtml += `<span class="task-time"><i class="ti ti-clock" style="font-size:11px"></i>&nbsp;${t.time}</span>`;
+  metaHtml += dateLabel;
   if (t.freq && t.freq !== 'once') metaHtml += `<span class="task-freq">· ${t.freq}</span>`;
 
   let subtasksHtml = '';
@@ -477,7 +550,7 @@ function makeCard(t) {
     const pct = Math.round((doneCount / t.subtasks.length) * 100);
     const items = t.subtasks.map((s, i) => `
       <div class="subtask-item">
-        <div class="subtask-box ${s.done ? 'checked' : ''}" onclick="toggleSub(${t.id}, ${i})"></div>
+        <div class="subtask-box ${s.done ? 'checked' : ''}" onclick="toggleSub(${t.id},${i})"></div>
         <span class="subtask-text ${s.done ? 'done' : ''}">${s.text}</span>
       </div>`).join('');
     subtasksHtml = `
@@ -485,12 +558,9 @@ function makeCard(t) {
         <div class="subtask-progress-row">
           <div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div>
           <span class="subtask-label">${doneCount}/${t.subtasks.length} done</span>
-        </div>
-        ${items}
+        </div>${items}
       </div>`;
   }
-
-  const priorityColors = { high:'#E24B4A', medium:'#EF9F27', low:'#97C459' };
 
   card.innerHTML = `
     <div class="task-top">
@@ -504,29 +574,11 @@ function makeCard(t) {
         <button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})" title="Delete"><i class="ti ti-trash"></i></button>
       </div>
       <div class="priority-dot" style="background:${priorityColors[t.priority]}" title="${t.priority} priority"></div>
-    </div>
-    ${subtasksHtml}`;
+    </div>${subtasksHtml}`;
   return card;
 }
 
-function updateProgress() {
-  const visible = getVisibleTasks();
-  const total = visible.length;
-  // For progress, show all (not filtered by incomplete)
-  const base = currentSort === 'incomplete'
-    ? tasks.filter(t => currentView === 'today' ? (t.freq === 'daily' || t.freq === 'once') : true)
-    : visible;
-  const allVisible = currentSort === 'incomplete'
-    ? tasks.filter(t => t.freq === 'daily' || t.freq === 'once')
-    : visible;
-  const doneCount = allVisible.filter(t => t.done).length;
-  const totalCount = allVisible.length;
-  const pct = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-text').textContent = `${doneCount} of ${totalCount} completed`;
-}
-
-// ── Toggle task / subtask ──
+// ── Interactions ──
 function toggleTask(id) {
   const t = tasks.find(t => t.id === id);
   if (t) { t.done = !t.done; render(); }
@@ -540,25 +592,27 @@ function toggleSub(taskId, subIdx) {
   }
 }
 
-// ── View / sort switching ──
+// ── View / Sort switching ──
 function setView(v) {
   currentView = v;
-  // Clear all sidebar active states
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  // Set the right one active
-  const viewEl = document.getElementById('view-' + v);
-  if (viewEl) viewEl.classList.add('active');
-
+  const el = document.getElementById('view-' + v);
+  if (el) el.classList.add('active');
   const titles = { today:'Today', week:'This Week', month:'This Month', all:'All Tasks' };
   document.getElementById('topbar-title').textContent = titles[v] || 'Tasks';
+  // Sync tab
+  const tabMap = { today:'day', week:'week', month:'month' };
+  if (tabMap[v]) {
+    document.querySelectorAll('.view-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabMap[v])?.classList.add('active');
+  }
   render();
 }
 
 function setCategory(cat) {
   currentView = 'cat:' + cat;
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  const catEl = document.getElementById('cat-' + cat);
-  if (catEl) catEl.classList.add('active');
+  document.getElementById('cat-' + cat)?.classList.add('active');
   document.getElementById('topbar-title').textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
   render();
 }
@@ -577,11 +631,20 @@ function setSort(s) {
   render();
 }
 
-// ── Add / Edit Modal ──
+// ── Modal ──
+function handleFreqChange() {
+  const freq = document.getElementById('new-freq').value;
+  const isRecurring = freq !== 'once';
+  document.getElementById('date-fields').style.display = isRecurring ? 'none' : '';
+  document.getElementById('recurring-note').style.display = isRecurring ? 'block' : 'none';
+}
+
 function openAddModal() {
   document.getElementById('modal-title').textContent = 'New Task';
   document.getElementById('edit-id').value = '';
   resetTaskForm();
+  // Default due date to today
+  document.getElementById('new-date').value = todayStr();
   document.getElementById('task-modal').classList.add('open');
   setTimeout(() => document.getElementById('new-name').focus(), 50);
 }
@@ -594,10 +657,12 @@ function openEditModal(id) {
   document.getElementById('new-name').value = t.name;
   document.getElementById('new-cat').value = t.cat;
   document.getElementById('new-priority').value = t.priority;
-  document.getElementById('new-time').value = t.time || '';
   document.getElementById('new-freq').value = t.freq;
+  document.getElementById('new-date').value = t.date || todayStr();
+  document.getElementById('new-time').value = t.time || '';
   document.getElementById('subtask-inputs').innerHTML = '';
   t.subtasks.forEach(s => addSubtaskInput(s.text));
+  handleFreqChange();
   document.getElementById('task-modal').classList.add('open');
   setTimeout(() => document.getElementById('new-name').focus(), 50);
 }
@@ -612,15 +677,17 @@ function resetTaskForm() {
   document.getElementById('new-name').value = '';
   document.getElementById('new-cat').value = 'life';
   document.getElementById('new-priority').value = 'low';
-  document.getElementById('new-time').value = '';
   document.getElementById('new-freq').value = 'once';
+  document.getElementById('new-date').value = todayStr();
+  document.getElementById('new-time').value = '';
   document.getElementById('subtask-inputs').innerHTML = '';
+  document.getElementById('date-fields').style.display = '';
+  document.getElementById('recurring-note').style.display = 'none';
 }
 
 function addSubtaskInput(val = '') {
   const c = document.getElementById('subtask-inputs');
-  const row = document.createElement('div');
-  row.className = 'subtask-input-row';
+  const row = document.createElement('div'); row.className = 'subtask-input-row';
   row.innerHTML = `<input class="form-input" placeholder="Subtask item..." value="${val}" /><button class="remove-sub" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;
   c.appendChild(row);
   row.querySelector('input').focus();
@@ -630,36 +697,32 @@ function saveTask() {
   const name = document.getElementById('new-name').value.trim();
   if (!name) { document.getElementById('new-name').focus(); return; }
 
+  const freq = document.getElementById('new-freq').value;
   const subs = [...document.querySelectorAll('#subtask-inputs input')]
     .map(i => i.value.trim()).filter(Boolean);
-
   const editId = document.getElementById('edit-id').value;
 
   if (editId) {
-    // Editing existing task
     const t = tasks.find(t => t.id === parseInt(editId));
     if (t) {
       const oldSubs = t.subtasks;
       t.name = name;
       t.cat = document.getElementById('new-cat').value;
       t.priority = document.getElementById('new-priority').value;
+      t.freq = freq;
+      t.date = freq === 'once' ? document.getElementById('new-date').value : null;
       t.time = document.getElementById('new-time').value;
-      t.freq = document.getElementById('new-freq').value;
-      // Preserve done state for existing subtasks, add new ones
-      t.subtasks = subs.map(text => {
-        const existing = oldSubs.find(s => s.text === text);
-        return existing || { text, done: false };
-      });
+      t.subtasks = subs.map(text => oldSubs.find(s => s.text === text) || { text, done: false });
     }
   } else {
-    // New task
     tasks.push({
       id: nextId++,
       name,
       cat: document.getElementById('new-cat').value,
       priority: document.getElementById('new-priority').value,
+      freq,
+      date: freq === 'once' ? document.getElementById('new-date').value : null,
       time: document.getElementById('new-time').value,
-      freq: document.getElementById('new-freq').value,
       done: false,
       subtasks: subs.map(text => ({ text, done: false }))
     });
@@ -677,22 +740,15 @@ function openDeleteConfirm(id) {
   document.getElementById('confirm-body').textContent = `"${t.name}" will be permanently removed.`;
   document.getElementById('confirm-modal').classList.add('open');
 }
-
 function closeConfirmModal() {
   document.getElementById('confirm-modal').classList.remove('open');
   deleteTargetId = null;
 }
-
 function confirmDelete() {
-  if (deleteTargetId !== null) {
-    tasks = tasks.filter(t => t.id !== deleteTargetId);
-    deleteTargetId = null;
-  }
+  if (deleteTargetId !== null) { tasks = tasks.filter(t => t.id !== deleteTargetId); deleteTargetId = null; }
   closeConfirmModal();
   render();
 }
-
-// ── Close modal on outside click ──
 function closeModalOutside(e, modalId) {
   if (e.target.id === modalId) {
     if (modalId === 'task-modal') closeTaskModal();
