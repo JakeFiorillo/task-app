@@ -476,11 +476,11 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <div class="page-title">Shop</div>
     <div class="page-sub" id="shop-coins-label">You have 142 coins</div>
     <div class="dupe-section">
-      <div class="dupe-title"><i class="ti ti-copy"></i> Craft Boxes from Duplicate Points (100 pts each)</div>
+      <div class="dupe-title"><i class="ti ti-copy"></i> Craft Random Cards from Duplicate Points (100 pts each)</div>
       <div id="dupe-craft-list"></div>
     </div>
     <div class="shop-section">
-      <div class="shop-section-title"><i class="ti ti-package"></i>Collectable Boxes</div>
+      <div class="shop-section-title"><i class="ti ti-cards"></i>Random Cards</div>
       <div class="shop-grid" id="box-shop"></div>
     </div>
     <div class="shop-section">
@@ -524,6 +524,40 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Time Format</div><div class="setting-desc">12-hour or 24-hour display</div></div>
         <div class="setting-control"><select id="setting-timeformat" onchange="saveSetting('timeFormat',this.value)"><option value="12">12-hour (2:30 PM)</option><option value="24">24-hour (14:30)</option></select></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Time Zone</div><div class="setting-desc">Used for lottery close times and daily reset display</div></div>
+        <div class="setting-control">
+          <select id="setting-timezone" onchange="saveSetting('timezone',this.value);renderLotteries()" style="min-width:220px">
+            <option value="-12">UTC-12 (Baker Island)</option>
+            <option value="-11">UTC-11 (Samoa)</option>
+            <option value="-10">UTC-10 Hawaii (HT)</option>
+            <option value="-9">UTC-9 Alaska (AKT)</option>
+            <option value="-8">UTC-8 Pacific (PT)</option>
+            <option value="-7">UTC-7 Mountain (MT)</option>
+            <option value="-6">UTC-6 Central (CT)</option>
+            <option value="-5">UTC-5 Eastern (ET)</option>
+            <option value="-4">UTC-4 Atlantic (AT)</option>
+            <option value="-3">UTC-3 Argentina / Brasília</option>
+            <option value="-2">UTC-2 Mid-Atlantic</option>
+            <option value="-1">UTC-1 Azores</option>
+            <option value="0">UTC+0 London / Dublin (GMT)</option>
+            <option value="1">UTC+1 Paris / Berlin (CET)</option>
+            <option value="2">UTC+2 Cairo / Athens (EET)</option>
+            <option value="3">UTC+3 Moscow / Nairobi</option>
+            <option value="4">UTC+4 Dubai / Baku</option>
+            <option value="5">UTC+5 Karachi / Tashkent</option>
+            <option value="5.5">UTC+5:30 India (IST)</option>
+            <option value="6">UTC+6 Dhaka / Almaty</option>
+            <option value="7">UTC+7 Bangkok / Jakarta</option>
+            <option value="8">UTC+8 Beijing / Singapore (CST)</option>
+            <option value="9">UTC+9 Tokyo / Seoul (JST)</option>
+            <option value="9.5">UTC+9:30 Adelaide (ACST)</option>
+            <option value="10">UTC+10 Sydney (AEST)</option>
+            <option value="11">UTC+11 Vladivostok</option>
+            <option value="12">UTC+12 Auckland / Fiji (NZST)</option>
+          </select>
+        </div>
       </div>
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Week Starts On</div><div class="setting-desc">First day of the week</div></div>
@@ -633,8 +667,25 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   <div class="box-open-scene" id="box-scene" onclick="flipBoxCard()">
     <div class="box-card-inner" id="box-card-inner">
       <div class="box-card-face box-card-back">
-        <div class="box-card-back-icon">📦</div>
-        <div class="box-card-back-label" id="box-open-title">Opening...</div>
+        <svg width="200" height="300" viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;border-radius:16px;">
+          <defs>
+            <pattern id="diamondPat" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+              <polygon points="12,2 22,12 12,22 2,12" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+              <circle cx="12" cy="12" r="2" fill="rgba(255,255,255,0.18)"/>
+            </pattern>
+            <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:var(--accent)"/>
+              <stop offset="100%" style="stop-color:var(--accent-mid)"/>
+            </linearGradient>
+          </defs>
+          <rect width="200" height="300" rx="14" fill="url(#cardBg)"/>
+          <rect width="200" height="300" rx="14" fill="url(#diamondPat)"/>
+          <rect x="10" y="10" width="180" height="280" rx="10" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <rect x="16" y="16" width="168" height="268" rx="8" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <text x="100" y="155" text-anchor="middle" font-size="14" fill="rgba(255,255,255,0.9)" font-weight="700" font-family="system-ui,sans-serif" letter-spacing="2">MY TASKS</text>
+          <text x="100" y="172" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.6)" font-family="system-ui,sans-serif" letter-spacing="1">TAP TO REVEAL</text>
+        </svg>
+        <div class="box-card-back-label" id="box-open-title" style="position:relative;z-index:1;color:white;font-size:13px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.3);margin-top:auto;padding-bottom:20px"></div>
       </div>
       <div class="box-card-face box-card-front" id="box-card-front"></div>
     </div>
@@ -756,7 +807,7 @@ const THEMES={
 };
 
 // ══════════════ STATE ══════════════
-let settings={timeFormat:'12',weekStart:0,colorBlind:false,largeText:false,bg:'purple'};
+let settings={timeFormat:'12',weekStart:0,colorBlind:false,largeText:false,bg:'purple',timezone:-(new Date().getTimezoneOffset()/60)};
 let categories=[
   {id:'work',   name:'Work',    color:'#60a5fa'},
   {id:'health', name:'Health',  color:'#34d399'},
@@ -870,7 +921,11 @@ function toggleSetting(key){
   const label=document.getElementById('toggle-'+key+'-label');
   if(settings[key]){track.classList.add('on');label.textContent='On';}
   else{track.classList.remove('on');label.textContent='Off';}
-  if(key==='largeText')document.body.style.fontSize=settings[key]?'15.5px':'14px';
+  if(key==='largeText'){
+    document.body.style.fontSize=settings[key]?'16px':'14px';
+    document.body.style.lineHeight=settings[key]?'1.6':'1.5';
+  }
+  if(key==='colorBlind'){ render(); }
 }
 function saveSetting(k,v){settings[k]=v;}
 
@@ -1085,7 +1140,7 @@ function openBox(rarity){
   else{const all=collection.filter(c=>c.rarity===cardRarity);card=all[Math.floor(Math.random()*all.length)];isDupe=true;}
   boxOpenRarity=cardRarity;boxOpenCard={card,isDupe};
   // Setup overlay
-  document.getElementById('box-open-title').textContent=`${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Box`;
+  document.getElementById('box-open-title').textContent=`Random ${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Card`;
   document.getElementById('box-card-inner').classList.remove('flipped');
   document.getElementById('box-open-result').classList.remove('show');
   document.getElementById('box-open-close').classList.remove('show');
@@ -1128,7 +1183,7 @@ function renderShop(){
   const boxRarities=['common','uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('box-shop').innerHTML=boxRarities.map(r=>{
     const ulv=BOX_UNLOCK_LEVELS[r];const cost=BOX_COSTS[r];const unlocked=lv>=ulv;
-    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</div><div class="shop-item-desc">${unlocked?`Opens to reveal a ${r} or lower rarity card.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
+    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div class="shop-item-name">Random ${r.charAt(0).toUpperCase()+r.slice(1)} Card</div><div class="shop-item-desc">${unlocked?`Reveals a random ${r} rarity card from the collection.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
   }).join('');
   document.getElementById('util-shop').innerHTML=`
     <div class="shop-item"><div class="shop-item-icon">🛡️</div><div class="shop-item-name">Streak Saver</div><div class="shop-item-desc">Protects your streak for one missed day. Usable once per week.</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>25</div><button class="shop-buy-btn" onclick="buyStreakSaver()" ${player.coins<25?'disabled':''}>Buy</button></div></div>`;
@@ -1137,18 +1192,109 @@ function craftBox(r){if((player.dupePoints[r]||0)<100)return;player.dupePoints[r
 function buyBox(r,cost){if(player.coins<cost)return;player.coins-=cost;updateNavStats();openBox(r);}
 function buyStreakSaver(){if(player.coins<25)return;player.coins-=25;updateNavStats();showToast('🛡️ Streak Saver purchased!');renderShop();}
 
-// ══════════════ LOTTERY ══════════════
+// Pick a specific card for "Card" lottery prizes
+function pickSpecificCard(rarity){
+  const all=collection.filter(c=>c.rarity===rarity);
+  if(!all.length)return`${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Card 1`;
+  const pick=all[Math.floor(Math.random()*all.length)];
+  return pick.name;
+}
+
+function makeLotteries(){
+  const now=new Date();
+  function hUTC(h){const t=new Date();t.setUTCHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.round((t-now)/3600000);}
+  // Daily pool: random card = random rarity card; specific card = named card
+  const dPool=[
+    {name:'Random Common Card',   isRandom:true,  rarity:'common',    cost:5, maxEntries:7,winners:10},
+    {name:pickSpecificCard('common'),   isRandom:false, rarity:'common',    cost:10,maxEntries:6,winners:10},
+    {name:'Random Uncommon Card', isRandom:true,  rarity:'uncommon',  cost:5, maxEntries:7,winners:8},
+    {name:pickSpecificCard('uncommon'), isRandom:false, rarity:'uncommon',  cost:10,maxEntries:6,winners:8},
+    {name:'Random Rare Card',     isRandom:true,  rarity:'rare',      cost:10,maxEntries:6,winners:7},
+    {name:pickSpecificCard('rare'),     isRandom:false, rarity:'rare',      cost:15,maxEntries:5,winners:7},
+    {name:'Random Epic Card',     isRandom:true,  rarity:'epic',      cost:10,maxEntries:6,winners:5},
+    {name:'Random Legendary Card',isRandom:true,  rarity:'legendary', cost:15,maxEntries:5,winners:3},
+  ];
+  const wPool=[
+    {name:'Random Epic Card',     isRandom:true,  rarity:'epic',      cost:15,maxEntries:4,winners:8},
+    {name:'Random Legendary Card',isRandom:true,  rarity:'legendary', cost:20,maxEntries:4,winners:5},
+    {name:'Random Mythic Card',   isRandom:true,  rarity:'mythic',    cost:25,maxEntries:3,winners:3},
+    {name:'Random Cosmic Card',   isRandom:true,  rarity:'cosmic',    cost:35,maxEntries:2,winners:2},
+    {name:pickSpecificCard('cosmic'),   isRandom:false, rarity:'cosmic',    cost:40,maxEntries:1,winners:1},
+  ];
+  const sh=a=>[...a].sort(()=>0.5-Math.random());
+  const utc=[0,6,12,18];
+  const daily=sh(dPool).slice(0,4).map((r,i)=>({...r,entries:0,entrants:Math.floor(Math.random()*80)+5,closeHour:utc[i],hoursLeft:hUTC(utc[i]),weekly:false}));
+  const weekly=[{...sh(wPool)[0],entries:0,entrants:Math.floor(Math.random()*200)+20,daysLeft:5,weekly:true}];
+  return{daily,weekly};
+}
+
+// Convert UTC close hour to user's local time string
+function utcToLocal(utcHour){
+  const tz=parseFloat(settings.timezone)||0;
+  let localHour=(utcHour+tz+24)%24;
+  if(settings.timeFormat==='12'){
+    const ampm=localHour>=12?'PM':'AM';
+    const h12=Math.floor(localHour)%12||12;
+    const mins=localHour%1===0.5?'30':'00';
+    return`${h12}:${mins} ${ampm}`;
+  }
+  const h=Math.floor(localHour);const m=localHour%1===0.5?'30':'00';
+  return`${String(h).padStart(2,'0')}:${m}`;
+}
+
+function getLocalTzLabel(){
+  const tz=parseFloat(settings.timezone)||0;
+  const sign=tz>=0?'+':'-';
+  const abs=Math.abs(tz);
+  const h=Math.floor(abs);const m=abs%1===0.5?'30':'00';
+  return`UTC${sign}${h}${m!=='00'?':'+m:''}`;
+}
 function renderLotteries(){
   document.getElementById('lottery-coins-val').textContent=player.coins;
+  const tzLabel=getLocalTzLabel();
   function card(l){
     const dots=Array.from({length:l.maxEntries},(_,i)=>`<div class="entry-dot ${i<l.entries?'filled':''}"></div>`).join('');
-    const ts=l.weekly?`${l.daysLeft}d left — closes Mon 12:00 AM UTC`:l.hoursLeft<=2?`${l.hoursLeft}h left — closing soon!`:`${l.hoursLeft}h left — closes ${l.closeHour.toString().padStart(2,'0')}:00 UTC`;
-    const urgent=!l.weekly&&l.hoursLeft<=2;const can=l.entries<l.maxEntries&&player.coins>=l.cost;
-    return`<div class="lottery-card ${l.weekly?'weekly-card':''}"><div class="lottery-top"><div class="lottery-reward-name">${l.name}</div>${l.weekly?'<span class="weekly-badge">⭐ Weekly</span>':''}</div><div class="lottery-meta"><span class="lottery-meta-chip"><i class="ti ti-users"></i>${l.winners} winners</span><span class="lottery-meta-chip"><i class="ti ti-coin"></i>${l.cost}/entry</span><span class="lottery-meta-chip">Max ${l.maxEntries}</span></div><div class="lottery-time ${urgent?'urgent':''}"><i class="ti ti-clock"></i>${ts}</div><div class="entry-row"><div class="entry-dots">${dots}</div><div class="entry-right"><div class="entry-count">${l.entries}/${l.maxEntries}</div><button class="entry-btn" onclick="enterLottery('${l.name}',${l.weekly})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button></div></div></div>`;
+    const localClose=utcToLocal(l.closeHour);
+    const ts=l.weekly
+      ?`${l.daysLeft}d left — closes Mon ${utcToLocal(0)} (${tzLabel})`
+      :l.hoursLeft<=2
+        ?`${l.hoursLeft}h left — closing soon!`
+        :`${l.hoursLeft}h left — closes ${localClose} (${tzLabel})`;
+    const urgent=!l.weekly&&l.hoursLeft<=2;
+    const can=l.entries<l.maxEntries&&player.coins>=l.cost;
+    const rc=RARITY_COLORS[l.rarity]||'var(--accent)';
+    const rl=l.rarity?l.rarity.charAt(0).toUpperCase()+l.rarity.slice(1):'';
+    return`<div class="lottery-card ${l.weekly?'weekly-card':''}">
+      <div class="lottery-top">
+        <div>
+          <div class="lottery-reward-name">${l.name}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
+            ${l.isRandom?'<span style="font-size:10px;color:var(--text3)">Random card</span>':'<span style="font-size:10px;color:var(--text3);font-style:italic">Guaranteed card</span>'}
+          </div>
+        </div>
+        ${l.weekly?'<span class="weekly-badge">⭐ Weekly</span>':''}
+      </div>
+      <div class="lottery-meta">
+        <span class="lottery-meta-chip"><i class="ti ti-trophy"></i>${l.winners} winners</span>
+        <span class="lottery-meta-chip"><i class="ti ti-users"></i>${l.entrants} entered</span>
+        <span class="lottery-meta-chip"><i class="ti ti-coin"></i>${l.cost}/entry</span>
+        <span class="lottery-meta-chip">Max ${l.maxEntries}</span>
+      </div>
+      <div class="lottery-time ${urgent?'urgent':''}"><i class="ti ti-clock"></i>${ts}</div>
+      <div class="entry-row">
+        <div class="entry-dots">${dots}</div>
+        <div class="entry-right">
+          <div class="entry-count">${l.entries}/${l.maxEntries} entries</div>
+          <button class="entry-btn" onclick="enterLottery('${l.name}',${l.weekly})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button>
+        </div>
+      </div>
+    </div>`;
   }
   document.getElementById('daily-lottery-grid').innerHTML=[...lotteries.daily].sort((a,b)=>a.hoursLeft-b.hoursLeft).map(card).join('');
   document.getElementById('weekly-lottery-grid').innerHTML=lotteries.weekly.map(card).join('');
 }
+
 function enterLottery(name,weekly){
   const arr=weekly?lotteries.weekly:lotteries.daily;const l=arr.find(x=>x.name===name);
   if(!l||l.entries>=l.maxEntries||player.coins<l.cost)return;
@@ -1179,6 +1325,21 @@ function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')close
 
 // INIT
 buildCatSelect();
+// Auto-detect timezone and pre-select
+(function(){
+  const detectedTz=-(new Date().getTimezoneOffset()/60);
+  settings.timezone=detectedTz;
+  const sel=document.getElementById('setting-timezone');
+  if(sel){
+    // Find closest option
+    let bestOpt=null,bestDiff=99;
+    for(const opt of sel.options){
+      const diff=Math.abs(parseFloat(opt.value)-detectedTz);
+      if(diff<bestDiff){bestDiff=diff;bestOpt=opt;}
+    }
+    if(bestOpt)bestOpt.selected=true;
+  }
+})();
 render();
 </script>
 </body>
