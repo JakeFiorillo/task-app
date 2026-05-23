@@ -12,14 +12,13 @@
   --text:#2a2040; --text2:#6b6388; --text3:#a89fc2;
   --border:rgba(120,100,180,0.13); --border2:rgba(120,100,180,0.26);
   --accent:#9b87d6; --accent-light:#ebe5fa; --accent-mid:#c4b8ef;
+  --accent-dark:#7c5cbf; --btn-text:#ffffff;
   --radius:8px; --radius-lg:12px;
-  --common:#9ca3af; --uncommon:#34d399; --rare:#60a5fa;
-  --epic:#a78bfa; --legendary:#fbbf24; --mythic:#f87171; --cosmic:#e879f9;
 }
 body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg3); color:var(--text); font-size:14px; height:100vh; overflow:hidden; }
 .app-shell { display:flex; flex-direction:column; height:100vh; }
 
-/* NAV */
+/* ── NAV ── */
 .nav-bar { background:var(--bg); border-bottom:0.5px solid var(--border); display:flex; align-items:center; padding:0 20px; height:50px; gap:2px; flex-shrink:0; }
 .nav-logo { font-size:15px; font-weight:700; color:var(--text); letter-spacing:-0.4px; margin-right:16px; white-space:nowrap; }
 .nav-item { display:flex; align-items:center; gap:6px; padding:5px 12px; border-radius:var(--radius); cursor:pointer; color:var(--text2); font-size:12px; font-weight:500; transition:all 0.12s; user-select:none; border:none; background:none; white-space:nowrap; }
@@ -28,30 +27,30 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .nav-item i { font-size:15px; }
 .nav-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
 .nav-stat { display:flex; align-items:center; gap:4px; font-size:12px; font-weight:600; padding:3px 9px; border-radius:20px; border:0.5px solid var(--border); white-space:nowrap; }
-.nav-stat.xp { color:#7c5cbf; background:#f5f0ff; }
+.nav-stat.xp { color:var(--accent-dark); background:var(--accent-light); }
 .nav-stat.coins { color:#b45309; background:#fef9ee; }
 .nav-stat.streak { color:#ea580c; background:#fff7ed; }
 
-/* PAGES */
+/* ── PAGES ── */
 .page { display:none; flex:1; overflow:hidden; }
 .page.active { display:flex; }
 
-/* ════ TASKS ════ */
-.sidebar { width:210px; min-width:210px; background:#f5f1fd; border-right:0.5px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0; }
+/* ── SIDEBAR ── */
+.sidebar { width:210px; min-width:210px; background:var(--bg2); border-right:0.5px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0; }
 .sidebar-section { padding:12px 10px 6px; }
 .sidebar-label { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; padding:0 8px; margin-bottom:4px; }
 .sidebar-item { display:flex; align-items:center; gap:8px; padding:6px 9px; border-radius:var(--radius); cursor:pointer; color:var(--text2); font-size:13px; transition:background 0.12s; user-select:none; }
 .sidebar-item:hover { background:var(--accent-light); color:var(--text); }
-.sidebar-item.active { background:#e0d7f8; color:var(--text); font-weight:500; }
+.sidebar-item.active { background:var(--accent-light); color:var(--text); font-weight:500; border-left:2px solid var(--accent); }
 .sidebar-item i { font-size:15px; }
-.sidebar-badge { margin-left:auto; background:var(--bg2); border:0.5px solid var(--border); color:var(--text2); font-size:11px; padding:1px 6px; border-radius:10px; }
+.sidebar-badge { margin-left:auto; background:var(--bg); border:0.5px solid var(--border); color:var(--text2); font-size:11px; padding:1px 6px; border-radius:10px; }
 .upcoming-panel { padding:10px; border-top:0.5px solid var(--border); margin-top:auto; }
 .upcoming-title { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; }
-.upcoming-item { display:flex; flex-direction:column; gap:2px; padding:7px 9px; background:var(--accent-light); border-radius:var(--radius); margin-bottom:5px; border:0.5px solid transparent; transition:border-color 0.12s; }
-.upcoming-item:hover { border-color:var(--border2); }
+.upcoming-item { display:flex; flex-direction:column; gap:2px; padding:7px 9px; background:var(--bg); border-radius:var(--radius); margin-bottom:5px; border:0.5px solid var(--border); }
 .upcoming-name { font-size:12px; font-weight:500; color:var(--text); }
 .upcoming-date { font-size:11px; color:var(--text3); }
 
+/* ── MAIN ── */
 .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
 .topbar { background:var(--bg); border-bottom:0.5px solid var(--border); padding:10px 18px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .topbar-left { flex:1; min-width:0; }
@@ -59,11 +58,11 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .topbar-title { font-size:17px; font-weight:600; letter-spacing:-0.3px; }
 .nav-arrows { display:flex; gap:4px; }
 .nav-arrow { width:26px; height:26px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all 0.12s; }
-.nav-arrow:hover { background:var(--accent-light); color:var(--text); }
+.nav-arrow:hover { background:var(--accent-light); color:var(--accent); }
 .view-tabs { display:flex; gap:2px; background:var(--bg2); padding:3px; border-radius:var(--radius); }
 .view-tab { padding:4px 11px; font-size:12px; border-radius:6px; cursor:pointer; color:var(--text2); transition:all 0.12s; user-select:none; }
 .view-tab.active { background:var(--bg); color:var(--text); font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
-.add-btn { display:flex; align-items:center; gap:5px; padding:6px 13px; background:var(--accent); color:#fff; border-radius:var(--radius); font-size:12px; font-weight:500; cursor:pointer; border:none; white-space:nowrap; }
+.add-btn { display:flex; align-items:center; gap:5px; padding:6px 13px; background:var(--accent); color:var(--btn-text); border-radius:var(--radius); font-size:12px; font-weight:500; cursor:pointer; border:none; white-space:nowrap; transition:opacity 0.15s; }
 .add-btn:hover { opacity:0.85; }
 
 .progress-section { padding:10px 18px; background:var(--bg); border-bottom:0.5px solid var(--border); }
@@ -73,7 +72,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .progress-track { height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; }
 .progress-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s ease; }
 
-/* Filter bar — multi-select */
 .filter-bar { display:flex; align-items:center; gap:6px; padding:10px 18px 8px; flex-wrap:wrap; }
 .filter-btn { display:flex; align-items:center; gap:4px; padding:4px 11px; border-radius:var(--radius); font-size:12px; cursor:pointer; background:var(--bg); border:0.5px solid var(--border); color:var(--text2); transition:all 0.12s; user-select:none; }
 .filter-btn:hover { background:var(--accent-light); border-color:var(--accent-mid); color:var(--text); }
@@ -92,9 +90,10 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .task-card.overdue { border-color:#F09595; background:#fffafa; }
 .task-top { display:flex; align-items:flex-start; gap:10px; }
 .task-checkbox { width:17px; height:17px; min-width:17px; border-radius:50%; border:1.5px solid var(--border2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; margin-top:2px; flex-shrink:0; }
-.task-checkbox:hover { border-color:var(--accent); }
-.task-checkbox.checked { background:var(--accent); border-color:var(--accent); }
-.task-checkbox.checked::after { content:''; width:5px; height:5px; background:white; border-radius:50%; }
+.task-checkbox:hover:not(.checked):not(.locked-check) { border-color:var(--accent); background:var(--accent-light); }
+.task-checkbox.checked { background:var(--accent); border-color:var(--accent); cursor:default; }
+.task-checkbox.checked::after { content:'✓'; color:white; font-size:9px; line-height:1; }
+.task-checkbox.locked-check { cursor:default; opacity:0.6; }
 .task-content { flex:1; min-width:0; }
 .task-name { font-size:13px; font-weight:500; line-height:1.4; }
 .task-name.done-text { text-decoration:line-through; color:var(--text3); }
@@ -102,7 +101,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .task-tag { font-size:11px; padding:2px 7px; border-radius:10px; font-weight:500; }
 .task-due { font-size:11px; color:var(--text3); display:flex; align-items:center; gap:3px; }
 .task-due.overdue-label { color:#A32D2D; font-weight:500; }
-.task-due.today-label { color:#7c5cbf; font-weight:500; }
+.task-due.today-label { color:var(--accent-dark); font-weight:500; }
 .task-freq { font-size:11px; color:var(--text3); }
 .task-actions { display:flex; gap:3px; opacity:0; transition:opacity 0.15s; }
 .task-card:hover .task-actions { opacity:1; }
@@ -114,56 +113,58 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .subtasks { margin-top:8px; padding-top:8px; border-top:0.5px solid var(--border); }
 .subtask-progress-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .subtask-track { flex:1; height:3px; background:var(--bg3); border-radius:2px; overflow:hidden; }
-.subtask-fill { height:100%; background:#b8a9e8; border-radius:2px; transition:width 0.3s; }
+.subtask-fill { height:100%; background:var(--accent-mid); border-radius:2px; transition:width 0.3s; }
 .subtask-label { font-size:11px; color:var(--text3); white-space:nowrap; }
 .subtask-item { display:flex; align-items:center; gap:7px; padding:3px 0; }
 .subtask-box { width:13px; height:13px; min-width:13px; border-radius:3px; border:1.5px solid var(--border2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; flex-shrink:0; }
 .subtask-box:hover { border-color:var(--accent); }
-.subtask-box.checked { background:#b8a9e8; border-color:#b8a9e8; }
+.subtask-box.checked { background:var(--accent-mid); border-color:var(--accent-mid); }
 .subtask-box.checked::after { content:'✓'; color:white; font-size:8px; line-height:1; }
 .subtask-text { font-size:12px; color:var(--text2); }
 .subtask-text.done { text-decoration:line-through; color:var(--text3); }
 .empty-state { text-align:center; padding:48px 20px; color:var(--text3); font-size:13px; }
 .empty-state i { font-size:32px; display:block; margin-bottom:10px; color:var(--accent-mid); }
 
-/* ════ PROGRESS PAGE ════ */
+/* ── TASK CONFIRM POPUP ── */
+.task-confirm-overlay { position:fixed; inset:0; background:rgba(40,30,70,0.18); z-index:250; display:flex; align-items:center; justify-content:center; }
+.task-confirm-box { background:var(--bg); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:22px 24px; width:320px; max-width:92vw; box-shadow:0 8px 32px rgba(0,0,0,0.12); }
+.task-confirm-title { font-size:15px; font-weight:600; margin-bottom:6px; }
+.task-confirm-name { font-size:13px; color:var(--text2); margin-bottom:18px; line-height:1.5; }
+.task-confirm-actions { display:flex; gap:8px; justify-content:flex-end; }
+.btn-confirm-yes { padding:7px 18px; font-size:13px; border:none; border-radius:var(--radius); background:var(--accent); color:var(--btn-text); cursor:pointer; font-family:inherit; font-weight:500; }
+.btn-confirm-no { padding:7px 14px; font-size:13px; border:0.5px solid var(--border2); border-radius:var(--radius); background:transparent; color:var(--text2); cursor:pointer; font-family:inherit; }
+
+/* ── PROGRESS PAGE ── */
 .scroll-page { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; background:var(--bg3); }
 .game-row { display:grid; gap:14px; }
 .game-row-3 { grid-template-columns:1fr 1fr 1fr; }
 .game-row-2 { grid-template-columns:1fr 1fr; }
 .game-card { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:18px; }
 .game-card-title { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-.game-card-title i { font-size:14px; }
 
 .xp-level { font-size:38px; font-weight:700; color:var(--accent); line-height:1; }
 .xp-sublabel { font-size:12px; color:var(--text2); margin-top:2px; margin-bottom:12px; }
 .xp-bar-track { height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; }
-.xp-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),#c4b8ef); border-radius:4px; transition:width 0.5s; }
+.xp-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-mid)); border-radius:4px; transition:width 0.5s; }
 .xp-bar-meta { display:flex; justify-content:space-between; font-size:11px; color:var(--text3); margin-top:4px; }
-.level-rewards-btn { display:flex; align-items:center; gap:5px; margin-top:12px; padding:6px 12px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg2); color:var(--text2); font-size:12px; cursor:pointer; font-family:inherit; font-weight:500; }
+.level-rewards-btn { display:flex; align-items:center; gap:5px; margin-top:12px; padding:6px 12px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg2); color:var(--text2); font-size:12px; cursor:pointer; font-family:inherit; font-weight:500; transition:all 0.12s; }
 .level-rewards-btn:hover { background:var(--accent-light); color:var(--accent); }
 
 .streak-num { font-size:38px; font-weight:700; color:#ea580c; line-height:1; }
 .streak-sub { font-size:12px; color:var(--text2); margin-top:2px; }
 .streak-mult { font-size:13px; font-weight:600; color:#ea580c; margin-top:8px; background:#fff7ed; padding:3px 9px; border-radius:7px; display:inline-block; }
 .streak-pct { font-size:11px; color:var(--text2); margin-top:6px; }
-.streak-days { display:flex; gap:3px; margin-top:10px; flex-wrap:wrap; }
-.streak-day { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; background:var(--bg3); color:var(--text3); flex-direction:column; gap:1px; }
-.streak-day.done { background:#ea580c; color:white; }
-.streak-day.today-day { background:#fed7aa; color:#ea580c; border:1.5px solid #ea580c; }
-.streak-day .day-letter { font-size:8px; }
-.streak-day .day-num { font-size:9px; }
 
 .coins-num { font-size:36px; font-weight:700; color:#b45309; line-height:1; }
 .coins-sub { font-size:12px; color:var(--text2); margin-top:2px; margin-bottom:12px; }
-.coin-pool-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.coin-pool-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
 .coin-pool-label { font-size:12px; color:var(--text2); }
 .coin-pool-val { font-size:13px; font-weight:600; color:#b45309; }
 .coin-pool-track { height:7px; background:var(--bg3); border-radius:3px; overflow:hidden; margin-bottom:12px; }
 .coin-pool-fill { height:100%; background:linear-gradient(90deg,#fbbf24,#f59e0b); border-radius:3px; transition:width 0.4s; }
 .coin-limits { display:flex; flex-direction:column; gap:5px; }
 .coin-limit-row { display:flex; align-items:center; gap:8px; }
-.coin-limit-label { font-size:11px; color:var(--text2); width:50px; flex-shrink:0; }
+.coin-limit-label { font-size:11px; color:var(--text2); width:52px; flex-shrink:0; }
 .coin-limit-track { flex:1; height:4px; background:var(--bg3); border-radius:2px; overflow:hidden; }
 .coin-limit-fill { height:100%; border-radius:2px; }
 .fill-low { background:#97C459; }
@@ -173,22 +174,21 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 
 .weekly-reward-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--radius); margin-bottom:6px; border:0.5px solid var(--border); }
 .weekly-reward-item.achieved { background:var(--accent-light); border-color:var(--accent-mid); }
-.weekly-reward-item.current { border-color:var(--accent); background:#f8f5ff; }
-.wr-pct { font-size:16px; font-weight:700; color:var(--accent); min-width:48px; }
+.weekly-reward-item.current { border-color:var(--accent); background:var(--accent-light); }
+.wr-pct { font-size:15px; font-weight:700; color:var(--accent); min-width:44px; }
 .wr-info { flex:1; }
 .wr-label { font-size:12px; font-weight:500; color:var(--text); }
 .wr-check { color:#059669; font-size:16px; }
 .weekly-pool-bar { height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; margin-bottom:5px; }
 .weekly-pool-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s; }
 .weekly-pool-label { font-size:11px; color:var(--text2); margin-bottom:12px; }
-
 .summary-row { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:0.5px solid var(--border); }
 .summary-row:last-child { border-bottom:none; }
 .summary-label { font-size:12px; color:var(--text2); }
 .summary-val { font-size:12px; font-weight:600; }
 .summary-val.pos { color:#059669; }
 
-/* ════ COLLECTION ════ */
+/* ── COLLECTION ── */
 .coll-page { flex:1; overflow-y:auto; padding:20px; background:var(--bg3); }
 .page-title { font-size:18px; font-weight:600; margin-bottom:4px; }
 .page-sub { font-size:13px; color:var(--text2); margin-bottom:18px; }
@@ -197,9 +197,9 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .rarity-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px; }
 .rarity-count-label { font-size:12px; color:var(--text2); }
 .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; }
-.coll-card { border-radius:var(--radius-lg); padding:12px 8px 8px; text-align:center; border:1.5px solid; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; position:relative; aspect-ratio:2/3; display:flex; flex-direction:column; align-items:center; justify-content:space-between; }
+.coll-card { border-radius:var(--radius-lg); padding:12px 8px 8px; text-align:center; border:1.5px solid; transition:transform 0.15s,box-shadow 0.15s; position:relative; aspect-ratio:2/3; display:flex; flex-direction:column; align-items:center; justify-content:space-between; }
 .coll-card:hover:not(.locked) { transform:translateY(-3px); box-shadow:0 6px 18px rgba(0,0,0,0.1); }
-.coll-card.locked { filter:grayscale(1); opacity:0.3; cursor:default; }
+.coll-card.locked { filter:grayscale(1); opacity:0.3; }
 .coll-card-icon { font-size:26px; }
 .coll-card-name { font-size:10px; font-weight:600; line-height:1.3; }
 .coll-card-rarity { font-size:9px; opacity:0.7; margin-top:2px; }
@@ -211,32 +211,50 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .r-mythic { border-color:#fca5a5; background:#fff1f2; color:#9f1239; }
 .r-cosmic { border-color:#f0abfc; background:#fdf4ff; color:#701a75; }
 
-/* ════ SHOP ════ */
+/* ── SHOP ── */
 .shop-page { flex:1; overflow-y:auto; padding:20px; background:var(--bg3); }
 .shop-section { margin-bottom:24px; }
 .shop-section-title { font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
-.shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
-.shop-item { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:14px; display:flex; flex-direction:column; gap:8px; }
+.shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:10px; }
+.shop-item { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:14px; display:flex; flex-direction:column; gap:7px; }
 .shop-item.locked-item { opacity:0.5; }
-.shop-item-name { font-size:13px; font-weight:600; color:var(--text); }
-.shop-item-desc { font-size:11px; color:var(--text2); line-height:1.4; }
+.shop-item-icon { font-size:24px; }
+.shop-item-name { font-size:13px; font-weight:600; }
+.shop-item-desc { font-size:11px; color:var(--text2); line-height:1.4; flex:1; }
 .shop-item-footer { display:flex; align-items:center; justify-content:space-between; margin-top:4px; }
 .shop-price { display:flex; align-items:center; gap:4px; font-size:13px; font-weight:700; color:#b45309; }
-.shop-buy-btn { padding:5px 12px; font-size:12px; font-weight:500; background:var(--accent); color:white; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; }
+.shop-buy-btn { padding:5px 12px; font-size:12px; font-weight:500; background:var(--accent); color:var(--btn-text); border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; transition:opacity 0.15s; }
 .shop-buy-btn:hover { opacity:0.85; }
-.shop-buy-btn:disabled { opacity:0.4; cursor:not-allowed; }
+.shop-buy-btn:disabled { opacity:0.35; cursor:not-allowed; }
 .shop-locked-label { font-size:11px; color:var(--text3); }
-.dupe-section { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:16px; margin-bottom:24px; }
-.dupe-title { font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; }
+.dupe-section { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:16px; margin-bottom:20px; }
+.dupe-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; }
 .dupe-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.dupe-label { font-size:12px; font-weight:600; width:72px; flex-shrink:0; }
+.dupe-label { font-size:12px; font-weight:600; width:76px; flex-shrink:0; }
 .dupe-bar-track { flex:1; height:5px; background:var(--bg3); border-radius:3px; overflow:hidden; }
 .dupe-bar-fill { height:100%; border-radius:3px; }
-.dupe-pts { font-size:11px; color:var(--text3); width:40px; text-align:right; flex-shrink:0; }
-.craft-btn { padding:3px 10px; font-size:11px; border:none; border-radius:6px; cursor:pointer; font-family:inherit; font-weight:500; }
-.craft-btn:disabled { opacity:0.35; cursor:default; }
+.dupe-pts { font-size:11px; color:var(--text3); width:42px; text-align:right; flex-shrink:0; }
+.craft-btn { padding:3px 10px; font-size:11px; border:none; border-radius:6px; cursor:pointer; font-family:inherit; font-weight:500; white-space:nowrap; }
 
-/* ════ LOTTERY ════ */
+/* ── BOX OPENING ANIMATION ── */
+.box-open-overlay { position:fixed; inset:0; background:rgba(20,10,50,0.75); z-index:300; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; }
+.box-open-scene { perspective:800px; width:200px; height:300px; cursor:pointer; }
+.box-card-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform 0.7s cubic-bezier(0.4,0,0.2,1); }
+.box-card-inner.flipped { transform:rotateY(180deg); }
+.box-card-face { position:absolute; inset:0; border-radius:16px; backface-visibility:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border:2px solid; }
+.box-card-back { background:linear-gradient(135deg,var(--accent),var(--accent-mid)); border-color:var(--accent); }
+.box-card-back-icon { font-size:60px; }
+.box-card-back-label { font-size:14px; color:white; font-weight:600; }
+.box-card-front { transform:rotateY(180deg); }
+.box-open-hint { font-size:13px; color:rgba(255,255,255,0.7); }
+.box-open-result { font-size:15px; color:white; font-weight:600; display:none; text-align:center; }
+.box-open-result.show { display:block; }
+.box-open-btn { padding:10px 28px; font-size:14px; font-weight:600; border:none; border-radius:var(--radius-lg); background:var(--accent); color:var(--btn-text); cursor:pointer; font-family:inherit; display:none; }
+.box-open-btn.show { display:block; }
+@keyframes sparkle { 0%{transform:scale(0) rotate(0deg);opacity:1} 100%{transform:scale(1.5) rotate(180deg);opacity:0} }
+.sparkle { position:absolute; font-size:20px; animation:sparkle 0.8s ease-out forwards; pointer-events:none; }
+
+/* ── LOTTERY ── */
 .lottery-page { flex:1; overflow-y:auto; padding:20px; background:var(--bg3); }
 .lottery-coins-bar { display:flex; align-items:center; gap:8px; background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:12px 16px; margin-bottom:18px; }
 .lottery-coins-label { font-size:13px; color:var(--text2); flex:1; }
@@ -244,10 +262,10 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .lottery-section-title { font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; margin-top:18px; }
 .lottery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; }
 .lottery-card { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:14px; }
-.lottery-card.weekly-card { border-color:var(--accent-mid); background:linear-gradient(135deg,#faf8ff,#f0ebff); }
+.lottery-card.weekly-card { border-color:var(--accent-mid); background:var(--accent-light); }
 .lottery-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
 .lottery-reward-name { font-size:13px; font-weight:600; }
-.weekly-badge { font-size:10px; font-weight:700; background:var(--accent); color:white; padding:2px 7px; border-radius:7px; }
+.weekly-badge { font-size:10px; font-weight:700; background:var(--accent); color:var(--btn-text); padding:2px 7px; border-radius:7px; }
 .lottery-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
 .lottery-meta-chip { font-size:11px; color:var(--text2); display:flex; align-items:center; gap:3px; }
 .lottery-time { font-size:12px; color:var(--text3); margin-bottom:10px; display:flex; align-items:center; gap:4px; }
@@ -258,57 +276,54 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .entry-dot.filled { background:var(--accent); border-color:var(--accent); }
 .entry-right { text-align:right; }
 .entry-count { font-size:10px; color:var(--text3); margin-bottom:3px; }
-.entry-btn { padding:4px 10px; font-size:11px; font-weight:500; background:var(--accent); color:white; border:none; border-radius:var(--radius); cursor:pointer; white-space:nowrap; }
+.entry-btn { padding:4px 10px; font-size:11px; font-weight:500; background:var(--accent); color:var(--btn-text); border:none; border-radius:var(--radius); cursor:pointer; white-space:nowrap; font-family:inherit; }
 .entry-btn:hover { opacity:0.85; }
 .entry-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
-/* ════ SETTINGS ════ */
+/* ── SETTINGS ── */
 .settings-page { flex:1; overflow-y:auto; padding:20px; background:var(--bg3); }
 .settings-section { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); margin-bottom:16px; overflow:hidden; }
-.settings-section-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; padding:12px 16px 8px; border-bottom:0.5px solid var(--border); }
-.setting-row { display:flex; align-items:center; padding:13px 16px; border-bottom:0.5px solid var(--border); gap:12px; }
+.settings-section-title { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; padding:12px 16px 10px; border-bottom:0.5px solid var(--border); background:var(--bg2); }
+.setting-row { display:flex; align-items:center; padding:14px 16px; border-bottom:0.5px solid var(--border); gap:16px; }
 .setting-row:last-child { border-bottom:none; }
-.setting-info { flex:1; }
+.setting-info { flex:1; min-width:0; }
 .setting-label { font-size:13px; font-weight:500; color:var(--text); }
 .setting-desc { font-size:11px; color:var(--text3); margin-top:2px; }
-.setting-control select, .setting-control input[type=text] { padding:5px 10px; font-size:12px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg); color:var(--text); font-family:inherit; outline:none; }
+.setting-control { flex-shrink:0; display:flex; align-items:center; }
+.setting-control select, .setting-control input[type=text] { padding:6px 10px; font-size:12px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg); color:var(--text); font-family:inherit; outline:none; min-width:160px; }
 .setting-control select:focus, .setting-control input:focus { border-color:var(--accent); }
-.toggle { position:relative; width:36px; height:20px; cursor:pointer; }
-.toggle input { opacity:0; width:0; height:0; }
-.toggle-slider { position:absolute; inset:0; background:var(--bg3); border-radius:20px; transition:0.2s; border:0.5px solid var(--border2); }
-.toggle-slider::before { content:''; position:absolute; width:14px; height:14px; left:2px; top:2px; background:white; border-radius:50%; transition:0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
-.toggle input:checked + .toggle-slider { background:var(--accent); border-color:var(--accent); }
-.toggle input:checked + .toggle-slider::before { transform:translateX(16px); }
+/* Toggle — fixed and visible */
+.toggle-wrap { display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+.toggle-track { width:42px; height:24px; border-radius:12px; background:var(--bg3); border:1.5px solid var(--border2); position:relative; transition:background 0.2s,border-color 0.2s; flex-shrink:0; }
+.toggle-track.on { background:var(--accent); border-color:var(--accent); }
+.toggle-knob { width:18px; height:18px; border-radius:50%; background:white; position:absolute; top:2px; left:2px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-knob { transform:translateX(18px); }
+.toggle-label { font-size:12px; color:var(--text2); font-weight:500; }
 
-/* ════ LEVEL REWARDS MODAL ════ */
-.level-modal { background:var(--bg); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:24px; width:560px; max-width:95vw; max-height:88vh; overflow-y:auto; }
-.level-progress-bar { position:relative; margin:20px 0 10px; }
-.level-track { height:8px; background:var(--bg3); border-radius:4px; position:relative; }
-.level-fill { height:100%; background:linear-gradient(90deg,var(--accent),#c4b8ef); border-radius:4px; }
-.level-markers { display:flex; justify-content:space-between; margin-top:6px; }
-.level-marker { font-size:10px; color:var(--text3); text-align:center; }
-.level-marker.reached { color:var(--accent); font-weight:600; }
-.level-table { width:100%; border-collapse:collapse; margin-top:16px; }
+/* ── LEVEL MODAL ── */
+.level-modal { background:var(--bg); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:24px; width:540px; max-width:95vw; max-height:88vh; overflow-y:auto; }
+.level-table { width:100%; border-collapse:collapse; margin-top:14px; }
 .level-table th { font-size:11px; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; padding:6px 10px; text-align:left; border-bottom:0.5px solid var(--border); }
 .level-table td { padding:8px 10px; font-size:12px; border-bottom:0.5px solid var(--border); }
+.level-table tr:last-child td { border-bottom:none; }
 .level-table tr.current-row td { background:var(--accent-light); font-weight:500; }
 .level-table tr.reached-row td { color:var(--text2); }
-.level-num-cell { font-weight:700; color:var(--accent); }
+.lv-num { font-weight:700; color:var(--accent); }
 
-/* ════ MODALS ════ */
+/* ── MODALS ── */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(40,30,70,0.22); z-index:200; align-items:center; justify-content:center; }
 .modal-overlay.open { display:flex; }
 .modal { background:var(--bg); border-radius:var(--radius-lg); border:0.5px solid var(--border); padding:22px; width:460px; max-width:95vw; max-height:92vh; overflow-y:auto; }
 .modal-title { font-size:15px; font-weight:600; margin-bottom:18px; }
 .form-row { margin-bottom:12px; }
 .form-label { font-size:12px; color:var(--text2); margin-bottom:4px; display:block; font-weight:500; }
-.form-input { width:100%; padding:7px 11px; font-size:13px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg); color:var(--text); font-family:inherit; outline:none; }
+.form-input { width:100%; padding:7px 11px; font-size:13px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg); color:var(--text); font-family:inherit; outline:none; transition:border-color 0.12s; }
 .form-input:focus { border-color:var(--accent); }
 .form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
 .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
-.btn-cancel { padding:7px 14px; font-size:12px; border:0.5px solid var(--border2); border-radius:var(--radius); background:transparent; color:var(--text2); cursor:pointer; font-family:inherit; }
+.btn-cancel { padding:7px 14px; font-size:12px; border:0.5px solid var(--border2); border-radius:var(--radius); background:transparent; color:var(--text2); cursor:pointer; font-family:inherit; transition:background 0.12s; }
 .btn-cancel:hover { background:var(--bg2); }
-.btn-save { padding:7px 16px; font-size:12px; border:none; border-radius:var(--radius); background:var(--accent); color:white; cursor:pointer; font-weight:500; font-family:inherit; }
+.btn-save { padding:7px 16px; font-size:12px; border:none; border-radius:var(--radius); background:var(--accent); color:var(--btn-text); cursor:pointer; font-weight:500; font-family:inherit; transition:opacity 0.15s; }
 .btn-save:hover { opacity:0.85; }
 .btn-delete { padding:7px 16px; font-size:12px; border:none; border-radius:var(--radius); background:#E24B4A; color:white; cursor:pointer; font-weight:500; font-family:inherit; }
 .subtask-inputs { margin-top:5px; }
@@ -316,7 +331,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .subtask-input-row .form-input { flex:1; }
 .remove-sub { background:none; border:none; color:var(--text3); cursor:pointer; font-size:15px; padding:2px 4px; border-radius:4px; }
 .remove-sub:hover { background:#FCEBEB; color:#A32D2D; }
-.add-sub-btn { font-size:12px; color:var(--text2); background:none; border:0.5px dashed var(--border2); border-radius:var(--radius); padding:5px 10px; cursor:pointer; width:100%; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:4px; }
+.add-sub-btn { font-size:12px; color:var(--text2); background:none; border:0.5px dashed var(--border2); border-radius:var(--radius); padding:5px 10px; cursor:pointer; width:100%; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:4px; transition:background 0.12s; }
 .add-sub-btn:hover { background:var(--accent-light); }
 .freq-note { font-size:11px; color:var(--text3); margin-top:4px; font-style:italic; }
 .color-chips { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
@@ -325,7 +340,8 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .confirm-modal { background:var(--bg); border-radius:var(--radius-lg); padding:22px; width:320px; max-width:95vw; }
 .confirm-title { font-size:14px; font-weight:600; margin-bottom:7px; }
 .confirm-body { font-size:13px; color:var(--text2); margin-bottom:18px; line-height:1.5; }
-.toast { position:fixed; bottom:20px; right:20px; background:var(--text); color:white; padding:10px 16px; border-radius:var(--radius-lg); font-size:13px; font-weight:500; z-index:300; transform:translateY(60px); opacity:0; transition:all 0.3s; display:flex; align-items:center; gap:7px; max-width:320px; }
+
+.toast { position:fixed; bottom:20px; right:20px; background:var(--text); color:white; padding:10px 16px; border-radius:var(--radius-lg); font-size:13px; font-weight:500; z-index:400; transform:translateY(60px); opacity:0; transition:all 0.3s; display:flex; align-items:center; gap:7px; max-width:320px; }
 .toast.show { transform:translateY(0); opacity:1; }
 </style>
 </head>
@@ -333,16 +349,16 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 <div class="app-shell">
 <nav class="nav-bar">
   <div class="nav-logo">My Tasks</div>
-  <button class="nav-item active" id="nav-tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i> Tasks</button>
-  <button class="nav-item" id="nav-game" onclick="showPage('game')"><i class="ti ti-sword"></i> Progress</button>
-  <button class="nav-item" id="nav-collection" onclick="showPage('collection')"><i class="ti ti-cards"></i> Collection</button>
-  <button class="nav-item" id="nav-shop" onclick="showPage('shop')"><i class="ti ti-shopping-bag"></i> Shop</button>
-  <button class="nav-item" id="nav-lottery" onclick="showPage('lottery')"><i class="ti ti-ticket"></i> Lottery</button>
-  <button class="nav-item" id="nav-settings" onclick="showPage('settings')"><i class="ti ti-settings"></i> Settings</button>
+  <button class="nav-item active" id="nav-tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i>Tasks</button>
+  <button class="nav-item" id="nav-game" onclick="showPage('game')"><i class="ti ti-sword"></i>Progress</button>
+  <button class="nav-item" id="nav-collection" onclick="showPage('collection')"><i class="ti ti-cards"></i>Collection</button>
+  <button class="nav-item" id="nav-shop" onclick="showPage('shop')"><i class="ti ti-shopping-bag"></i>Shop</button>
+  <button class="nav-item" id="nav-lottery" onclick="showPage('lottery')"><i class="ti ti-ticket"></i>Lottery</button>
+  <button class="nav-item" id="nav-settings" onclick="showPage('settings')"><i class="ti ti-settings"></i>Settings</button>
   <div class="nav-right">
-    <div class="nav-stat xp"><i class="ti ti-star"></i> <span id="nav-xp">0</span> XP</div>
-    <div class="nav-stat coins"><i class="ti ti-coin"></i> <span id="nav-coins">0</span></div>
-    <div class="nav-stat streak"><i class="ti ti-flame"></i> <span id="nav-streak">0</span></div>
+    <div class="nav-stat xp"><i class="ti ti-star"></i><span id="nav-xp">340</span> XP</div>
+    <div class="nav-stat coins"><i class="ti ti-coin"></i><span id="nav-coins">142</span></div>
+    <div class="nav-stat streak"><i class="ti ti-flame"></i><span id="nav-streak">7</span></div>
   </div>
 </nav>
 
@@ -387,7 +403,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     </div>
     <div class="filter-bar">
-      <span style="font-size:11px;color:var(--text3);margin-right:2px;">Sort/Filter:</span>
+      <span style="font-size:11px;color:var(--text3);margin-right:2px">Sort/Filter:</span>
       <div class="filter-btn" id="filter-category" onclick="toggleFilter('category')"><i class="ti ti-tag"></i>Category</div>
       <div class="filter-btn" id="filter-priority" onclick="toggleFilter('priority')"><i class="ti ti-flag"></i>Priority</div>
       <div class="filter-btn" id="filter-due" onclick="toggleFilter('due')"><i class="ti ti-clock"></i>Due Date</div>
@@ -401,7 +417,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 <div class="page" id="page-game">
   <div class="scroll-page">
     <div class="game-row game-row-3">
-      <!-- XP -->
       <div class="game-card">
         <div class="game-card-title"><i class="ti ti-star" style="color:var(--accent)"></i>Level & XP</div>
         <div class="xp-level" id="g-level">1</div>
@@ -410,34 +425,29 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
         <div class="xp-bar-meta"><span id="xp-current-label">0 XP</span><span id="xp-next-label">100 to next</span></div>
         <button class="level-rewards-btn" onclick="openLevelModal()"><i class="ti ti-gift"></i>View all level rewards</button>
       </div>
-      <!-- Streak -->
       <div class="game-card">
         <div class="game-card-title"><i class="ti ti-flame" style="color:#ea580c"></i>Streak</div>
         <div style="display:flex;align-items:flex-end;gap:6px"><div class="streak-num" id="g-streak">7</div><span style="font-size:24px">🔥</span></div>
         <div class="streak-sub">day streak</div>
         <div class="streak-mult" id="streak-mult-label">1.34x XP multiplier</div>
         <div class="streak-pct" id="streak-pct-label">Need 75% completion to maintain</div>
-        <div class="streak-days" id="streak-days"></div>
       </div>
-      <!-- Coins -->
       <div class="game-card">
         <div class="game-card-title"><i class="ti ti-coin" style="color:#b45309"></i>Coins</div>
-        <div class="coins-num" id="g-coins">100</div>
+        <div class="coins-num" id="g-coins">142</div>
         <div class="coins-sub">available coins</div>
-        <div class="coin-pool-row"><span class="coin-pool-label">Earnable pool</span><span class="coin-pool-val" id="coin-pool-val">100/250</span></div>
-        <div class="coin-pool-track"><div class="coin-pool-fill" id="coin-pool-bar" style="width:40%"></div></div>
+        <div class="coin-pool-row"><span class="coin-pool-label">Earnable pool</span><span class="coin-pool-val" id="coin-pool-val">142/250</span></div>
+        <div class="coin-pool-track"><div class="coin-pool-fill" id="coin-pool-bar" style="width:57%"></div></div>
         <div class="coin-limits" id="coin-limits"></div>
       </div>
     </div>
     <div class="game-row game-row-2">
-      <!-- Weekly -->
       <div class="game-card">
-        <div class="game-card-title"><i class="ti ti-trophy" style="color:#b45309"></i>Weekly Rewards <span id="weekly-tier-badge" style="font-size:10px;background:var(--accent-light);color:var(--accent);padding:2px 7px;border-radius:8px;font-weight:700;margin-left:4px;">Tier 1</span></div>
+        <div class="game-card-title"><i class="ti ti-trophy" style="color:#b45309"></i>Weekly Rewards <span id="weekly-tier-badge" style="font-size:10px;background:var(--accent-light);color:var(--accent);padding:2px 7px;border-radius:8px;font-weight:700;margin-left:4px">Tier 1</span></div>
         <div class="weekly-pool-bar"><div class="weekly-pool-fill" id="weekly-bar" style="width:0%"></div></div>
         <div class="weekly-pool-label" id="weekly-pool-label">0% accumulated this week</div>
         <div id="weekly-rewards-list"></div>
       </div>
-      <!-- Summary -->
       <div class="game-card">
         <div class="game-card-title"><i class="ti ti-chart-bar" style="color:var(--accent)"></i>Today's Summary</div>
         <div class="summary-row"><span class="summary-label">Tasks completed</span><span class="summary-val" id="s-done">0</span></div>
@@ -464,20 +474,17 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 <div class="page" id="page-shop">
   <div class="shop-page">
     <div class="page-title">Shop</div>
-    <div class="page-sub" style="margin-bottom:18px" id="shop-coins-label">You have 0 coins</div>
-    <!-- Duplicate crafting -->
+    <div class="page-sub" id="shop-coins-label">You have 142 coins</div>
     <div class="dupe-section">
       <div class="dupe-title"><i class="ti ti-copy"></i> Craft Boxes from Duplicate Points (100 pts each)</div>
       <div id="dupe-craft-list"></div>
     </div>
-    <!-- Collectable boxes -->
     <div class="shop-section">
-      <div class="shop-section-title"><i class="ti ti-package"></i> Collectable Boxes</div>
+      <div class="shop-section-title"><i class="ti ti-package"></i>Collectable Boxes</div>
       <div class="shop-grid" id="box-shop"></div>
     </div>
-    <!-- Utilities -->
     <div class="shop-section">
-      <div class="shop-section-title"><i class="ti ti-tool"></i> Utilities</div>
+      <div class="shop-section-title"><i class="ti ti-tool"></i>Utilities</div>
       <div class="shop-grid" id="util-shop"></div>
     </div>
   </div>
@@ -488,7 +495,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   <div class="lottery-page">
     <div class="lottery-coins-bar">
       <div class="lottery-coins-label">Your coins</div>
-      <div class="lottery-coins-val"><i class="ti ti-coin"></i><span id="lottery-coins-val">0</span></div>
+      <div class="lottery-coins-val"><i class="ti ti-coin"></i><span id="lottery-coins-val">142</span></div>
     </div>
     <div class="lottery-section-title">📅 Daily Lotteries</div>
     <div class="lottery-grid" id="daily-lottery-grid"></div>
@@ -503,29 +510,69 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <div class="page-title" style="margin-bottom:16px">Settings</div>
     <div class="settings-section">
       <div class="settings-section-title">Account</div>
-      <div class="setting-row"><div class="setting-info"><div class="setting-label">Display Name</div><div class="setting-desc">Your name shown in the app</div></div><div class="setting-control"><input type="text" id="setting-name" value="Player One" style="width:160px" /></div></div>
-      <div class="setting-row"><div class="setting-info"><div class="setting-label">Email</div><div class="setting-desc">Account email address</div></div><div class="setting-control"><input type="text" id="setting-email" value="player@email.com" style="width:200px" /></div></div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Display Name</div><div class="setting-desc">Your name shown in the app</div></div>
+        <div class="setting-control"><input type="text" id="setting-name" value="Player One" /></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Email</div><div class="setting-desc">Account email address</div></div>
+        <div class="setting-control"><input type="text" id="setting-email" value="player@email.com" /></div>
+      </div>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">Accessibility</div>
-      <div class="setting-row"><div class="setting-info"><div class="setting-label">Time Format</div><div class="setting-desc">Choose 12-hour or 24-hour time display</div></div><div class="setting-control"><select id="setting-timeformat" onchange="saveSetting('timeFormat',this.value)"><option value="12">12-hour (2:30 PM)</option><option value="24">24-hour (14:30)</option></select></div></div>
-      <div class="setting-row"><div class="setting-info"><div class="setting-label">Week Starts On</div><div class="setting-desc">First day shown in streak calendar and week view</div></div><div class="setting-control"><select id="setting-weekstart" onchange="saveSetting('weekStart',parseInt(this.value));renderStreakDays()"><option value="0">Sunday</option><option value="1">Monday</option><option value="6">Saturday</option></select></div></div>
-      <div class="setting-row"><div class="setting-info"><div class="setting-label">Color Blind Mode</div><div class="setting-desc">Use shapes in addition to colors for streak indicators</div></div><div class="setting-control"><label class="toggle"><input type="checkbox" id="setting-colorblind" onchange="saveSetting('colorBlind',this.checked);renderStreakDays()"><div class="toggle-slider"></div></label></div></div>
-      <div class="setting-row"><div class="setting-info"><div class="setting-label">Large Text</div><div class="setting-desc">Increase base font size throughout the app</div></div><div class="setting-control"><label class="toggle"><input type="checkbox" id="setting-largetext" onchange="applyLargeText(this.checked)"><div class="toggle-slider"></div></label></div></div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Time Format</div><div class="setting-desc">12-hour or 24-hour display</div></div>
+        <div class="setting-control"><select id="setting-timeformat" onchange="saveSetting('timeFormat',this.value)"><option value="12">12-hour (2:30 PM)</option><option value="24">24-hour (14:30)</option></select></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Week Starts On</div><div class="setting-desc">First day of the week</div></div>
+        <div class="setting-control"><select id="setting-weekstart" onchange="saveSetting('weekStart',parseInt(this.value))"><option value="0">Sunday</option><option value="1">Monday</option><option value="6">Saturday</option></select></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Large Text</div><div class="setting-desc">Increase font size throughout the app</div></div>
+        <div class="setting-control">
+          <div class="toggle-wrap" onclick="toggleSetting('largeText')">
+            <div class="toggle-track" id="toggle-largeText"><div class="toggle-knob"></div></div>
+            <span class="toggle-label" id="toggle-largeText-label">Off</span>
+          </div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Color Blind Mode</div><div class="setting-desc">Adds symbols alongside colors for priority indicators</div></div>
+        <div class="setting-control">
+          <div class="toggle-wrap" onclick="toggleSetting('colorBlind')">
+            <div class="toggle-track" id="toggle-colorBlind"><div class="toggle-knob"></div></div>
+            <span class="toggle-label" id="toggle-colorBlind-label">Off</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="settings-section">
       <div class="settings-section-title">App Theme</div>
-      <div class="setting-row"><div class="setting-info"><div class="setting-label">Background Color</div><div class="setting-desc">Choose your preferred app background</div></div><div class="setting-control"><select id="setting-bg" onchange="applyBackground(this.value)"><option value="purple">Lavender (default)</option><option value="blue">Sky Blue</option><option value="green">Mint Green</option><option value="peach">Peach</option><option value="gray">Soft Gray</option></select></div></div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Color Theme</div><div class="setting-desc">Changes background and accent colors throughout the app</div></div>
+        <div class="setting-control">
+          <select id="setting-bg" onchange="applyTheme(this.value)">
+            <option value="purple">Lavender (default)</option>
+            <option value="blue">Sky Blue</option>
+            <option value="green">Mint Green</option>
+            <option value="peach">Peach</option>
+            <option value="rose">Rose Pink</option>
+            <option value="gray">Soft Gray</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 </div>
 
-<!-- LEVEL REWARDS MODAL -->
+<!-- LEVEL MODAL -->
 <div class="modal-overlay" id="level-modal" onclick="closeModalOutside(event,'level-modal')">
   <div class="level-modal">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="modal-title" style="margin-bottom:0">Level Rewards</div>
+      <div style="font-size:15px;font-weight:600">Level Rewards</div>
       <button class="btn-cancel" onclick="closeLevelModal()">Close</button>
     </div>
     <div id="level-modal-content"></div>
@@ -569,56 +616,97 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   </div>
 </div>
 
+<!-- TASK COMPLETE CONFIRM -->
+<div id="task-confirm-overlay" class="task-confirm-overlay" style="display:none">
+  <div class="task-confirm-box">
+    <div class="task-confirm-title">Mark as complete?</div>
+    <div class="task-confirm-name" id="task-confirm-name"></div>
+    <div class="task-confirm-actions">
+      <button class="btn-confirm-no" onclick="cancelTaskConfirm()">Cancel</button>
+      <button class="btn-confirm-yes" onclick="confirmTaskComplete()">Complete ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOX OPENING -->
+<div id="box-open-overlay" class="box-open-overlay" style="display:none">
+  <div class="box-open-scene" id="box-scene" onclick="flipBoxCard()">
+    <div class="box-card-inner" id="box-card-inner">
+      <div class="box-card-face box-card-back">
+        <div class="box-card-back-icon">📦</div>
+        <div class="box-card-back-label" id="box-open-title">Opening...</div>
+      </div>
+      <div class="box-card-face box-card-front" id="box-card-front"></div>
+    </div>
+  </div>
+  <div class="box-open-hint" id="box-open-hint">Tap the card to reveal</div>
+  <div class="box-open-result" id="box-open-result"></div>
+  <button class="box-open-btn" id="box-open-close" onclick="closeBoxOpen()">Add to Collection</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════
-// CONSTANTS
-// ══════════════════════════════════════════════
-const RARITY_COLORS = {common:'#9ca3af',uncommon:'#34d399',rare:'#60a5fa',epic:'#a78bfa',legendary:'#fbbf24',mythic:'#f87171',cosmic:'#e879f9'};
-const RARITY_ICONS  = {common:'🃏',uncommon:'🌿',rare:'💧',epic:'💜',legendary:'⭐',mythic:'🔥',cosmic:'🌌'};
-const RARITY_CLASS  = {common:'r-common',uncommon:'r-uncommon',rare:'r-rare',epic:'r-epic',legendary:'r-legendary',mythic:'r-mythic',cosmic:'r-cosmic'};
-const PRIORITY_COLORS = {high:'#E24B4A',medium:'#EF9F27',low:'#97C459'};
+// ══════════════ CONSTANTS ══════════════
+const RARITY_COLORS={common:'#9ca3af',uncommon:'#34d399',rare:'#60a5fa',epic:'#a78bfa',legendary:'#fbbf24',mythic:'#f87171',cosmic:'#e879f9'};
+const RARITY_ICONS={common:'🃏',uncommon:'🌿',rare:'💧',epic:'💜',legendary:'⭐',mythic:'🔥',cosmic:'🌌'};
+const RARITY_CLASS={common:'r-common',uncommon:'r-uncommon',rare:'r-rare',epic:'r-epic',legendary:'r-legendary',mythic:'r-mythic',cosmic:'r-cosmic'};
+const PRIORITY_COLORS={high:'#E24B4A',medium:'#EF9F27',low:'#97C459'};
+const PRIORITY_SHAPES={high:'▲',medium:'●',low:'▼'};
 
-const LEVEL_DATA = [
-  {level:1, xpNeeded:0,    totalXP:0,     benefit:'Basics Unlocked at Start',       coins:20,  weeklyTier:1},
-  {level:2, xpNeeded:100,  totalXP:100,   benefit:'Common Collectable Boxes',        coins:20,  weeklyTier:1},
-  {level:3, xpNeeded:150,  totalXP:250,   benefit:'Daily Lotteries',                 coins:25,  weeklyTier:1},
-  {level:4, xpNeeded:200,  totalXP:450,   benefit:'Weekly Reward Tier 2 Unlocked',   coins:25,  weeklyTier:2},
-  {level:5, xpNeeded:300,  totalXP:750,   benefit:'Uncommon Collectable Boxes',      coins:25,  weeklyTier:2},
-  {level:6, xpNeeded:400,  totalXP:1150,  benefit:'Coin Task Increases',             coins:35,  weeklyTier:2},
-  {level:7, xpNeeded:500,  totalXP:1650,  benefit:'Weekly Lotteries',                coins:35,  weeklyTier:2},
-  {level:8, xpNeeded:650,  totalXP:2300,  benefit:'Rare Collectable Boxes',          coins:35,  weeklyTier:2},
-  {level:9, xpNeeded:800,  totalXP:3100,  benefit:'Weekly Reward Tier 3 Unlocked',   coins:50,  weeklyTier:3},
-  {level:10,xpNeeded:950,  totalXP:4050,  benefit:'Epic Collectable Boxes',          coins:50,  weeklyTier:3},
-  {level:11,xpNeeded:1150, totalXP:5200,  benefit:'Coin Task Increases',             coins:50,  weeklyTier:3},
-  {level:12,xpNeeded:1350, totalXP:6550,  benefit:'Free Epic Card (your choice)',    coins:70,  weeklyTier:3},
-  {level:13,xpNeeded:1550, totalXP:8100,  benefit:'Legendary Collectable Boxes',     coins:70,  weeklyTier:3},
-  {level:14,xpNeeded:1800, totalXP:9900,  benefit:'Weekly Reward Tier 4 Unlocked',   coins:70,  weeklyTier:4},
-  {level:15,xpNeeded:2050, totalXP:11950, benefit:'Mythic Collectable Boxes',        coins:100, weeklyTier:4},
-  {level:16,xpNeeded:2300, totalXP:14250, benefit:'Coin Task Increases',             coins:100, weeklyTier:4},
-  {level:17,xpNeeded:2600, totalXP:16850, benefit:'Free Mythic Card (your choice)',  coins:100, weeklyTier:4},
-  {level:18,xpNeeded:2900, totalXP:19750, benefit:'Cosmic Collectable Boxes',        coins:150, weeklyTier:4},
-  {level:19,xpNeeded:3200, totalXP:22950, benefit:'Weekly Reward Tier 5 Unlocked',   coins:150, weeklyTier:5},
-  {level:20,xpNeeded:3550, totalXP:26500, benefit:'Free Cosmic Card (your choice)',  coins:150, weeklyTier:5},
+const LEVEL_DATA=[
+  {level:1, xpNeeded:0,    totalXP:0,     benefit:'Basics Unlocked at Start',         coins:20, weeklyTier:1},
+  {level:2, xpNeeded:100,  totalXP:100,   benefit:'Uncommon Collectable Boxes',        coins:20, weeklyTier:1},
+  {level:3, xpNeeded:150,  totalXP:250,   benefit:'Daily Lotteries',                   coins:25, weeklyTier:1},
+  {level:4, xpNeeded:200,  totalXP:450,   benefit:'Weekly Reward Tier 2 Unlocked',     coins:25, weeklyTier:2},
+  {level:5, xpNeeded:300,  totalXP:750,   benefit:'Rare Collectable Boxes',            coins:25, weeklyTier:2},
+  {level:6, xpNeeded:400,  totalXP:1150,  benefit:'Coin Task Increases',               coins:35, weeklyTier:2},
+  {level:7, xpNeeded:500,  totalXP:1650,  benefit:'Weekly Lotteries',                  coins:35, weeklyTier:2},
+  {level:8, xpNeeded:650,  totalXP:2300,  benefit:'Epic Collectable Boxes',            coins:35, weeklyTier:2},
+  {level:9, xpNeeded:800,  totalXP:3100,  benefit:'Weekly Reward Tier 3 Unlocked',     coins:50, weeklyTier:3},
+  {level:10,xpNeeded:950,  totalXP:4050,  benefit:'Free Epic Card (user chooses)',     coins:50, weeklyTier:3},
+  {level:11,xpNeeded:1150, totalXP:5200,  benefit:'Coin Task Increases',               coins:50, weeklyTier:3},
+  {level:12,xpNeeded:1350, totalXP:6550,  benefit:'Legendary Collectable Boxes',       coins:70, weeklyTier:3},
+  {level:13,xpNeeded:1550, totalXP:8100,  benefit:'Free Legendary Card (user chooses)',coins:70, weeklyTier:3},
+  {level:14,xpNeeded:1800, totalXP:9900,  benefit:'Weekly Reward Tier 4 Unlocked',     coins:70, weeklyTier:4},
+  {level:15,xpNeeded:2050, totalXP:11950, benefit:'Mythic Collectable Boxes',          coins:100,weeklyTier:4},
+  {level:16,xpNeeded:2300, totalXP:14250, benefit:'Coin Task Increases',               coins:100,weeklyTier:4},
+  {level:17,xpNeeded:2600, totalXP:16850, benefit:'Free Mythic Card (user chooses)',   coins:100,weeklyTier:4},
+  {level:18,xpNeeded:2900, totalXP:19750, benefit:'Cosmic Collectable Boxes',          coins:150,weeklyTier:4},
+  {level:19,xpNeeded:3200, totalXP:22950, benefit:'Weekly Reward Tier 5 Unlocked',     coins:150,weeklyTier:5},
+  {level:20,xpNeeded:3550, totalXP:26500, benefit:'Free Cosmic Card (user chooses)',   coins:150,weeklyTier:5},
 ];
 
-// Coin system by level bracket
-const COIN_LEVELS = [
-  {minLv:1,  maxLv:5,  gainLow:2, gainMed:4, gainHigh:7, maxLow:10, maxMed:5, maxHigh:3, recharge:40,  maxPool:250},
-  {minLv:6,  maxLv:10, gainLow:2, gainMed:5, gainHigh:8, maxLow:10, maxMed:5, maxHigh:3, recharge:50,  maxPool:320},
-  {minLv:11, maxLv:15, gainLow:3, gainMed:5, gainHigh:9, maxLow:12, maxMed:6, maxHigh:4, recharge:70,  maxPool:400},
-  {minLv:16, maxLv:20, gainLow:3, gainMed:6, gainHigh:10,maxLow:12, maxMed:6, maxHigh:4, recharge:80,  maxPool:500},
+const COIN_LEVELS=[
+  {minLv:1, maxLv:5, gainLow:2,gainMed:4,gainHigh:7, maxLow:10,maxMed:5,maxHigh:3, recharge:40, maxPool:250},
+  {minLv:6, maxLv:10,gainLow:2,gainMed:5,gainHigh:8, maxLow:10,maxMed:5,maxHigh:3, recharge:50, maxPool:320},
+  {minLv:11,maxLv:15,gainLow:3,gainMed:5,gainHigh:9, maxLow:12,maxMed:6,maxHigh:4, recharge:70, maxPool:400},
+  {minLv:16,maxLv:20,gainLow:3,gainMed:6,gainHigh:10,maxLow:12,maxMed:6,maxHigh:4, recharge:80, maxPool:500},
 ];
 
-// Weekly rewards tiers
-const WEEKLY_TIERS = {
+const WEEKLY_TIERS={
   1:[{pct:75,reward:'10 coins'},{pct:150,reward:'Common Box'},{pct:250,reward:'Uncommon Box'},{pct:375,reward:'25 coins'},{pct:550,reward:'Rare Box'}],
   2:[{pct:75,reward:'20 coins'},{pct:150,reward:'2× Common Box'},{pct:250,reward:'Uncommon Box'},{pct:375,reward:'50 coins'},{pct:550,reward:'2× Rare Box'}],
   3:[{pct:75,reward:'30 coins'},{pct:150,reward:'Uncommon Box'},{pct:250,reward:'3× Uncommon Box'},{pct:375,reward:'75 coins'},{pct:550,reward:'Epic Box'}],
   4:[{pct:100,reward:'40 coins'},{pct:200,reward:'2× Uncommon Box'},{pct:300,reward:'2× Rare Box'},{pct:450,reward:'100 coins'},{pct:600,reward:'2× Epic Box'}],
   5:[{pct:100,reward:'50 coins'},{pct:200,reward:'Rare Box'},{pct:300,reward:'3× Rare Box'},{pct:450,reward:'125 coins'},{pct:600,reward:'Legendary Box'}],
 };
+
+const BOX_COSTS={common:15,uncommon:30,rare:50,epic:85,legendary:140,mythic:220,cosmic:400};
+const BOX_UNLOCK_LEVELS={common:2,uncommon:2,rare:5,epic:8,legendary:12,mythic:15,cosmic:18};
+
+// Drop rate tables per box rarity
+const BOX_DROPS={
+  common:   [{r:'common',w:75},{r:'uncommon',w:20},{r:'rare',w:5}],
+  uncommon: [{r:'common',w:40},{r:'uncommon',w:45},{r:'rare',w:12},{r:'epic',w:3}],
+  rare:     [{r:'common',w:15},{r:'uncommon',w:30},{r:'rare',w:45},{r:'epic',w:8},{r:'legendary',w:2}],
+  epic:     [{r:'uncommon',w:15},{r:'rare',w:30},{r:'epic',w:45},{r:'legendary',w:10}],
+  legendary:[{r:'rare',w:20},{r:'epic',w:30},{r:'legendary',w:45},{r:'mythic',w:5}],
+  mythic:   [{r:'rare',w:5},{r:'epic',w:15},{r:'legendary',w:30},{r:'mythic',w:45},{r:'cosmic',w:5}],
+  cosmic:   [{r:'legendary',w:10},{r:'mythic',w:30},{r:'cosmic',w:60}],
+};
+
+const DUPE_REWARD={common:null,uncommon:{target:'rare',pts:20},rare:{target:'epic',pts:25},epic:{target:'legendary',pts:25},legendary:{target:'mythic',pts:30},mythic:{target:'cosmic',pts:30},cosmic:{target:'cosmic',pts:70}};
 
 const XP_TABLE=[
   [45,30,24,20,17,16,15,14,13,12,11,10,10,9,8,8,7,7,6,6],
@@ -657,15 +745,19 @@ const STREAK_DATA=[
 
 const CAT_COLORS=['#9b87d6','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c','#a78bfa','#f472b6','#2dd4bf','#94a3b8'];
 
-const BOX_COSTS = {common:15,uncommon:30,rare:50,epic:85,legendary:140,mythic:220,cosmic:400};
-const BOX_UNLOCK_LEVELS = {common:2,uncommon:5,rare:8,epic:10,legendary:13,mythic:15,cosmic:18};
+// Full color themes
+const THEMES={
+  purple:{bg:'#ffffff',bg2:'#f3f0fb',bg3:'#ede8f7',sb:'#f3f0fb',accent:'#9b87d6',accentLight:'#ebe5fa',accentMid:'#c4b8ef',accentDark:'#7c5cbf',btnText:'#ffffff',border:'rgba(120,100,180,0.13)',border2:'rgba(120,100,180,0.26)'},
+  blue:  {bg:'#ffffff',bg2:'#eff6ff',bg3:'#dbeafe',sb:'#eff6ff',accent:'#3b82f6',accentLight:'#dbeafe',accentMid:'#93c5fd',accentDark:'#1d4ed8',btnText:'#ffffff',border:'rgba(59,130,246,0.13)',border2:'rgba(59,130,246,0.26)'},
+  green: {bg:'#ffffff',bg2:'#f0fdf4',bg3:'#dcfce7',sb:'#f0fdf4',accent:'#22c55e',accentLight:'#dcfce7',accentMid:'#86efac',accentDark:'#15803d',btnText:'#ffffff',border:'rgba(34,197,94,0.13)',border2:'rgba(34,197,94,0.26)'},
+  peach: {bg:'#ffffff',bg2:'#fff7ed',bg3:'#ffedd5',sb:'#fff7ed',accent:'#f97316',accentLight:'#ffedd5',accentMid:'#fdba74',accentDark:'#c2410c',btnText:'#ffffff',border:'rgba(249,115,22,0.13)',border2:'rgba(249,115,22,0.26)'},
+  rose:  {bg:'#ffffff',bg2:'#fff1f2',bg3:'#ffe4e6',sb:'#fff1f2',accent:'#f43f5e',accentLight:'#ffe4e6',accentMid:'#fda4af',accentDark:'#be123c',btnText:'#ffffff',border:'rgba(244,63,94,0.13)',border2:'rgba(244,63,94,0.26)'},
+  gray:  {bg:'#ffffff',bg2:'#f8fafc',bg3:'#f1f5f9',sb:'#f8fafc',accent:'#64748b',accentLight:'#f1f5f9',accentMid:'#cbd5e1',accentDark:'#334155',btnText:'#ffffff',border:'rgba(100,116,139,0.13)',border2:'rgba(100,116,139,0.26)'},
+};
 
-// ══════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════
-let settings = { timeFormat:'12', weekStart:0, colorBlind:false, largeText:false, bg:'purple' };
-
-let categories = [
+// ══════════════ STATE ══════════════
+let settings={timeFormat:'12',weekStart:0,colorBlind:false,largeText:false,bg:'purple'};
+let categories=[
   {id:'work',   name:'Work',    color:'#60a5fa'},
   {id:'health', name:'Health',  color:'#34d399'},
   {id:'home',   name:'Home',    color:'#fb923c'},
@@ -673,54 +765,53 @@ let categories = [
   {id:'fitness',name:'Fitness', color:'#f87171'},
   {id:'events', name:'Events',  color:'#fbbf24'},
 ];
-
-let player = {
-  totalXP:340, coins:142, streak:7,
-  coinPool:142, coinsEarnedToday:8,
-  dailyLowUsed:3, dailyMedUsed:2, dailyHighUsed:1,
-  weeklyPool:185,
-  weeklyAchieved:[75,150],
+let player={
+  totalXP:340,coins:142,streak:7,
+  coinPool:142,coinsEarnedToday:8,
+  dailyLowUsed:3,dailyMedUsed:2,dailyHighUsed:1,
+  weeklyPool:185,weeklyAchieved:[75,150],
   dupePoints:{uncommon:40,rare:25,epic:10,legendary:0,mythic:0,cosmic:0},
 };
 
 function todayStr(){return new Date().toISOString().split('T')[0];}
-function dateOffset(days){const[y,m,d]=todayStr().split('-').map(Number);return new Date(y,m-1,d+days).toISOString().split('T')[0];}
+function dateOffset(d){const[y,m,dd]=todayStr().split('-').map(Number);return new Date(y,m-1,dd+d).toISOString().split('T')[0];}
 
 let tasks=[
-  {id:1,name:'Go to bed by 11pm',       cat:'life',   priority:'high',   date:todayStr(),    time:'23:00',freq:'daily', done:false,subtasks:[]},
-  {id:2,name:'Apply to 3 jobs',          cat:'work',   priority:'high',   date:todayStr(),    time:'',     freq:'once',  done:false,subtasks:[{text:'Software engineer at Stripe',done:true},{text:'Frontend role at Linear',done:false},{text:'Full-stack at Vercel',done:false}]},
-  {id:3,name:'Vacuum the living room',   cat:'home',   priority:'medium', date:dateOffset(2), time:'',     freq:'weekly',done:false,subtasks:[]},
-  {id:4,name:'30 min walk',             cat:'fitness', priority:'medium', date:todayStr(),    time:'08:00',freq:'daily', done:false,subtasks:[]},
-  {id:5,name:'Review Q2 report',         cat:'work',   priority:'high',   date:todayStr(),    time:'14:00',freq:'once',  done:false,subtasks:[{text:'Read executive summary',done:true},{text:'Check revenue figures',done:false},{text:'Note action items',done:false}]},
-  {id:6,name:'Call Mom',                 cat:'life',   priority:'medium', date:dateOffset(1), time:'18:00',freq:'weekly',done:false,subtasks:[]},
-  {id:7,name:'Drink 8 glasses of water', cat:'health', priority:'low',    date:todayStr(),    time:'',     freq:'daily', done:false,subtasks:[]},
-  {id:8,name:'Take out trash',           cat:'home',   priority:'low',    date:dateOffset(3), time:'',     freq:'weekly',done:false,subtasks:[]},
-  {id:9,name:'Dentist appointment',      cat:'health', priority:'high',   date:dateOffset(10),time:'10:00',freq:'once',  done:false,subtasks:[]},
-  {id:10,name:'Gym session',             cat:'fitness',priority:'medium', date:todayStr(),    time:'07:00',freq:'daily', done:true, subtasks:[]},
+  {id:1,name:'Go to bed by 11pm',       cat:'life',   priority:'high',  date:todayStr(),    time:'23:00',freq:'daily', done:false,subtasks:[]},
+  {id:2,name:'Apply to 3 jobs',          cat:'work',   priority:'high',  date:todayStr(),    time:'',     freq:'once',  done:false,subtasks:[{text:'Software engineer at Stripe',done:true},{text:'Frontend role at Linear',done:false},{text:'Full-stack at Vercel',done:false}]},
+  {id:3,name:'Vacuum the living room',   cat:'home',   priority:'medium',date:dateOffset(2), time:'',     freq:'weekly',done:false,subtasks:[]},
+  {id:4,name:'30 min walk',              cat:'fitness',priority:'medium',date:todayStr(),    time:'08:00',freq:'daily', done:false,subtasks:[]},
+  {id:5,name:'Review Q2 report',         cat:'work',   priority:'high',  date:todayStr(),    time:'14:00',freq:'once',  done:false,subtasks:[{text:'Read executive summary',done:true},{text:'Check revenue figures',done:false},{text:'Note action items',done:false}]},
+  {id:6,name:'Call Mom',                 cat:'life',   priority:'medium',date:dateOffset(1), time:'18:00',freq:'weekly',done:false,subtasks:[]},
+  {id:7,name:'Drink 8 glasses of water', cat:'health', priority:'low',   date:todayStr(),    time:'',     freq:'daily', done:false,subtasks:[]},
+  {id:8,name:'Take out trash',           cat:'home',   priority:'low',   date:dateOffset(3), time:'',     freq:'weekly',done:false,subtasks:[]},
+  {id:9,name:'Dentist appointment',      cat:'health', priority:'high',  date:dateOffset(10),time:'10:00',freq:'once',  done:false,subtasks:[]},
+  {id:10,name:'Gym session',             cat:'fitness',priority:'medium',date:todayStr(),    time:'07:00',freq:'daily', done:true, subtasks:[]},
 ];
 let nextId=11;
-
-// Active filters (multi-select)
-let activeFilters = new Set();
+let activeFilters=new Set();
 let currentView='today';
 let viewOffset=0;
 let deleteTargetId=null;
 let selectedColor=CAT_COLORS[0];
+let pendingTaskId=null;
+let boxOpenRarity=null;
+let boxOpenCard=null;
 
-// Generate collection
+// Collection
 function makeCollection(){
   const defs=[{key:'common',count:30},{key:'uncommon',count:30},{key:'rare',count:25},{key:'epic',count:25},{key:'legendary',count:20},{key:'mythic',count:20},{key:'cosmic',count:10}];
-  const coll=[];
-  defs.forEach(r=>{for(let i=1;i<=r.count;i++)coll.push({id:`${r.key}-${i}`,rarity:r.key,name:`${r.key.charAt(0).toUpperCase()+r.key.slice(1)} Card ${i}`,owned:Math.random()<(r.key==='common'?0.55:r.key==='uncommon'?0.3:r.key==='rare'?0.18:0.04)});});
-  return coll;
+  const c=[];
+  defs.forEach(r=>{for(let i=1;i<=r.count;i++)c.push({id:`${r.key}-${i}`,rarity:r.key,name:`${r.key.charAt(0).toUpperCase()+r.key.slice(1)} Card ${i}`,owned:Math.random()<(r.key==='common'?0.55:r.key==='uncommon'?0.3:r.key==='rare'?0.18:0.04)});});
+  return c;
 }
 let collection=makeCollection();
 
-// Generate lotteries with UTC times
+// Lotteries
 function makeLotteries(){
   const now=new Date();
-  function hoursUntilUTC(h){const t=new Date();t.setUTCHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.round((t-now)/3600000);}
-  const dailyPool=[
+  function hUTC(h){const t=new Date();t.setUTCHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.round((t-now)/3600000);}
+  const dPool=[
     {name:'Common Box',cost:5,maxEntries:7,winners:10},
     {name:'Common Card',cost:10,maxEntries:6,winners:10},
     {name:'Uncommon Box',cost:5,maxEntries:7,winners:8},
@@ -730,52 +821,60 @@ function makeLotteries(){
     {name:'Epic Box',cost:10,maxEntries:6,winners:5},
     {name:'Legendary Box',cost:15,maxEntries:5,winners:3},
   ];
-  const weeklyPool=[
+  const wPool=[
     {name:'Epic Box',cost:15,maxEntries:4,winners:8},
     {name:'Legendary Box',cost:20,maxEntries:4,winners:5},
     {name:'Mythic Box',cost:25,maxEntries:3,winners:3},
     {name:'Cosmic Box',cost:35,maxEntries:2,winners:2},
     {name:'Cosmic Card',cost:40,maxEntries:1,winners:1},
   ];
-  const shuffle=a=>[...a].sort(()=>0.5-Math.random());
-  const picks=shuffle(dailyPool).slice(0,4);
-  const utcTimes=[0,6,12,18];
-  const daily=picks.map((r,i)=>({...r,entries:0,closeHour:utcTimes[i],hoursLeft:hoursUntilUTC(utcTimes[i]),weekly:false}));
-  const weekly=[{...shuffle(weeklyPool)[0],entries:0,closeHour:0,daysLeft:5,weekly:true}];
+  const sh=a=>[...a].sort(()=>0.5-Math.random());
+  const utc=[0,6,12,18];
+  const daily=sh(dPool).slice(0,4).map((r,i)=>({...r,entries:0,closeHour:utc[i],hoursLeft:hUTC(utc[i]),weekly:false}));
+  const weekly=[{...sh(wPool)[0],entries:0,daysLeft:5,weekly:true}];
   return{daily,weekly};
 }
 let lotteries=makeLotteries();
 
-// ══════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════
+// ══════════════ HELPERS ══════════════
 function getLevel(){let l=1;for(let i=LEVEL_DATA.length-1;i>=0;i--){if(player.totalXP>=LEVEL_DATA[i].totalXP){l=LEVEL_DATA[i].level;break;}}return Math.min(l,20);}
 function getCoinLevel(lv){return COIN_LEVELS.find(c=>lv>=c.minLv&&lv<=c.maxLv)||COIN_LEVELS[0];}
-function getWeeklyTier(lv){const d=LEVEL_DATA[lv-1];return d?d.weeklyTier:1;}
-function getStreakInfo(){const idx=Math.min(player.streak,35)-1;return idx>=0?STREAK_DATA[idx]:{mult:1.0,pct:70};}
-function calcBaseXP(done,total){if(total===0)return 0;const c=Math.min(total,20)-1;const r=Math.min(done,total,20)-1;if(r<0)return 0;return XP_TABLE[r][c]||0;}
+function getWeeklyTier(lv){return LEVEL_DATA[lv-1]?.weeklyTier||1;}
+function getStreakInfo(){const i=Math.min(player.streak,35)-1;return i>=0?STREAK_DATA[i]:{mult:1.0,pct:70};}
+function calcBaseXP(done,total){if(!total)return 0;const c=Math.min(total,20)-1;const r=Math.min(done,total,20)-1;if(r<0)return 0;return XP_TABLE[r]?.[c]||0;}
 function getTodayTasks(){const t=todayStr();return tasks.filter(x=>x.freq==='daily'||x.freq==='weekly'||x.freq==='monthly'||(x.date&&x.date<=t));}
 function getCatById(id){return categories.find(c=>c.id===id)||{name:id,color:'#aaa'};}
-function formatDisplayDate(ds){if(!ds)return'';const[y,m,d]=ds.split('-').map(Number);const date=new Date(y,m-1,d);const today=new Date();today.setHours(0,0,0,0);const tom=new Date(today);tom.setDate(today.getDate()+1);if(date.getTime()===today.getTime())return'Today';if(date.getTime()===tom.getTime())return'Tomorrow';return date.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function formatDisplayDate(ds){if(!ds)return'';const[y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);const td=new Date();td.setHours(0,0,0,0);const tm=new Date(td);tm.setDate(td.getDate()+1);if(dt.getTime()===td.getTime())return'Today';if(dt.getTime()===tm.getTime())return'Tomorrow';return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function isOverdue(t){return!t.done&&t.date&&t.freq==='once'&&t.date<todayStr();}
-function formatTime(timeStr){if(!timeStr)return'';if(settings.timeFormat==='12'){const[h,m]=timeStr.split(':').map(Number);const ampm=h>=12?'PM':'AM';const h12=h%12||12;return`${h12}:${String(m).padStart(2,'0')} ${ampm}`;}return timeStr;}
+function formatTime(ts){if(!ts)return'';if(settings.timeFormat==='12'){const[h,m]=ts.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}return ts;}
 function showToast(msg){const el=document.getElementById('toast');el.innerHTML=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
-function saveSetting(k,v){settings[k]=v;}
-function applyLargeText(on){document.body.style.fontSize=on?'15.5px':'14px';saveSetting('largeText',on);}
-function applyBackground(val){
-  const themes={purple:{bg:'#fff',bg2:'#f3f0fb',bg3:'#ede8f7',sb:'#f5f1fd'},blue:{bg:'#fff',bg2:'#eff6ff',bg3:'#dbeafe',sb:'#e0efff'},green:{bg:'#fff',bg2:'#f0fdf4',bg3:'#dcfce7',sb:'#e6faf0'},peach:{bg:'#fff',bg2:'#fff7ed',bg3:'#ffedd5',sb:'#fff1e0'},gray:{bg:'#fff',bg2:'#f8fafc',bg3:'#f1f5f9',sb:'#f4f6f9'}};
-  const t=themes[val]||themes.purple;
-  document.documentElement.style.setProperty('--bg',t.bg);
-  document.documentElement.style.setProperty('--bg2',t.bg2);
-  document.documentElement.style.setProperty('--bg3',t.bg3);
-  document.querySelector('.sidebar').style.background=t.sb;
-  saveSetting('bg',val);
-}
-function updateNavStats(){document.getElementById('nav-xp').textContent=player.totalXP;document.getElementById('nav-coins').textContent=player.coins;document.getElementById('nav-streak').textContent=player.streak;}
+function updateNavStats(){document.getElementById('nav-xp').textContent=player.totalXP;document.getElementById('nav-coins').textContent=player.coins;document.getElementById('nav-streak').textContent=player.streak;document.getElementById('lottery-coins-val').textContent=player.coins;document.getElementById('shop-coins-label').textContent=`You have ${player.coins} coins`;}
 
-// ══════════════════════════════════════════════
-// PAGE NAV
-// ══════════════════════════════════════════════
+// ══════════════ THEME ══════════════
+function applyTheme(name){
+  const t=THEMES[name]||THEMES.purple;
+  const r=document.documentElement.style;
+  r.setProperty('--bg',t.bg);r.setProperty('--bg2',t.bg2);r.setProperty('--bg3',t.bg3);
+  r.setProperty('--accent',t.accent);r.setProperty('--accent-light',t.accentLight);
+  r.setProperty('--accent-mid',t.accentMid);r.setProperty('--accent-dark',t.accentDark);
+  r.setProperty('--btn-text',t.btnText);
+  r.setProperty('--border',t.border);r.setProperty('--border2',t.border2);
+  document.querySelector('.sidebar').style.background=t.sb;
+  saveSetting('bg',name);
+}
+
+// ══════════════ SETTINGS TOGGLES ══════════════
+function toggleSetting(key){
+  settings[key]=!settings[key];
+  const track=document.getElementById('toggle-'+key);
+  const label=document.getElementById('toggle-'+key+'-label');
+  if(settings[key]){track.classList.add('on');label.textContent='On';}
+  else{track.classList.remove('on');label.textContent='Off';}
+  if(key==='largeText')document.body.style.fontSize=settings[key]?'15.5px':'14px';
+}
+function saveSetting(k,v){settings[k]=v;}
+
+// ══════════════ PAGE NAV ══════════════
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -787,9 +886,7 @@ function showPage(name){
   if(name==='lottery')renderLotteries();
 }
 
-// ══════════════════════════════════════════════
-// TASKS PAGE
-// ══════════════════════════════════════════════
+// ══════════════ TASKS ══════════════
 function getViewRange(){
   const base=new Date();base.setHours(0,0,0,0);
   if(currentView==='today'){base.setDate(base.getDate()+viewOffset);const ds=base.toISOString().split('T')[0];return{start:ds,end:ds,label:viewOffset===0?'Today':base.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})};}
@@ -805,24 +902,14 @@ function getVisibleTasks(){
     if(t.freq!=='once')return true;
     return t.date&&t.date>=range.start&&t.date<=range.end;
   });
-  // Apply active filters in order: category -> priority -> due date -> incomplete
-  const hasCategory=activeFilters.has('category');
-  const hasPriority=activeFilters.has('priority');
-  const hasDue=activeFilters.has('due');
-  const hasIncomplete=activeFilters.has('incomplete');
-  if(hasIncomplete)list=list.filter(t=>!t.done);
-  if(hasDue)list.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
-  if(hasPriority)list.sort((a,b)=>({high:0,medium:1,low:2}[a.priority]-{high:0,medium:1,low:2}[b.priority]));
-  // Category groups happen in renderTasks if hasCategory
-  return{list,hasCategory,hasPriority,hasDue};
+  if(activeFilters.has('incomplete'))list=list.filter(t=>!t.done);
+  if(activeFilters.has('due'))list.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  if(activeFilters.has('priority'))list.sort((a,b)=>({high:0,medium:1,low:2}[a.priority]-{high:0,medium:1,low:2}[b.priority]));
+  return{list,hasCategory:activeFilters.has('category')};
 }
 
 function render(){
-  renderTasks();
-  updateProgress();
-  updateBadges();
-  updateUpcoming();
-  updateNavStats();
+  renderTasks();updateProgress();updateBadges();updateUpcoming();updateNavStats();
   document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   document.getElementById('topbar-title').textContent=getViewRange().label;
 }
@@ -840,14 +927,11 @@ function updateBadges(){
 function updateUpcoming(){
   const t=todayStr();
   const future=tasks.filter(x=>!x.done&&x.date&&x.date>t&&x.freq==='once').sort((a,b)=>a.date<b.date?-1:1).slice(0,6);
-  const ul=document.getElementById('upcoming-list');
-  ul.innerHTML=future.length?future.map(t=>`<div class="upcoming-item"><div class="upcoming-name">${t.name}</div><div class="upcoming-date"><i class="ti ti-calendar" style="font-size:10px"></i> ${formatDisplayDate(t.date)}${t.time?' · '+formatTime(t.time):''}</div></div>`).join(''):'<div style="font-size:11px;color:var(--text3)">No upcoming tasks.</div>';
+  document.getElementById('upcoming-list').innerHTML=future.length?future.map(t=>`<div class="upcoming-item"><div class="upcoming-name">${t.name}</div><div class="upcoming-date"><i class="ti ti-calendar" style="font-size:10px"></i> ${formatDisplayDate(t.date)}${t.time?' · '+formatTime(t.time):''}</div></div>`).join(''):'<div style="font-size:11px;color:var(--text3)">No upcoming tasks.</div>';
 }
 
 function updateProgress(){
-  const today=getTodayTasks();
-  const done=today.filter(t=>t.done).length;
-  const total=today.length;
+  const tod=getTodayTasks();const done=tod.filter(t=>t.done).length;const total=tod.length;
   const pct=total?Math.round((done/total)*100):0;
   document.getElementById('progress-fill').style.width=pct+'%';
   document.getElementById('progress-text').textContent=`${done} of ${total} completed`;
@@ -855,15 +939,13 @@ function updateProgress(){
 
 function renderTasks(){
   const area=document.getElementById('task-area');
-  const {list,hasCategory}=getVisibleTasks();
-  if(list.length===0){area.innerHTML='<div class="empty-state"><i class="ti ti-circle-check"></i><p>No tasks here.</p><p>Hit "Add Task" to get started!</p></div>';return;}
+  const{list,hasCategory}=getVisibleTasks();
+  if(!list.length){area.innerHTML='<div class="empty-state"><i class="ti ti-circle-check"></i><p>No tasks here.</p><p>Hit "Add Task" to get started!</p></div>';return;}
   area.innerHTML='';
   if(hasCategory){
-    const groups={};
-    list.forEach(t=>{if(!groups[t.cat])groups[t.cat]=[];groups[t.cat].push(t);});
+    const groups={};list.forEach(t=>{if(!groups[t.cat])groups[t.cat]=[];groups[t.cat].push(t);});
     Object.keys(groups).forEach(cat=>{
-      const ci=getCatById(cat);
-      const g=document.createElement('div');g.className='category-group';
+      const ci=getCatById(cat);const g=document.createElement('div');g.className='category-group';
       const h=document.createElement('div');h.className='category-header';
       h.innerHTML=`<div class="category-dot" style="background:${ci.color}"></div><span class="category-name">${ci.name}</span><span class="category-count">&nbsp;· ${groups[cat].length} task${groups[cat].length!==1?'s':''}</span>`;
       g.appendChild(h);groups[cat].forEach(t=>g.appendChild(makeCard(t)));area.appendChild(g);
@@ -880,73 +962,64 @@ function makeCard(t){
   const ci=getCatById(t.cat);
   let dateLabel='';
   if(t.date){const disp=formatDisplayDate(t.date);const cls=overdue?'overdue-label':t.date===todayStr()?'today-label':'';dateLabel=`<span class="task-due ${cls}"><i class="ti ${overdue?'ti-alert-circle':'ti-calendar'}" style="font-size:10px"></i>&nbsp;${overdue?'Overdue · ':''}${disp}${t.time?' '+formatTime(t.time):''}</span>`;}
+  const priorityDisplay=settings.colorBlind?`<span style="color:${PRIORITY_COLORS[t.priority]};font-size:10px;margin-left:2px">${PRIORITY_SHAPES[t.priority]}</span>`:'';
   let meta=`<span class="task-tag" style="background:${ci.color}22;color:${ci.color}">${ci.name}</span>${dateLabel}`;
   if(t.freq&&t.freq!=='once')meta+=`<span class="task-freq">· ${t.freq}</span>`;
   let subs='';
   if(t.subtasks.length>0){const dc=t.subtasks.filter(s=>s.done).length;const pct=Math.round((dc/t.subtasks.length)*100);subs=`<div class="subtasks"><div class="subtask-progress-row"><div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div><span class="subtask-label">${dc}/${t.subtasks.length} done</span></div>${t.subtasks.map((s,i)=>`<div class="subtask-item"><div class="subtask-box ${s.done?'checked':''}" onclick="toggleSub(${t.id},${i})"></div><span class="subtask-text ${s.done?'done':''}">${s.text}</span></div>`).join('')}</div>`;}
-  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${t.done?'checked':''}" onclick="toggleTask(${t.id})"></div><div class="task-content"><div class="task-name ${t.done?'done-text':''}">${t.name}</div><div class="task-meta">${meta}</div></div><div class="task-actions"><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
+  const cbClass=t.done?'checked':'';
+  const cbClick=t.done?'':`onclick="requestTaskComplete(${t.id})"`;
+  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick}></div><div class="task-content"><div class="task-name ${t.done?'done-text':''}">${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div></div><div class="task-actions"><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
   return card;
 }
 
-function toggleTask(id){
+// Task complete confirmation
+function requestTaskComplete(id){
+  const t=tasks.find(t=>t.id===id);if(!t||t.done)return;
+  pendingTaskId=id;
+  document.getElementById('task-confirm-name').textContent=`"${t.name}"`;
+  document.getElementById('task-confirm-overlay').style.display='flex';
+}
+function cancelTaskConfirm(){document.getElementById('task-confirm-overlay').style.display='none';pendingTaskId=null;}
+function confirmTaskComplete(){
+  document.getElementById('task-confirm-overlay').style.display='none';
+  const id=pendingTaskId;pendingTaskId=null;
   const t=tasks.find(t=>t.id===id);if(!t)return;
-  t.done=!t.done;
-  if(t.done){
-    const lv=getLevel();const cl=getCoinLevel(lv);
-    const limits={low:cl.maxLow,medium:cl.maxMed,high:cl.maxHigh};
-    const used={low:player.dailyLowUsed,medium:player.dailyMedUsed,high:player.dailyHighUsed};
-    const gains={low:cl.gainLow,medium:cl.gainMed,high:cl.gainHigh};
-    const p=t.priority;
-    if(used[p]<limits[p]&&player.coinPool>0){
-      const earned=gains[p];
-      player.coins+=earned;player.coinPool=Math.max(0,player.coinPool-earned);player.coinsEarnedToday+=earned;
-      if(p==='low')player.dailyLowUsed++;else if(p==='medium')player.dailyMedUsed++;else player.dailyHighUsed++;
-      showToast(`<i class="ti ti-coin"></i> +${earned} coins — "${t.name}"`);
-    } else {
-      showToast(`<i class="ti ti-check"></i> "${t.name}" completed!`);
-    }
+  t.done=true;
+  const lv=getLevel();const cl=getCoinLevel(lv);
+  const limits={low:cl.maxLow,medium:cl.maxMed,high:cl.maxHigh};
+  const used={low:player.dailyLowUsed,medium:player.dailyMedUsed,high:player.dailyHighUsed};
+  const gains={low:cl.gainLow,medium:cl.gainMed,high:cl.gainHigh};
+  const p=t.priority;
+  if(used[p]<limits[p]&&player.coinPool>0){
+    const earned=gains[p];
+    player.coins+=earned;player.coinPool=Math.max(0,player.coinPool-earned);player.coinsEarnedToday+=earned;
+    if(p==='low')player.dailyLowUsed++;else if(p==='medium')player.dailyMedUsed++;else player.dailyHighUsed++;
+    showToast(`<i class="ti ti-coin"></i> +${earned} coins — task complete!`);
+  } else {
+    showToast(`<i class="ti ti-check"></i> Task completed!`);
   }
   render();
 }
+
 function toggleSub(tid,i){const t=tasks.find(t=>t.id===tid);if(!t||!t.subtasks[i])return;t.subtasks[i].done=!t.subtasks[i].done;render();}
-
-function toggleFilter(f){
-  if(activeFilters.has(f))activeFilters.delete(f);else activeFilters.add(f);
-  document.getElementById('filter-'+f).classList.toggle('active',activeFilters.has(f));
-  render();
-}
-
-function setView(v){
-  currentView=v;viewOffset=0;
-  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));
-  document.getElementById('view-'+v)?.classList.add('active');
-  const tabMap={today:'day',week:'week',month:'month'};
-  if(tabMap[v]){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+tabMap[v])?.classList.add('active');}
-  render();
-}
+function toggleFilter(f){activeFilters.has(f)?activeFilters.delete(f):activeFilters.add(f);document.getElementById('filter-'+f).classList.toggle('active',activeFilters.has(f));render();}
+function setView(v){currentView=v;viewOffset=0;document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));document.getElementById('view-'+v)?.classList.add('active');const m={today:'day',week:'week',month:'month'};if(m[v]){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+m[v])?.classList.add('active');}render();}
 function setTab(t){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');setView({day:'today',week:'week',month:'month'}[t]);}
 function shiftView(dir){viewOffset+=dir;render();}
 
-// ══════════════════════════════════════════════
-// PROGRESS PAGE
-// ══════════════════════════════════════════════
+// ══════════════ PROGRESS PAGE ══════════════
 function renderGamePage(){
   const lv=getLevel();const ld=LEVEL_DATA[lv-1];const nd=LEVEL_DATA[Math.min(lv,19)];
-  const xpIn=player.totalXP-ld.totalXP;const xpNeed=lv<20?nd.xpNeeded:1;const xpPct=lv<20?Math.round((xpIn/xpNeed)*100):100;
-  document.getElementById('g-level').textContent=lv;
-  document.getElementById('g-level-sub').textContent=lv;
+  const xpIn=player.totalXP-ld.totalXP;const xpNeed=lv<20?nd.xpNeeded:1;const xpPct=lv<20?Math.min(100,Math.round((xpIn/xpNeed)*100)):100;
+  document.getElementById('g-level').textContent=lv;document.getElementById('g-level-sub').textContent=lv;
   document.getElementById('xp-bar').style.width=xpPct+'%';
-  document.getElementById('xp-current-label').textContent=player.totalXP+' XP total';
+  document.getElementById('xp-current-label').textContent=`${xpIn} / ${xpNeed} XP`;
   document.getElementById('xp-next-label').textContent=lv<20?`${xpNeed-xpIn} to Lv ${lv+1}`:'Max Level!';
-
-  // Streak
   const si=getStreakInfo();
   document.getElementById('g-streak').textContent=player.streak;
   document.getElementById('streak-mult-label').textContent=`${si.mult.toFixed(2)}x XP multiplier`;
   document.getElementById('streak-pct-label').textContent=`Need ${si.pct}% completion to maintain`;
-  renderStreakDays();
-
-  // Coins
   const cl=getCoinLevel(lv);
   document.getElementById('g-coins').textContent=player.coins;
   document.getElementById('coin-pool-val').textContent=`${player.coinPool}/${cl.maxPool}`;
@@ -955,69 +1028,31 @@ function renderGamePage(){
     <div class="coin-limit-row"><span class="coin-limit-label">Low (×${cl.gainLow})</span><div class="coin-limit-track"><div class="coin-limit-fill fill-low" style="width:${Math.round((player.dailyLowUsed/cl.maxLow)*100)}%"></div></div><span class="coin-limit-count">${player.dailyLowUsed}/${cl.maxLow}</span></div>
     <div class="coin-limit-row"><span class="coin-limit-label">Med (×${cl.gainMed})</span><div class="coin-limit-track"><div class="coin-limit-fill fill-med" style="width:${Math.round((player.dailyMedUsed/cl.maxMed)*100)}%"></div></div><span class="coin-limit-count">${player.dailyMedUsed}/${cl.maxMed}</span></div>
     <div class="coin-limit-row"><span class="coin-limit-label">High (×${cl.gainHigh})</span><div class="coin-limit-track"><div class="coin-limit-fill fill-high" style="width:${Math.round((player.dailyHighUsed/cl.maxHigh)*100)}%"></div></div><span class="coin-limit-count">${player.dailyHighUsed}/${cl.maxHigh}</span></div>`;
-
-  // Weekly rewards
-  const tier=getWeeklyTier(lv);
-  document.getElementById('weekly-tier-badge').textContent=`Tier ${tier}`;
-  const maxPct=tier<=3?700:700;
-  const barPct=Math.min(100,Math.round((player.weeklyPool/maxPct)*100));
+  const tier=getWeeklyTier(lv);document.getElementById('weekly-tier-badge').textContent=`Tier ${tier}`;
+  const maxPct=700;const barPct=Math.min(100,Math.round((player.weeklyPool/maxPct)*100));
   document.getElementById('weekly-bar').style.width=barPct+'%';
   document.getElementById('weekly-pool-label').textContent=`${player.weeklyPool}% accumulated this week`;
   const rewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
   document.getElementById('weekly-rewards-list').innerHTML=rewards.map(r=>{
-    const achieved=player.weeklyAchieved.includes(r.pct);
-    const isCurrent=!achieved&&player.weeklyPool>=r.pct;
-    return`<div class="weekly-reward-item ${achieved?'achieved':''} ${isCurrent?'current':''}">
-      <div class="wr-pct">${r.pct}%</div>
-      <div class="wr-info"><div class="wr-label">${r.reward}</div></div>
-      ${achieved?'<i class="ti ti-circle-check wr-check"></i>':''}
-    </div>`;}).join('');
-
-  // Summary
-  const tod=getTodayTasks();const done=tod.filter(t=>t.done).length;const total=tod.length;
-  const pct=total?Math.round((done/total)*100):0;
-  const baseXP=calcBaseXP(done,total);
-  const multXP=Math.round(baseXP*(player.streak>0?si.mult:1));
-  document.getElementById('s-done').textContent=done;
-  document.getElementById('s-total').textContent=total;
-  document.getElementById('s-pct').textContent=pct+'%';
-  document.getElementById('s-xp').textContent='+'+baseXP+' XP';
-  document.getElementById('s-xp-mult').textContent='+'+multXP+' XP';
-  document.getElementById('s-coins').textContent='+'+player.coinsEarnedToday;
-}
-
-function renderStreakDays(){
-  const el=document.getElementById('streak-days');if(!el)return;
-  const ws=settings.weekStart;
-  const colorBlind=settings.colorBlind;
-  const today=new Date();const todayDow=today.getDay();
-  const days=[];
-  for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(today.getDate()-i);days.push(d);}
-  // Sort so week starts on settings.weekStart
-  days.sort((a,b)=>{const ai=(a.getDay()-ws+7)%7;const bi=(b.getDay()-ws+7)%7;return ai-bi;});
-  const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  el.innerHTML=days.map(d=>{
-    const isToday=d.toDateString()===today.toDateString();
-    const daysAgo=Math.round((today-d)/86400000);
-    const streakDay=daysAgo<player.streak;
-    const cls=isToday?'streak-day today-day':streakDay?'streak-day done':'streak-day';
-    const shape=colorBlind&&streakDay?'★':'';
-    return`<div class="${cls}" title="${d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})}"><span class="day-letter">${dayNames[d.getDay()].slice(0,1)}</span><span class="day-num">${d.getDate()}${shape}</span></div>`;
+    const achieved=player.weeklyAchieved.includes(r.pct);const isCurrent=!achieved&&player.weeklyPool>=r.pct;
+    return`<div class="weekly-reward-item ${achieved?'achieved':''} ${isCurrent?'current':''}"><div class="wr-pct">${r.pct}%</div><div class="wr-info"><div class="wr-label">${r.reward}</div></div>${achieved?'<i class="ti ti-circle-check wr-check"></i>':''}</div>`;
   }).join('');
+  const tod=getTodayTasks();const done=tod.filter(t=>t.done).length;const total=tod.length;const pct=total?Math.round((done/total)*100):0;
+  const baseXP=calcBaseXP(done,total);const multXP=Math.round(baseXP*(player.streak>0?si.mult:1));
+  document.getElementById('s-done').textContent=done;document.getElementById('s-total').textContent=total;document.getElementById('s-pct').textContent=pct+'%';
+  document.getElementById('s-xp').textContent='+'+baseXP+' XP';document.getElementById('s-xp-mult').textContent='+'+multXP+' XP';document.getElementById('s-coins').textContent='+'+player.coinsEarnedToday;
 }
 
-// Level modal
+// Level modal — no XP needed column, progress bar shows current level progress only
 function openLevelModal(){
-  const lv=getLevel();
-  const maxXP=LEVEL_DATA[19].totalXP;
-  const pct=Math.round((player.totalXP/maxXP)*100);
-  let html=`<div style="margin-bottom:6px;font-size:12px;color:var(--text2)">Your progress: <strong>${player.totalXP} / ${maxXP} total XP (${pct}%)</strong></div>`;
-  html+=`<div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:18px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),#c4b8ef);border-radius:5px;"></div></div>`;
-  html+=`<table class="level-table"><thead><tr><th>Lv</th><th>XP Needed</th><th>Benefit</th><th>Coins</th></tr></thead><tbody>`;
+  const lv=getLevel();const ld=LEVEL_DATA[lv-1];const nd=LEVEL_DATA[Math.min(lv,19)];
+  const xpIn=player.totalXP-ld.totalXP;const xpNeed=lv<20?nd.xpNeeded:1;const pct=lv<20?Math.min(100,Math.round((xpIn/xpNeed)*100)):100;
+  let html=`<div style="margin-bottom:6px;font-size:12px;color:var(--text2)">Level ${lv} progress: <strong>${xpIn} / ${xpNeed} XP (${pct}%)</strong></div>`;
+  html+=`<div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;margin-bottom:18px"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent-mid));border-radius:5px;transition:width 0.5s"></div></div>`;
+  html+=`<table class="level-table"><thead><tr><th>Lv</th><th>Benefit</th><th>Coins on Unlock</th></tr></thead><tbody>`;
   LEVEL_DATA.forEach(d=>{
-    const reached=player.totalXP>=d.totalXP;
-    const current=lv===d.level;
-    html+=`<tr class="${current?'current-row':reached?'reached-row':''}"><td class="level-num-cell">${d.level}</td><td>${d.xpNeeded}</td><td>${d.benefit}</td><td>+${d.coins}</td></tr>`;
+    const reached=player.totalXP>=d.totalXP;const current=lv===d.level;
+    html+=`<tr class="${current?'current-row':reached?'reached-row':''}"><td class="lv-num">${d.level}${current?' ◄':''}</td><td>${d.benefit}</td><td>+${d.coins}</td></tr>`;
   });
   html+=`</tbody></table>`;
   document.getElementById('level-modal-content').innerHTML=html;
@@ -1025,121 +1060,102 @@ function openLevelModal(){
 }
 function closeLevelModal(){document.getElementById('level-modal').classList.remove('open');}
 
-// ══════════════════════════════════════════════
-// COLLECTION
-// ══════════════════════════════════════════════
+// ══════════════ COLLECTION ══════════════
 function renderCollection(){
   const owned=collection.filter(c=>c.owned).length;
   document.getElementById('coll-progress').textContent=`${owned} / 160 cards collected`;
   const rarityOrder=['common','uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('collection-display').innerHTML=rarityOrder.map(r=>{
-    const cards=collection.filter(c=>c.rarity===r);
-    const oc=cards.filter(c=>c.owned).length;
-    return`<div class="rarity-section">
-      <div class="rarity-header">
-        <span class="rarity-badge" style="background:${RARITY_COLORS[r]}22;color:${RARITY_COLORS[r]};border:1px solid ${RARITY_COLORS[r]}55">${r.toUpperCase()}</span>
-        <span class="rarity-count-label">${oc}/${cards.length} collected</span>
-      </div>
-      <div class="cards-grid">${cards.map(c=>`<div class="coll-card ${RARITY_CLASS[r]} ${c.owned?'':'locked'}"><div class="coll-card-icon">${c.owned?RARITY_ICONS[r]:'🔒'}</div><div><div class="coll-card-name">${c.owned?c.name:'???'}</div><div class="coll-card-rarity">${r}</div></div></div>`).join('')}</div>
-    </div>`;}).join('');
+    const cards=collection.filter(c=>c.rarity===r);const oc=cards.filter(c=>c.owned).length;
+    return`<div class="rarity-section"><div class="rarity-header"><span class="rarity-badge" style="background:${RARITY_COLORS[r]}22;color:${RARITY_COLORS[r]};border:1px solid ${RARITY_COLORS[r]}55">${r.toUpperCase()}</span><span class="rarity-count-label">${oc}/${cards.length}</span></div><div class="cards-grid">${cards.map(c=>`<div class="coll-card ${RARITY_CLASS[r]} ${c.owned?'':'locked'}"><div class="coll-card-icon">${c.owned?RARITY_ICONS[r]:'🔒'}</div><div><div class="coll-card-name">${c.owned?c.name:'???'}</div><div class="coll-card-rarity">${r}</div></div></div>`).join('')}</div></div>`;
+  }).join('');
 }
 
-// ══════════════════════════════════════════════
-// SHOP
-// ══════════════════════════════════════════════
+// ══════════════ BOX OPENING ══════════════
+function rollCard(rarity){
+  const drops=BOX_DROPS[rarity]||BOX_DROPS.common;
+  const total=drops.reduce((s,d)=>s+d.w,0);let roll=Math.random()*total;
+  for(const d of drops){roll-=d.w;if(roll<=0){return d.r;}}return drops[drops.length-1].r;
+}
+function openBox(rarity){
+  const cardRarity=rollCard(rarity);
+  const available=collection.filter(c=>c.rarity===cardRarity&&!c.owned);
+  let card,isDupe=false;
+  if(available.length>0){card=available[Math.floor(Math.random()*available.length)];card.owned=true;}
+  else{const all=collection.filter(c=>c.rarity===cardRarity);card=all[Math.floor(Math.random()*all.length)];isDupe=true;}
+  boxOpenRarity=cardRarity;boxOpenCard={card,isDupe};
+  // Setup overlay
+  document.getElementById('box-open-title').textContent=`${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Box`;
+  document.getElementById('box-card-inner').classList.remove('flipped');
+  document.getElementById('box-open-result').classList.remove('show');
+  document.getElementById('box-open-close').classList.remove('show');
+  document.getElementById('box-open-hint').style.display='block';
+  document.getElementById('box-card-front').innerHTML=`<div class="coll-card ${RARITY_CLASS[cardRarity]}" style="width:100%;height:100%;border-radius:14px;transform:none;aspect-ratio:unset;justify-content:center;"><div style="font-size:48px;margin-bottom:8px">${RARITY_ICONS[cardRarity]}</div><div style="font-size:13px;font-weight:700">${card.name}</div><div style="font-size:11px;opacity:0.7;margin-top:4px">${cardRarity.toUpperCase()}</div>${isDupe?'<div style="font-size:11px;margin-top:6px;color:#ea580c;font-weight:600">DUPLICATE</div>':''}</div>`;
+  document.getElementById('box-open-overlay').style.display='flex';
+}
+function flipBoxCard(){
+  const inner=document.getElementById('box-card-inner');
+  if(inner.classList.contains('flipped'))return;
+  inner.classList.add('flipped');
+  document.getElementById('box-open-hint').style.display='none';
+  setTimeout(()=>{
+    const{card,isDupe}=boxOpenCard;
+    if(isDupe){
+      const dr=DUPE_REWARD[card.rarity];
+      if(dr){player.dupePoints[dr.target]=(player.dupePoints[dr.target]||0)+dr.pts;}
+      document.getElementById('box-open-result').innerHTML=`Duplicate! Added <strong>+${DUPE_REWARD[card.rarity]?.pts||0} ${DUPE_REWARD[card.rarity]?.target||''} points</strong> to your crafting pool.`;
+    } else {
+      document.getElementById('box-open-result').innerHTML=`New card! <strong>${card.name}</strong> added to your collection.`;
+    }
+    document.getElementById('box-open-result').classList.add('show');
+    document.getElementById('box-open-close').classList.add('show');
+    // Sparkles
+    const overlay=document.getElementById('box-open-overlay');
+    for(let i=0;i<6;i++){const s=document.createElement('div');s.className='sparkle';s.textContent=['✨','⭐','💫','🌟'][Math.floor(Math.random()*4)];s.style.cssText=`left:${20+Math.random()*60}%;top:${20+Math.random()*60}%;animation-delay:${Math.random()*0.3}s`;overlay.appendChild(s);setTimeout(()=>s.remove(),1200);}
+  },750);
+}
+function closeBoxOpen(){document.getElementById('box-open-overlay').style.display='none';boxOpenRarity=null;boxOpenCard=null;renderCollection();renderShop();}
+
+// ══════════════ SHOP ══════════════
 function renderShop(){
   const lv=getLevel();
   document.getElementById('shop-coins-label').textContent=`You have ${player.coins} coins`;
-
-  // Dupe crafting
   const rarities=['uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('dupe-craft-list').innerHTML=rarities.map(r=>{
-    const pts=player.dupePoints[r]||0;const pct=Math.min(100,Math.round((pts/100)*100));
-    const canCraft=pts>=100;
-    return`<div class="dupe-row">
-      <span class="dupe-label" style="color:${RARITY_COLORS[r]}">${r.charAt(0).toUpperCase()+r.slice(1)}</span>
-      <div class="dupe-bar-track"><div class="dupe-bar-fill" style="width:${pct}%;background:${RARITY_COLORS[r]}"></div></div>
-      <span class="dupe-pts">${pts}/100</span>
-      <button class="craft-btn" style="background:${canCraft?RARITY_COLORS[r]:'var(--bg3)'};color:${canCraft?'white':'var(--text3)'}" onclick="craftBox('${r}')" ${canCraft?'':'disabled'}>Craft</button>
-    </div>`;}).join('');
-
-  // Box shop
+    const pts=player.dupePoints[r]||0;const pct=Math.min(100,Math.round((pts/100)*100));const can=pts>=100;
+    return`<div class="dupe-row"><span class="dupe-label" style="color:${RARITY_COLORS[r]}">${r.charAt(0).toUpperCase()+r.slice(1)}</span><div class="dupe-bar-track"><div class="dupe-bar-fill" style="width:${pct}%;background:${RARITY_COLORS[r]}"></div></div><span class="dupe-pts">${pts}/100</span><button class="craft-btn" style="background:${can?RARITY_COLORS[r]:'var(--bg3)'};color:${can?'white':'var(--text3)'}" onclick="craftBox('${r}')" ${can?'':'disabled'}>Craft</button></div>`;
+  }).join('');
   const boxRarities=['common','uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('box-shop').innerHTML=boxRarities.map(r=>{
-    const unlockLv=BOX_UNLOCK_LEVELS[r];const cost=BOX_COSTS[r];const unlocked=lv>=unlockLv;
-    return`<div class="shop-item ${unlocked?'':'locked-item'}">
-      <div style="font-size:24px">${RARITY_ICONS[r]}</div>
-      <div class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</div>
-      <div class="shop-item-desc">${unlocked?`Contains a random ${r} or lower rarity card.`:`Unlocks at Level ${unlockLv}`}</div>
-      <div class="shop-item-footer">
-        <div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>
-        ${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy</button>`:`<span class="shop-locked-label">🔒 Level ${unlockLv}</span>`}
-      </div>
-    </div>`;}).join('');
-
-  // Utilities
+    const ulv=BOX_UNLOCK_LEVELS[r];const cost=BOX_COSTS[r];const unlocked=lv>=ulv;
+    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</div><div class="shop-item-desc">${unlocked?`Opens to reveal a ${r} or lower rarity card.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
+  }).join('');
   document.getElementById('util-shop').innerHTML=`
-    <div class="shop-item">
-      <div style="font-size:24px">🛡️</div>
-      <div class="shop-item-name">Streak Saver</div>
-      <div class="shop-item-desc">Protects your streak for one missed day. Can only be used once per week.</div>
-      <div class="shop-item-footer">
-        <div class="shop-price"><i class="ti ti-coin"></i>25</div>
-        <button class="shop-buy-btn" onclick="buyStreakSaver()" ${player.coins<25?'disabled':''}>Buy</button>
-      </div>
-    </div>`;
+    <div class="shop-item"><div class="shop-item-icon">🛡️</div><div class="shop-item-name">Streak Saver</div><div class="shop-item-desc">Protects your streak for one missed day. Usable once per week.</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>25</div><button class="shop-buy-btn" onclick="buyStreakSaver()" ${player.coins<25?'disabled':''}>Buy</button></div></div>`;
 }
+function craftBox(r){if((player.dupePoints[r]||0)<100)return;player.dupePoints[r]-=100;showToast(`Crafted a ${r} box!`);openBox(r);}
+function buyBox(r,cost){if(player.coins<cost)return;player.coins-=cost;updateNavStats();openBox(r);}
+function buyStreakSaver(){if(player.coins<25)return;player.coins-=25;updateNavStats();showToast('🛡️ Streak Saver purchased!');renderShop();}
 
-function craftBox(rarity){if((player.dupePoints[rarity]||0)<100)return;player.dupePoints[rarity]-=100;showToast(`<i class="ti ti-package"></i> Crafted a ${rarity} box!`);renderShop();}
-function buyBox(rarity,cost){if(player.coins<cost){showToast('Not enough coins!');return;}player.coins-=cost;updateNavStats();showToast(`<i class="ti ti-package"></i> Bought a ${rarity} box!`);renderShop();}
-function buyStreakSaver(){if(player.coins<25){showToast('Not enough coins!');return;}player.coins-=25;updateNavStats();showToast('🛡️ Streak Saver purchased! Active for this week.');renderShop();}
-
-// ══════════════════════════════════════════════
-// LOTTERY
-// ══════════════════════════════════════════════
+// ══════════════ LOTTERY ══════════════
 function renderLotteries(){
   document.getElementById('lottery-coins-val').textContent=player.coins;
   function card(l){
     const dots=Array.from({length:l.maxEntries},(_,i)=>`<div class="entry-dot ${i<l.entries?'filled':''}"></div>`).join('');
-    const timeStr=l.weekly?`${l.daysLeft}d left — closes Mon 12:00 AM UTC`:l.hoursLeft<=2?`${l.hoursLeft}h left — closing soon!`:`${l.hoursLeft}h left — closes at ${l.closeHour.toString().padStart(2,'0')}:00 UTC`;
-    const urgent=!l.weekly&&l.hoursLeft<=2;
-    const canEnter=l.entries<l.maxEntries&&player.coins>=l.cost;
-    return`<div class="lottery-card ${l.weekly?'weekly-card':''}">
-      <div class="lottery-top"><div class="lottery-reward-name">${l.name}</div>${l.weekly?'<span class="weekly-badge">⭐ Weekly</span>':''}</div>
-      <div class="lottery-meta">
-        <span class="lottery-meta-chip"><i class="ti ti-users"></i>${l.winners} winners</span>
-        <span class="lottery-meta-chip"><i class="ti ti-coin"></i>${l.cost} coins/entry</span>
-        <span class="lottery-meta-chip"><i class="ti ti-door-enter"></i>Max ${l.maxEntries}</span>
-      </div>
-      <div class="lottery-time ${urgent?'urgent':''}"><i class="ti ti-clock"></i>${timeStr}</div>
-      <div class="entry-row">
-        <div class="entry-dots">${dots}</div>
-        <div class="entry-right">
-          <div class="entry-count">${l.entries}/${l.maxEntries} entries</div>
-          <button class="entry-btn" onclick="enterLottery('${l.name}',${l.weekly})" ${canEnter?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button>
-        </div>
-      </div>
-    </div>`;
+    const ts=l.weekly?`${l.daysLeft}d left — closes Mon 12:00 AM UTC`:l.hoursLeft<=2?`${l.hoursLeft}h left — closing soon!`:`${l.hoursLeft}h left — closes ${l.closeHour.toString().padStart(2,'0')}:00 UTC`;
+    const urgent=!l.weekly&&l.hoursLeft<=2;const can=l.entries<l.maxEntries&&player.coins>=l.cost;
+    return`<div class="lottery-card ${l.weekly?'weekly-card':''}"><div class="lottery-top"><div class="lottery-reward-name">${l.name}</div>${l.weekly?'<span class="weekly-badge">⭐ Weekly</span>':''}</div><div class="lottery-meta"><span class="lottery-meta-chip"><i class="ti ti-users"></i>${l.winners} winners</span><span class="lottery-meta-chip"><i class="ti ti-coin"></i>${l.cost}/entry</span><span class="lottery-meta-chip">Max ${l.maxEntries}</span></div><div class="lottery-time ${urgent?'urgent':''}"><i class="ti ti-clock"></i>${ts}</div><div class="entry-row"><div class="entry-dots">${dots}</div><div class="entry-right"><div class="entry-count">${l.entries}/${l.maxEntries}</div><button class="entry-btn" onclick="enterLottery('${l.name}',${l.weekly})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button></div></div></div>`;
   }
-  // Sort daily by time remaining (soonest first)
-  const sortedDaily=[...lotteries.daily].sort((a,b)=>a.hoursLeft-b.hoursLeft);
-  document.getElementById('daily-lottery-grid').innerHTML=sortedDaily.map(card).join('');
+  document.getElementById('daily-lottery-grid').innerHTML=[...lotteries.daily].sort((a,b)=>a.hoursLeft-b.hoursLeft).map(card).join('');
   document.getElementById('weekly-lottery-grid').innerHTML=lotteries.weekly.map(card).join('');
 }
-
 function enterLottery(name,weekly){
-  if(player.coins<=0)return;
-  const arr=weekly?lotteries.weekly:lotteries.daily;
-  const l=arr.find(x=>x.name===name);
+  const arr=weekly?lotteries.weekly:lotteries.daily;const l=arr.find(x=>x.name===name);
   if(!l||l.entries>=l.maxEntries||player.coins<l.cost)return;
-  player.coins-=l.cost;l.entries++;
-  showToast(`<i class="ti ti-ticket"></i> Entered the ${name} lottery!`);
-  updateNavStats();renderLotteries();
+  player.coins-=l.cost;l.entries++;showToast(`<i class="ti ti-ticket"></i> Entered ${name} lottery!`);updateNavStats();renderLotteries();
 }
 
-// ══════════════════════════════════════════════
-// TASK MODAL
-// ══════════════════════════════════════════════
+// ══════════════ TASK MODAL ══════════════
 function handleFreqChange(){const f=document.getElementById('new-freq').value;const r=f!=='once';document.getElementById('date-fields').style.display=r?'none':'';document.getElementById('recurring-note').style.display=r?'block':'none';}
 function openAddModal(){document.getElementById('modal-title').textContent='New Task';document.getElementById('edit-id').value='';resetTaskForm();document.getElementById('new-date').value=todayStr();document.getElementById('task-modal').classList.add('open');setTimeout(()=>document.getElementById('new-name').focus(),50);}
 function openEditModal(id){const t=tasks.find(t=>t.id===id);if(!t)return;document.getElementById('modal-title').textContent='Edit Task';document.getElementById('edit-id').value=id;document.getElementById('new-name').value=t.name;document.getElementById('new-cat').value=t.cat;document.getElementById('new-priority').value=t.priority;document.getElementById('new-freq').value=t.freq;document.getElementById('new-date').value=t.date||todayStr();document.getElementById('new-time').value=t.time||'';document.getElementById('subtask-inputs').innerHTML='';t.subtasks.forEach(s=>addSubtaskInput(s.text));handleFreqChange();document.getElementById('task-modal').classList.add('open');setTimeout(()=>document.getElementById('new-name').focus(),50);}
@@ -1148,14 +1164,14 @@ function resetTaskForm(){['edit-id','new-name','new-time'].forEach(id=>{const el
 function addSubtaskInput(val=''){const c=document.getElementById('subtask-inputs');const row=document.createElement('div');row.className='subtask-input-row';row.innerHTML=`<input class="form-input" placeholder="Subtask item..." value="${val}"/><button class="remove-sub" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;c.appendChild(row);row.querySelector('input').focus();}
 function saveTask(){const name=document.getElementById('new-name').value.trim();if(!name){document.getElementById('new-name').focus();return;}const freq=document.getElementById('new-freq').value;const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);const editId=document.getElementById('edit-id').value;if(editId){const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;const old=t.subtasks;t.name=name;t.cat=document.getElementById('new-cat').value;t.priority=document.getElementById('new-priority').value;t.freq=freq;t.date=freq==='once'?document.getElementById('new-date').value:null;t.time=document.getElementById('new-time').value;t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});}else{tasks.push({id:nextId++,name,cat:document.getElementById('new-cat').value,priority:document.getElementById('new-priority').value,freq,date:freq==='once'?document.getElementById('new-date').value:null,time:document.getElementById('new-time').value,done:false,subtasks:subs.map(text=>({text,done:false}))});}closeTaskModal();render();}
 
-// CATEGORY MODAL
+// ══════════════ CATEGORY MODAL ══════════════
 function buildCatSelect(){const sel=document.getElementById('new-cat');if(sel)sel.innerHTML=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');}
 function openAddCatModal(){document.getElementById('cat-name').value='';selectedColor=CAT_COLORS[0];document.getElementById('color-chips').innerHTML=CAT_COLORS.map(c=>`<div class="color-chip ${c===selectedColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');document.getElementById('cat-modal').classList.add('open');setTimeout(()=>document.getElementById('cat-name').focus(),50);}
 function selectColor(c){selectedColor=c;document.querySelectorAll('.color-chip').forEach(el=>el.classList.toggle('selected',el.style.backgroundColor===c||el.style.background===c));}
 function closeCatModal(){document.getElementById('cat-modal').classList.remove('open');}
 function saveCategory(){const name=document.getElementById('cat-name').value.trim();if(!name)return;const id=name.toLowerCase().replace(/\s+/g,'-')+'-'+Date.now();categories.push({id,name,color:selectedColor});closeCatModal();buildCatSelect();render();}
 
-// DELETE
+// ══════════════ DELETE ══════════════
 function openDeleteConfirm(id){const t=tasks.find(t=>t.id===id);if(!t)return;deleteTargetId=id;document.getElementById('confirm-body').textContent=`"${t.name}" will be permanently removed.`;document.getElementById('confirm-modal').classList.add('open');}
 function closeConfirmModal(){document.getElementById('confirm-modal').classList.remove('open');deleteTargetId=null;}
 function confirmDelete(){if(deleteTargetId!==null){tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}closeConfirmModal();render();}
