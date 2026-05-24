@@ -1560,7 +1560,7 @@ function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')close
 
 // ══════════════ SUPABASE AUTH ══════════════
 const SUPABASE_URL = 'https://szkyhxephooswxexsjar.supabase.co';
-const SUPABASE_ANON_KEY = 'PASTE_YOUR_ANON_KEY_HERE';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a3loeGVwaG9vc3d4ZXhzamFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODYyNjcsImV4cCI6MjA5NTE2MjI2N30.fz5kr4cvZacYXtGf-GBhHZM9KZz9CcJcraYdebM9OJY';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null; // holds the Supabase user object
