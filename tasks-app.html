@@ -154,6 +154,11 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .subtask-box.checked::after { content:'✓'; color:white; font-size:8px; line-height:1; }
 .subtask-text { font-size:12px; color:var(--text2); }
 .subtask-text.done { text-decoration:line-through; color:var(--text3); }
+
+/* Pinned task */
+.task-card.pinned-card { border-left:3px solid var(--accent); }
+.pin-badge { font-size:10px; color:var(--accent); font-weight:600; display:flex; align-items:center; gap:2px; }
+
 .empty-state { text-align:center; padding:48px 20px; color:var(--text3); font-size:13px; }
 .empty-state i { font-size:32px; display:block; margin-bottom:10px; color:var(--accent-mid); }
 
@@ -468,10 +473,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="sidebar-item" id="view-month" onclick="setView('month')"><i class="ti ti-calendar-month"></i>This Month<span class="sidebar-badge" id="badge-month">0</span></div>
       <div class="sidebar-item" id="view-all" onclick="setView('all')"><i class="ti ti-list"></i>All Tasks<span class="sidebar-badge" id="badge-all">0</span></div>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Categories</div>
-      <div class="sidebar-item" onclick="openAddCatModal()" style="color:var(--text3);font-size:12px;"><i class="ti ti-plus"></i>New category</div>
-    </div>
+
     <div class="upcoming-panel">
       <div class="upcoming-title">Upcoming</div>
       <div id="upcoming-list"></div>
@@ -716,9 +718,17 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <div class="modal-title" id="modal-title">New Task</div>
     <input type="hidden" id="edit-id" />
     <div class="form-row"><label class="form-label">Task name</label><input class="form-input" id="new-name" placeholder="e.g. Vacuum the living room" /></div>
+    <div class="form-row"><label class="form-label">Notes <span style="font-weight:400;color:var(--text3)">(optional)</span></label><textarea class="form-input" id="new-notes" placeholder="Any extra details..." rows="2" style="resize:vertical;min-height:54px;font-family:inherit"></textarea></div>
     <div class="form-row-2">
-      <div><label class="form-label">Category</label><select class="form-input" id="new-cat"></select></div>
+      <div><label class="form-label">Category</label><select class="form-input" id="new-cat" onchange="handleCatChange(this)"></select></div>
       <div><label class="form-label">Priority</label><select class="form-input" id="new-priority"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+    </div>
+    <div class="form-row" style="display:flex;align-items:center;gap:12px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
+        <div class="toggle-track" id="toggle-pinned" style="width:34px;height:19px" onclick="this.classList.toggle('on')"><div class="toggle-knob" style="width:13px;height:13px;top:2px;left:2px"></div></div>
+        <span>Pin this task</span>
+      </label>
+      <span style="font-size:11px;color:var(--text3)">Pinned tasks show first in Upcoming</span>
     </div>
     <div class="form-row"><label class="form-label">Frequency</label><select class="form-input" id="new-freq" onchange="handleFreqChange()"><option value="once">One time</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div>
     <div id="date-fields"><div class="form-row-2"><div><label class="form-label">Due date</label><input class="form-input" id="new-date" type="date" /></div><div><label class="form-label">Due time (optional)</label><input class="form-input" id="new-time" type="time" /></div></div></div>
@@ -1108,7 +1118,32 @@ function updateBadges(){
 function updateUpcoming(){
   const t=todayStr();
   const future=tasks.filter(x=>!x.done&&x.date&&x.date>t&&x.freq==='once').sort((a,b)=>a.date<b.date?-1:1).slice(0,6);
-  document.getElementById('upcoming-list').innerHTML=future.length?future.map(t=>`<div class="upcoming-item"><div class="upcoming-name">${t.name}</div><div class="upcoming-date"><i class="ti ti-calendar" style="font-size:10px"></i> ${formatDisplayDate(t.date)}${t.time?' · '+formatTime(t.time):''}</div></div>`).join(''):'<div style="font-size:11px;color:var(--text3)">No upcoming tasks.</div>';
+  // Show up to 5 upcoming tasks: pinned first, then by closest deadline
+  const t2=todayStr();
+  const upcoming=tasks
+    .filter(x=>!x.done&&(x.pinned||(x.date&&x.date>=t2&&x.freq==='once')))
+    .sort((a,b)=>{
+      // Pinned always first
+      if(a.pinned&&!b.pinned)return -1;
+      if(!a.pinned&&b.pinned)return 1;
+      // Then by date ascending (soonest first), null dates go last
+      const da=a.date||'9999-12-31';
+      const db=b.date||'9999-12-31';
+      return da<db?-1:da>db?1:0;
+    })
+    .slice(0,5);
+  document.getElementById('upcoming-list').innerHTML=upcoming.length
+    ?upcoming.map(t=>`<div class="upcoming-item">
+        <div class="upcoming-name" style="display:flex;align-items:center;gap:5px">
+          ${t.pinned?'<i class="ti ti-pin" style="font-size:11px;color:var(--accent)"></i>':''}
+          ${t.name}
+        </div>
+        <div class="upcoming-date">
+          <i class="ti ti-calendar" style="font-size:10px"></i>
+          ${t.date?formatDisplayDate(t.date):'Recurring'}${t.time?' · '+formatTime(t.time):''}
+        </div>
+      </div>`).join('')
+    :'<div style="font-size:11px;color:var(--text3)">No upcoming tasks.</div>';
 }
 
 function updateProgress(){
@@ -1150,7 +1185,10 @@ function makeCard(t){
   if(t.subtasks.length>0){const dc=t.subtasks.filter(s=>s.done).length;const pct=Math.round((dc/t.subtasks.length)*100);subs=`<div class="subtasks"><div class="subtask-progress-row"><div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div><span class="subtask-label">${dc}/${t.subtasks.length} done</span></div>${t.subtasks.map((s,i)=>`<div class="subtask-item"><div class="subtask-box ${s.done?'checked':''}" onclick="toggleSub(${t.id},${i})"></div><span class="subtask-text ${s.done?'done':''}">${s.text}</span></div>`).join('')}</div>`;}
   const cbClass=t.done?'checked':'';
   const cbClick=t.done?'':`onclick="requestTaskComplete(${t.id})"`;
-  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick}></div><div class="task-content"><div class="task-name ${t.done?'done-text':''}">${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div></div><div class="task-actions"><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
+  const notesHtml=t.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;white-space:pre-wrap">${t.notes}</div>`:'';
+  const pinIcon=t.pinned?'ti-pin-filled':'ti-pin';
+  const pinColor=t.pinned?'color:var(--accent)':'';
+  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick}></div><div class="task-content"><div class="task-name ${t.done?'done-text':''}" style="display:flex;align-items:center;gap:5px">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions"><button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
   return card;
 }
 
@@ -1183,6 +1221,14 @@ async function confirmTaskComplete(){
   await saveTask(t);
   await savePlayerState();
   render();
+}
+
+async function togglePin(id){
+  const t=tasks.find(t=>t.id===id);if(!t)return;
+  t.pinned=!t.pinned;
+  await saveTask(t);
+  render();
+  showToast(t.pinned?'📌 Task pinned to upcoming':'Task unpinned');
 }
 
 function toggleSub(tid,i){
@@ -1778,14 +1824,88 @@ async function enterLottery(lotteryId){
 // ══════════════ TASK MODAL ══════════════
 function handleFreqChange(){const f=document.getElementById('new-freq').value;const r=f!=='once';document.getElementById('date-fields').style.display=r?'none':'';document.getElementById('recurring-note').style.display=r?'block':'none';}
 function openAddModal(){document.getElementById('modal-title').textContent='New Task';document.getElementById('edit-id').value='';resetTaskForm();document.getElementById('new-date').value=todayStr();document.getElementById('task-modal').classList.add('open');setTimeout(()=>document.getElementById('new-name').focus(),50);}
-function openEditModal(id){const t=tasks.find(t=>t.id===id);if(!t)return;document.getElementById('modal-title').textContent='Edit Task';document.getElementById('edit-id').value=id;document.getElementById('new-name').value=t.name;document.getElementById('new-cat').value=t.cat;document.getElementById('new-priority').value=t.priority;document.getElementById('new-freq').value=t.freq;document.getElementById('new-date').value=t.date||todayStr();document.getElementById('new-time').value=t.time||'';document.getElementById('subtask-inputs').innerHTML='';t.subtasks.forEach(s=>addSubtaskInput(s.text));handleFreqChange();document.getElementById('task-modal').classList.add('open');setTimeout(()=>document.getElementById('new-name').focus(),50);}
+function openEditModal(id){
+  const t=tasks.find(t=>t.id===id);if(!t)return;
+  document.getElementById('modal-title').textContent='Edit Task';
+  document.getElementById('edit-id').value=id;
+  document.getElementById('new-name').value=t.name;
+  document.getElementById('new-notes').value=t.notes||'';
+  document.getElementById('new-cat').value=t.cat;
+  document.getElementById('new-priority').value=t.priority;
+  document.getElementById('new-freq').value=t.freq;
+  document.getElementById('new-date').value=t.date||todayStr();
+  document.getElementById('new-time').value=t.time||'';
+  document.getElementById('subtask-inputs').innerHTML='';
+  t.subtasks.forEach(s=>addSubtaskInput(s.text));
+  // Pin toggle
+  const pt=document.getElementById('toggle-pinned');
+  if(pt){if(t.pinned)pt.classList.add('on');else pt.classList.remove('on');}
+  handleFreqChange();
+  document.getElementById('task-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('new-name').focus(),50);
+}
 function closeTaskModal(){document.getElementById('task-modal').classList.remove('open');resetTaskForm();}
-function resetTaskForm(){['edit-id','new-name','new-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const nc=document.getElementById('new-cat');if(nc)nc.value=categories[0]?.id||'';document.getElementById('new-priority').value='low';document.getElementById('new-freq').value='once';document.getElementById('new-date').value=todayStr();document.getElementById('subtask-inputs').innerHTML='';document.getElementById('date-fields').style.display='';document.getElementById('recurring-note').style.display='none';}
+function resetTaskForm(){
+  ['edit-id','new-name','new-time','new-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const nc=document.getElementById('new-cat');if(nc)nc.value=categories[0]?.id||'';
+  document.getElementById('new-priority').value='low';
+  document.getElementById('new-freq').value='once';
+  document.getElementById('new-date').value=todayStr();
+  document.getElementById('subtask-inputs').innerHTML='';
+  document.getElementById('date-fields').style.display='';
+  document.getElementById('recurring-note').style.display='none';
+  // Reset pin toggle
+  const pt=document.getElementById('toggle-pinned');
+  if(pt)pt.classList.remove('on');
+}
 function addSubtaskInput(val=''){const c=document.getElementById('subtask-inputs');const row=document.createElement('div');row.className='subtask-input-row';row.innerHTML=`<input class="form-input" placeholder="Subtask item..." value="${val}"/><button class="remove-sub" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;c.appendChild(row);row.querySelector('input').focus();}
-async function submitTaskForm(){const name=document.getElementById('new-name').value.trim();if(!name){document.getElementById('new-name').focus();return;}const freq=document.getElementById('new-freq').value;const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);const editId=document.getElementById('edit-id').value;if(editId){const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;const old=t.subtasks;t.name=name;t.cat=document.getElementById('new-cat').value;t.priority=document.getElementById('new-priority').value;t.freq=freq;t.date=freq==='once'?document.getElementById('new-date').value:null;t.time=document.getElementById('new-time').value;t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});await saveTask(t);}else{const newTask={id:nextId++,name,cat:document.getElementById('new-cat').value,priority:document.getElementById('new-priority').value,freq,date:freq==='once'?document.getElementById('new-date').value:null,time:document.getElementById('new-time').value,done:false,subtasks:subs.map(text=>({text,done:false})),_isNew:true};tasks.push(newTask);await saveTask(newTask);}closeTaskModal();render();}
+async function submitTaskForm(){
+  const name=document.getElementById('new-name').value.trim();
+  if(!name){document.getElementById('new-name').focus();return;}
+  const freq=document.getElementById('new-freq').value;
+  const notes=document.getElementById('new-notes').value.trim();
+  const pinned=document.getElementById('toggle-pinned').classList.contains('on');
+  const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);
+  const editId=document.getElementById('edit-id').value;
+  if(editId){
+    const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;
+    const old=t.subtasks;
+    t.name=name;t.notes=notes;t.pinned=pinned;
+    t.cat=document.getElementById('new-cat').value;
+    t.priority=document.getElementById('new-priority').value;
+    t.freq=freq;
+    t.date=freq==='once'?document.getElementById('new-date').value:null;
+    t.time=document.getElementById('new-time').value;
+    t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});
+    await saveTask(t);
+  } else {
+    const newTask={
+      id:nextId++,name,notes,pinned,
+      cat:document.getElementById('new-cat').value,
+      priority:document.getElementById('new-priority').value,
+      freq,date:freq==='once'?document.getElementById('new-date').value:null,
+      time:document.getElementById('new-time').value,
+      done:false,subtasks:subs.map(text=>({text,done:false})),_isNew:true
+    };
+    tasks.push(newTask);
+    await saveTask(newTask);
+  }
+  closeTaskModal();render();
+}
 
 // ══════════════ CATEGORY MODAL ══════════════
-function buildCatSelect(){const sel=document.getElementById('new-cat');if(sel)sel.innerHTML=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');}
+function buildCatSelect(){
+  const sel=document.getElementById('new-cat');
+  if(!sel)return;
+  sel.innerHTML=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.innerHTML+='<option value="__add_new__" style="color:var(--accent);font-weight:500">+ Add new category...</option>';
+}
+function handleCatChange(sel){
+  if(sel.value==='__add_new__'){
+    sel.value=categories[0]?.id||'';
+    openAddCatModal();
+  }
+}
 function openAddCatModal(){document.getElementById('cat-name').value='';selectedColor=CAT_COLORS[0];document.getElementById('color-chips').innerHTML=CAT_COLORS.map(c=>`<div class="color-chip ${c===selectedColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');document.getElementById('cat-modal').classList.add('open');setTimeout(()=>document.getElementById('cat-name').focus(),50);}
 function selectColor(c){selectedColor=c;document.querySelectorAll('.color-chip').forEach(el=>el.classList.toggle('selected',el.style.backgroundColor===c||el.style.background===c));}
 function closeCatModal(){document.getElementById('cat-modal').classList.remove('open');}
@@ -1937,6 +2057,7 @@ async function loadUserDataFromDB(){
         id:t.id, name:t.name, cat:t.category, priority:t.priority,
         freq:t.freq, date:t.due_date, time:t.due_time||'',
         done:t.done, subtasks:t.subtasks||[],
+        notes:t.notes||'', pinned:t.pinned||false,
       }));
       nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
     }
@@ -2012,6 +2133,7 @@ async function saveTask(taskObj){
     user_id:currentUser.id, name:taskObj.name, category:taskObj.cat,
     priority:taskObj.priority, freq:taskObj.freq, due_date:taskObj.date||null,
     due_time:taskObj.time||null, done:taskObj.done, subtasks:taskObj.subtasks,
+    notes:taskObj.notes||null, pinned:taskObj.pinned||false,
   };
   if(taskObj._isNew){
     const {data}=await sb.from('tasks').insert(row).select().single();
