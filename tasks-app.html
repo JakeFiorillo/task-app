@@ -1074,12 +1074,21 @@ function render(){
 
 function updateBadges(){
   const t=todayStr();
+  // Week end = this Sunday (Mon-Sun week)
   const we=(()=>{const d=new Date();const dow=d.getDay()||7;d.setDate(d.getDate()+(7-dow));return d.toISOString().split('T')[0];})();
+  // Week start = this Monday
+  const ws=(()=>{const d=new Date();const dow=d.getDay()||7;d.setDate(d.getDate()-(dow-1));return d.toISOString().split('T')[0];})();
   const me=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];})();
-  document.getElementById('badge-today').textContent=tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=t).length;
-  document.getElementById('badge-week').textContent=tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=we).length;
-  document.getElementById('badge-month').textContent=tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=me).length;
-  document.getElementById('badge-all').textContent=tasks.length;
+  const ms=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];})();
+  // Only count incomplete tasks that actually appear in each view
+  const incomplete=x=>!x.done;
+  const fitsToday=x=>x.freq!=='once'||(x.date&&x.date===t);
+  const fitsWeek=x=>x.freq!=='once'||(x.date&&x.date>=ws&&x.date<=we);
+  const fitsMonth=x=>x.freq!=='once'||(x.date&&x.date>=ms&&x.date<=me);
+  document.getElementById('badge-today').textContent=tasks.filter(x=>incomplete(x)&&fitsToday(x)).length;
+  document.getElementById('badge-week').textContent=tasks.filter(x=>incomplete(x)&&fitsWeek(x)).length;
+  document.getElementById('badge-month').textContent=tasks.filter(x=>incomplete(x)&&fitsMonth(x)).length;
+  document.getElementById('badge-all').textContent=tasks.filter(x=>!x.done).length;
 }
 
 function updateUpcoming(){
@@ -1442,10 +1451,10 @@ function getLocalTzLabel(){
 
 // Seed all 11 lottery slots into DB if they don't exist yet
 async function seedLotteriesIfNeeded(){
-  const {data:existing}=await sb.from('lotteries').select('slot_key').eq('is_active',true);
+  const {data:existing,error:fetchErr}=await sb.from('lotteries').select('slot_key').eq('is_active',true);
+  if(fetchErr){console.error('Seed fetch error:',fetchErr);return;}
   const existingKeys=new Set((existing||[]).map(r=>r.slot_key));
   const sh=a=>[...a].sort(()=>0.5-Math.random());
-  const toInsert=[];
 
   // 4 daily slots
   const dailySlotDefs=[
@@ -1455,42 +1464,37 @@ async function seedLotteriesIfNeeded(){
     {key:'daily_0', utcHour:0},
   ];
   const shuffledDaily=sh([...DAILY_POOL]);
-  dailySlotDefs.forEach((slot,i)=>{
-    if(!existingKeys.has(slot.key)){
-      const prize=shuffledDaily[i%shuffledDaily.length];
-      toInsert.push({
-        slot_key:slot.key, name:prize.name, rarity:prize.rarity,
-        is_random:prize.isRandom, is_weekly:false,
-        cost:prize.cost, max_entries:prize.maxEntries, winners:prize.winners,
-        closes_at:nextDailyClose(slot.utcHour).toISOString(), is_active:true,
-      });
-    }
-  });
+  for(let i=0;i<dailySlotDefs.length;i++){
+    const slot=dailySlotDefs[i];
+    if(existingKeys.has(slot.key))continue;
+    const prize=shuffledDaily[i%shuffledDaily.length];
+    const {error}=await sb.from('lotteries').insert({
+      slot_key:slot.key, name:prize.name, rarity:prize.rarity,
+      is_random:prize.isRandom, is_weekly:false,
+      cost:prize.cost, max_entries:prize.maxEntries, winners:prize.winners,
+      closes_at:nextDailyClose(slot.utcHour).toISOString(), is_active:true,
+    });
+    if(error)console.error('Seed daily error:',slot.key,error.message);
+  }
 
-  // 7 weekly slots — one per day of week, closes at 12:00 AM UTC on that day
-  // utcDay: 1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat,7=Sun
+  // 7 weekly slots
   const weeklySlotDefs=[
     {key:'weekly_1',utcDay:1},{key:'weekly_2',utcDay:2},{key:'weekly_3',utcDay:3},
     {key:'weekly_4',utcDay:4},{key:'weekly_5',utcDay:5},{key:'weekly_6',utcDay:6},
     {key:'weekly_7',utcDay:7},
   ];
   const shuffledWeekly=sh([...WEEKLY_POOL]);
-  weeklySlotDefs.forEach((slot,i)=>{
-    if(!existingKeys.has(slot.key)){
-      const prize=shuffledWeekly[i%shuffledWeekly.length];
-      toInsert.push({
-        slot_key:slot.key, name:prize.name, rarity:prize.rarity,
-        is_random:prize.isRandom, is_weekly:true,
-        cost:prize.cost, max_entries:prize.maxEntries, winners:prize.winners,
-        closes_at:nextWeeklyClose(slot.utcDay).toISOString(), is_active:true,
-      });
-    }
-  });
-
-  if(toInsert.length>0){
-    const {error}=await sb.from('lotteries').insert(toInsert);
-    if(error)console.error('Seed error:',error);
-    else console.log('Seeded',toInsert.length,'lottery slots');
+  for(let i=0;i<weeklySlotDefs.length;i++){
+    const slot=weeklySlotDefs[i];
+    if(existingKeys.has(slot.key))continue;
+    const prize=shuffledWeekly[i%shuffledWeekly.length];
+    const {error}=await sb.from('lotteries').insert({
+      slot_key:slot.key, name:prize.name, rarity:prize.rarity,
+      is_random:prize.isRandom, is_weekly:true,
+      cost:prize.cost, max_entries:prize.maxEntries, winners:prize.winners,
+      closes_at:nextWeeklyClose(slot.utcDay).toISOString(), is_active:true,
+    });
+    if(error)console.error('Seed weekly error:',slot.key,error.message);
   }
 }
 
