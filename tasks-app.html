@@ -18,6 +18,37 @@
 body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg3); color:var(--text); font-size:14px; height:100vh; overflow:hidden; }
 .app-shell { display:flex; flex-direction:column; height:100vh; }
 
+
+/* ── AUTH SCREEN ── */
+.auth-screen { position:fixed; inset:0; background:var(--bg3); z-index:1000; display:flex; align-items:center; justify-content:center; }
+.auth-card { background:var(--bg); border:0.5px solid var(--border); border-radius:20px; padding:36px 40px; width:400px; max-width:92vw; box-shadow:0 8px 40px rgba(120,100,180,0.12); }
+.auth-logo { font-size:28px; font-weight:800; color:var(--accent); letter-spacing:-0.5px; margin-bottom:4px; text-align:center; }
+.auth-tagline { font-size:13px; color:var(--text3); text-align:center; margin-bottom:28px; }
+.auth-tabs { display:flex; background:var(--bg2); border-radius:var(--radius); padding:3px; margin-bottom:24px; }
+.auth-tab { flex:1; text-align:center; padding:7px; font-size:13px; font-weight:500; border-radius:6px; cursor:pointer; color:var(--text2); transition:all 0.12s; user-select:none; }
+.auth-tab.active { background:var(--bg); color:var(--accent); box-shadow:0 1px 4px rgba(0,0,0,0.08); font-weight:600; }
+.auth-form { display:flex; flex-direction:column; gap:14px; }
+.auth-field { display:flex; flex-direction:column; gap:5px; }
+.auth-label { font-size:12px; font-weight:500; color:var(--text2); }
+.auth-input { padding:10px 14px; font-size:14px; border:0.5px solid var(--border2); border-radius:var(--radius); background:var(--bg); color:var(--text); font-family:inherit; outline:none; transition:border-color 0.12s; }
+.auth-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+.auth-btn { padding:11px; font-size:14px; font-weight:600; background:var(--accent); color:white; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; transition:opacity 0.15s; margin-top:4px; }
+.auth-btn:hover { opacity:0.88; }
+.auth-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.auth-error { font-size:12px; color:#A32D2D; background:#FCEBEB; border:0.5px solid #F09595; border-radius:var(--radius); padding:8px 12px; display:none; }
+.auth-error.show { display:block; }
+.auth-divider { display:flex; align-items:center; gap:10px; margin:4px 0; }
+.auth-divider::before, .auth-divider::after { content:''; flex:1; height:0.5px; background:var(--border); }
+.auth-divider span { font-size:11px; color:var(--text3); }
+.auth-switch { text-align:center; font-size:12px; color:var(--text3); margin-top:4px; }
+.auth-switch a { color:var(--accent); cursor:pointer; font-weight:500; text-decoration:none; }
+.auth-switch a:hover { text-decoration:underline; }
+.auth-requirements { font-size:11px; color:var(--text3); line-height:1.5; margin-top:2px; }
+.auth-strength { height:3px; border-radius:2px; margin-top:5px; transition:all 0.3s; background:var(--bg3); }
+.auth-strength.weak { background:#E24B4A; width:33%; }
+.auth-strength.medium { background:#EF9F27; width:66%; }
+.auth-strength.strong { background:#97C459; width:100%; }
+
 /* ── NAV ── */
 .nav-bar { background:var(--bg); border-bottom:0.5px solid var(--border); display:flex; align-items:center; padding:0 20px; height:50px; gap:2px; flex-shrink:0; }
 .nav-logo { font-size:15px; font-weight:700; color:var(--text); letter-spacing:-0.4px; margin-right:16px; white-space:nowrap; }
@@ -358,6 +389,59 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 </head>
 <body>
 <div class="app-shell">
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo" id="auth-app-name">My Tasks</div>
+    <div class="auth-tagline">Your tasks. Your progress. Your game.</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')">Create Account</div>
+    </div>
+
+    <!-- Login form -->
+    <div id="auth-login-form" class="auth-form">
+      <div class="auth-field">
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="login-email" type="email" placeholder="your@email.com" autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div class="auth-error" id="login-error"></div>
+      <button class="auth-btn" id="login-btn" onclick="handleLogin()">Sign In</button>
+      <div class="auth-switch">Don't have an account? <a onclick="switchAuthTab('signup')">Create one</a></div>
+    </div>
+
+    <!-- Signup form -->
+    <div id="auth-signup-form" class="auth-form" style="display:none">
+      <div class="auth-field">
+        <label class="auth-label">Display Name</label>
+        <input class="auth-input" id="signup-name" type="text" placeholder="Your name" autocomplete="name" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="signup-email" type="email" placeholder="your@email.com" autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="signup-password" type="password" placeholder="Min 8 characters" autocomplete="new-password" oninput="checkPasswordStrength(this.value)" />
+        <div class="auth-strength" id="password-strength"></div>
+        <div class="auth-requirements">At least 8 characters with a number or symbol.</div>
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Confirm Password</label>
+        <input class="auth-input" id="signup-confirm" type="password" placeholder="Repeat password" autocomplete="new-password" />
+      </div>
+      <div class="auth-error" id="signup-error"></div>
+      <button class="auth-btn" id="signup-btn" onclick="handleSignup()">Create Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="switchAuthTab('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
 <nav class="nav-bar">
   <div class="nav-logo">My Tasks</div>
   <button class="nav-item active" id="nav-tasks" onclick="showPage('tasks')"><i class="ti ti-checklist"></i>Tasks</button>
@@ -527,7 +611,11 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       </div>
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Email</div><div class="setting-desc">Account email address</div></div>
-        <div class="setting-control"><input type="text" id="setting-email" value="player@email.com" /></div>
+        <div class="setting-control"><input type="text" id="setting-email" value="" /></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Sign Out</div><div class="setting-desc">Save your data and return to the login screen</div></div>
+        <div class="setting-control"><button class="shop-buy-btn" onclick="signOut()" style="background:#6b6388">Sign Out</button></div>
       </div>
     </div>
     <div class="settings-section">
@@ -607,45 +695,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
             <option value="gray">Soft Gray</option>
           </select>
         </div>
-      </div>
-    </div>
-    <div class="settings-section" style="border-color:#E24B4A55">
-      <div class="settings-section-title" style="background:#fff5f5;color:#A32D2D">🛠 Admin / Testing Tools</div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Advance Day</div><div class="setting-desc">Simulates 4am rollover — resets daily limits and recharges coin pool</div></div>
-        <div class="setting-control"><button class="shop-buy-btn" onclick="adminAdvanceDay()" style="background:#E24B4A">+ 1 Day</button></div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Give Coins</div><div class="setting-desc">Add coins directly to your balance</div></div>
-        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
-          <input type="number" id="admin-coins-amt" value="100" min="1" max="9999" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
-          <button class="shop-buy-btn" onclick="adminGiveCoins()" style="background:#E24B4A">Give</button>
-        </div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Give XP</div><div class="setting-desc">Add XP directly to your total</div></div>
-        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
-          <input type="number" id="admin-xp-amt" value="100" min="1" max="9999" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
-          <button class="shop-buy-btn" onclick="adminGiveXP()" style="background:#E24B4A">Give</button>
-        </div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Set Streak</div><div class="setting-desc">Jump to a specific streak day to test multipliers</div></div>
-        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
-          <input type="number" id="admin-streak-amt" value="7" min="0" max="35" style="width:70px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
-          <button class="shop-buy-btn" onclick="adminSetStreak()" style="background:#E24B4A">Set</button>
-        </div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Add Weekly %</div><div class="setting-desc">Add to weekly pool to test reward thresholds</div></div>
-        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
-          <input type="number" id="admin-weekly-amt" value="75" min="1" max="700" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
-          <button class="shop-buy-btn" onclick="adminAddWeekly()" style="background:#E24B4A">Add</button>
-        </div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Reset Streak</div><div class="setting-desc">Set streak back to 0</div></div>
-        <div class="setting-control"><button class="shop-buy-btn" onclick="adminResetStreak()" style="background:#E24B4A">Reset</button></div>
       </div>
     </div>
   </div>
@@ -867,29 +916,18 @@ let categories=[
   {id:'events', name:'Events',  color:'#fbbf24'},
 ];
 let player={
-  totalXP:340,coins:142,streak:7,
-  coinPool:142,coinsEarnedToday:8,
-  dailyLowUsed:3,dailyMedUsed:2,dailyHighUsed:1,
-  weeklyPool:185,weeklyAchieved:[75,150],
-  dupePoints:{uncommon:40,rare:25,epic:10,legendary:0,mythic:0,cosmic:0},
+  totalXP:0, coins:100, streak:0,
+  coinPool:100, coinsEarnedToday:0,
+  dailyLowUsed:0, dailyMedUsed:0, dailyHighUsed:0,
+  weeklyPool:0, weeklyAchieved:[],
+  dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
 };
 
 function todayStr(){return new Date().toISOString().split('T')[0];}
 function dateOffset(d){const[y,m,dd]=todayStr().split('-').map(Number);return new Date(y,m-1,dd+d).toISOString().split('T')[0];}
 
-let tasks=[
-  {id:1,name:'Go to bed by 11pm',       cat:'life',   priority:'high',  date:todayStr(),    time:'23:00',freq:'daily', done:false,subtasks:[]},
-  {id:2,name:'Apply to 3 jobs',          cat:'work',   priority:'high',  date:todayStr(),    time:'',     freq:'once',  done:false,subtasks:[{text:'Software engineer at Stripe',done:true},{text:'Frontend role at Linear',done:false},{text:'Full-stack at Vercel',done:false}]},
-  {id:3,name:'Vacuum the living room',   cat:'home',   priority:'medium',date:dateOffset(2), time:'',     freq:'weekly',done:false,subtasks:[]},
-  {id:4,name:'30 min walk',              cat:'fitness',priority:'medium',date:todayStr(),    time:'08:00',freq:'daily', done:false,subtasks:[]},
-  {id:5,name:'Review Q2 report',         cat:'work',   priority:'high',  date:todayStr(),    time:'14:00',freq:'once',  done:false,subtasks:[{text:'Read executive summary',done:true},{text:'Check revenue figures',done:false},{text:'Note action items',done:false}]},
-  {id:6,name:'Call Mom',                 cat:'life',   priority:'medium',date:dateOffset(1), time:'18:00',freq:'weekly',done:false,subtasks:[]},
-  {id:7,name:'Drink 8 glasses of water', cat:'health', priority:'low',   date:todayStr(),    time:'',     freq:'daily', done:false,subtasks:[]},
-  {id:8,name:'Take out trash',           cat:'home',   priority:'low',   date:dateOffset(3), time:'',     freq:'weekly',done:false,subtasks:[]},
-  {id:9,name:'Dentist appointment',      cat:'health', priority:'high',  date:dateOffset(10),time:'10:00',freq:'once',  done:false,subtasks:[]},
-  {id:10,name:'Gym session',             cat:'fitness',priority:'medium',date:todayStr(),    time:'07:00',freq:'daily', done:true, subtasks:[]},
-];
-let nextId=11;
+let tasks=[];
+let nextId=1;
 let activeFilters=new Set();
 let currentView='today';
 let viewOffset=0;
@@ -903,7 +941,7 @@ let boxOpenCard=null;
 function makeCollection(){
   const defs=[{key:'common',count:30},{key:'uncommon',count:30},{key:'rare',count:25},{key:'epic',count:25},{key:'legendary',count:20},{key:'mythic',count:20},{key:'cosmic',count:10}];
   const c=[];
-  defs.forEach(r=>{for(let i=1;i<=r.count;i++)c.push({id:`${r.key}-${i}`,rarity:r.key,name:`${r.key.charAt(0).toUpperCase()+r.key.slice(1)} Card ${i}`,owned:Math.random()<(r.key==='common'?0.55:r.key==='uncommon'?0.3:r.key==='rare'?0.18:0.04)});});
+  defs.forEach(r=>{for(let i=1;i<=r.count;i++)c.push({id:`${r.key}-${i}`,rarity:r.key,name:`${r.key.charAt(0).toUpperCase()+r.key.slice(1)} Card ${i}`,owned:false});});
   return c;
 }
 let collection=makeCollection();
@@ -1458,104 +1496,240 @@ function closeConfirmModal(){document.getElementById('confirm-modal').classList.
 function confirmDelete(){if(deleteTargetId!==null){tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}closeConfirmModal();render();}
 function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='cat-modal')closeCatModal();if(id==='confirm-modal')closeConfirmModal();if(id==='level-modal')closeLevelModal();}}
 
-// ══════════════ ADMIN TOOLS ══════════════
-function adminAdvanceDay(){
-  const lv=getLevel();const cl=getCoinLevel(lv);
 
-  // 1. Calculate today's completion % and add to weekly pool
-  const todayTasks=getTodayTasks();
-  const done=todayTasks.filter(t=>t.done).length;
-  const total=todayTasks.length;
-  const dayPct=total>0?Math.round((done/total)*100):0;
-  player.weeklyPool=Math.min(player.weeklyPool+dayPct,700);
 
-  // 2. Check weekly reward thresholds newly crossed
-  const tier=getWeeklyTier(lv);
-  const rewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
-  rewards.forEach(r=>{
-    if(player.weeklyPool>=r.pct && !player.weeklyAchieved.includes(r.pct)){
-      player.weeklyAchieved.push(r.pct);
-      showToast('🏆 Weekly reward unlocked: '+r.reward);
+// ══════════════ AUTH ══════════════
+// Simple local auth for now — will connect to Supabase backend later.
+// Passwords are never stored in plain text even locally.
+// This simulates the auth flow so the UI is complete and ready to wire up.
+
+const LOCAL_USERS_KEY = 'mytasks_users';
+const LOCAL_SESSION_KEY = 'mytasks_session';
+
+function getLocalUsers(){
+  try { return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY)||'{}'); } catch(e){ return {}; }
+}
+function saveLocalUsers(users){ localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users)); }
+function getSession(){ try { return JSON.parse(localStorage.getItem(LOCAL_SESSION_KEY)||'null'); } catch(e){ return null; } }
+function saveSession(session){ localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(session)); }
+function clearSession(){ localStorage.removeItem(LOCAL_SESSION_KEY); }
+
+// Simple hash for local storage (not cryptographic — backend will use proper hashing)
+async function hashPassword(password){
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function checkPasswordStrength(pw){
+  const el=document.getElementById('password-strength');
+  if(!el)return;
+  if(pw.length===0){el.className='auth-strength';return;}
+  const hasNum=/\d/.test(pw);
+  const hasSym=/[^a-zA-Z0-9]/.test(pw);
+  const long=pw.length>=12;
+  if(pw.length<6){el.className='auth-strength weak';}
+  else if(pw.length<8||(pw.length>=8&&!hasNum&&!hasSym)){el.className='auth-strength medium';}
+  else if(pw.length>=8&&(hasNum||hasSym)){el.className=long&&(hasNum||hasSym)?'auth-strength strong':'auth-strength medium';}
+}
+
+function isValidEmail(email){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+function showAuthError(formId, msg){
+  const el=document.getElementById(formId+'-error');
+  if(el){el.textContent=msg;el.classList.add('show');}
+}
+function clearAuthError(formId){
+  const el=document.getElementById(formId+'-error');
+  if(el)el.classList.remove('show');
+}
+
+async function handleLogin(){
+  clearAuthError('login');
+  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  const password=document.getElementById('login-password').value;
+  if(!email||!password){showAuthError('login','Please fill in all fields.');return;}
+  if(!isValidEmail(email)){showAuthError('login','Please enter a valid email address.');return;}
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true;btn.textContent='Signing in...';
+  const users=getLocalUsers();
+  const hash=await hashPassword(password);
+  if(!users[email]){showAuthError('login','No account found with that email.');btn.disabled=false;btn.textContent='Sign In';return;}
+  if(users[email].passwordHash!==hash){showAuthError('login','Incorrect password.');btn.disabled=false;btn.textContent='Sign In';return;}
+  // Load user data
+  const userData=users[email];
+  loadUserData(userData);
+  saveSession({email, name:userData.name});
+  enterApp(userData.name);
+  btn.disabled=false;btn.textContent='Sign In';
+}
+
+async function handleSignup(){
+  clearAuthError('signup');
+  const name=document.getElementById('signup-name').value.trim();
+  const email=document.getElementById('signup-email').value.trim().toLowerCase();
+  const password=document.getElementById('signup-password').value;
+  const confirm=document.getElementById('signup-confirm').value;
+  if(!name||!email||!password||!confirm){showAuthError('signup','Please fill in all fields.');return;}
+  if(!isValidEmail(email)){showAuthError('signup','Please enter a valid email address.');return;}
+  if(password.length<8){showAuthError('signup','Password must be at least 8 characters.');return;}
+  if(!/[\d\W]/.test(password)){showAuthError('signup','Password must include a number or symbol.');return;}
+  if(password!==confirm){showAuthError('signup','Passwords do not match.');return;}
+  const users=getLocalUsers();
+  if(users[email]){showAuthError('signup','An account with that email already exists.');return;}
+  const btn=document.getElementById('signup-btn');
+  btn.disabled=true;btn.textContent='Creating account...';
+  const hash=await hashPassword(password);
+  const newUser={
+    name, email, passwordHash:hash,
+    createdAt:new Date().toISOString(),
+    // Fresh player state
+    playerData:{
+      totalXP:0,coins:100,streak:0,
+      coinPool:100,coinsEarnedToday:0,
+      dailyLowUsed:0,dailyMedUsed:0,dailyHighUsed:0,
+      weeklyPool:0,weeklyAchieved:[],
+      dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
+    },
+    tasks:[],
+    categories:[
+      {id:'work',   name:'Work',    color:'#60a5fa'},
+      {id:'health', name:'Health',  color:'#34d399'},
+      {id:'home',   name:'Home',    color:'#fb923c'},
+      {id:'life',   name:'Life',    color:'#9b87d6'},
+      {id:'fitness',name:'Fitness', color:'#f87171'},
+      {id:'events', name:'Events',  color:'#fbbf24'},
+    ],
+    settings:{timeFormat:'12',weekStart:0,colorBlind:false,largeText:false,bg:'purple',timezone:0},
+    lastDayReset: new Date().toISOString().split('T')[0],
+  };
+  users[email]=newUser;
+  saveLocalUsers(users);
+  loadUserData(newUser);
+  saveSession({email,name});
+  enterApp(name);
+  btn.disabled=false;btn.textContent='Create Account';
+}
+
+function loadUserData(userData){
+  // Load player state
+  if(userData.playerData) Object.assign(player, userData.playerData);
+  // Load tasks
+  if(userData.tasks) tasks=userData.tasks.map(t=>({...t}));
+  nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
+  // Load categories
+  if(userData.categories) categories=userData.categories;
+  // Load settings
+  if(userData.settings) Object.assign(settings,userData.settings);
+  // Apply settings
+  applyTheme(settings.bg||'purple');
+  if(settings.largeText) document.body.style.fontSize='18px';
+  // Auto day reset check
+  checkDayReset(userData);
+}
+
+function checkDayReset(userData){
+  const today=todayStr();
+  const lastReset=userData.lastDayReset||today;
+  if(lastReset!==today){
+    // It's a new day — run the day rollover
+    const lv=getLevel();const cl=getCoinLevel(lv);
+    const dayPct=userData.lastDayPct||0;
+    player.weeklyPool=Math.min(player.weeklyPool+dayPct,700);
+    const tier=getWeeklyTier(lv);
+    const rewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
+    rewards.forEach(r=>{
+      if(player.weeklyPool>=r.pct&&!player.weeklyAchieved.includes(r.pct)){
+        player.weeklyAchieved.push(r.pct);
+      }
+    });
+    player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
+    player.coinsEarnedToday=0;
+    player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
+    player.streak=Math.min(player.streak+1,35);
+    tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
+    // Update stored last reset
+    const users=getLocalUsers();
+    const session=getSession();
+    if(session&&users[session.email]){
+      users[session.email].lastDayReset=today;
+      saveLocalUsers(users);
     }
-  });
-
-  // 3. Reset daily task limits
-  player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
-  player.coinsEarnedToday=0;
-
-  // 4. Recharge coin pool up to max
-  player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
-
-  // 5. Increment streak
-  player.streak=Math.min(player.streak+1,35);
-
-  // 6. Un-done all daily/recurring tasks so they can be re-completed
-  tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
-
-  // 7. Tick down existing daily lotteries and remove expired ones
-  lotteries.daily.forEach(l=>l.hoursLeft=Math.max(0,l.hoursLeft-24));
-  lotteries.daily=lotteries.daily.filter(l=>l.hoursLeft>0);
-
-  // 8. Generate one fresh daily lottery to replace expired ones (maintain ~4 at a time)
-  const newDay=makeOneDailyLottery();
-  if(newDay)lotteries.daily.push(newDay);
-
-  // 9. Tick down weekly lotteries, add one new weekly lottery
-  lotteries.weekly.forEach(l=>l.daysLeft=Math.max(0,l.daysLeft-1));
-  lotteries.weekly=lotteries.weekly.filter(l=>l.daysLeft>0);
-  const newWeekly=makeOneWeeklyLottery();
-  if(newWeekly)lotteries.weekly.push(newWeekly);
-
-  updateNavStats();render();
-  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
-  if(document.getElementById('page-lottery').classList.contains('active'))renderLotteries();
-  showToast(`🗓 Day advanced — +${dayPct}% to weekly pool, coin pool recharged`);
+  }
 }
-function adminGiveCoins(){
-  const amt=parseInt(document.getElementById('admin-coins-amt').value)||0;
-  if(amt<=0)return;
-  player.coins+=amt;updateNavStats();renderShopIfOpen();
-  showToast(`🪙 +${amt} coins added`);
+
+function saveUserData(){
+  const session=getSession();
+  if(!session)return;
+  const users=getLocalUsers();
+  if(!users[session.email])return;
+  users[session.email].playerData={...player};
+  users[session.email].tasks=tasks.map(t=>({...t}));
+  users[session.email].categories=[...categories];
+  users[session.email].settings={...settings};
+  users[session.email].lastDayPct=getTodayCompletionPct();
+  saveLocalUsers(users);
 }
-function adminGiveXP(){
-  const amt=parseInt(document.getElementById('admin-xp-amt').value)||0;
-  if(amt<=0)return;
-  const oldLv=getLevel();player.totalXP+=amt;const newLv=getLevel();
-  updateNavStats();
-  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
-  if(newLv>oldLv)showToast(`⭐ +${amt} XP — Level up! Now Level ${newLv}`);
-  else showToast(`⭐ +${amt} XP added (${player.totalXP} total)`);
+
+function getTodayCompletionPct(){
+  const tod=getTodayTasks();
+  const done=tod.filter(t=>t.done).length;
+  const total=tod.length;
+  return total>0?Math.round((done/total)*100):0;
 }
-function adminSetStreak(){
-  const amt=parseInt(document.getElementById('admin-streak-amt').value)||0;
-  player.streak=Math.max(0,Math.min(35,amt));
-  updateNavStats();
-  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
-  showToast(`🔥 Streak set to ${player.streak}`);
+
+function enterApp(name){
+  document.getElementById('auth-screen').style.display='none';
+  // Update display name in settings
+  const nameInput=document.getElementById('setting-name');
+  if(nameInput)nameInput.value=name;
+  const emailInput=document.getElementById('setting-email');
+  const session=getSession();
+  if(emailInput&&session)emailInput.value=session.email;
+  buildCatSelect();
+  render();
 }
-function adminResetStreak(){
-  player.streak=0;updateNavStats();
-  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
-  showToast('🔥 Streak reset to 0');
+
+function signOut(){
+  saveUserData();
+  clearSession();
+  // Reset to clean state
+  tasks=[];
+  Object.assign(player,{totalXP:0,coins:100,streak:0,coinPool:100,coinsEarnedToday:0,dailyLowUsed:0,dailyMedUsed:0,dailyHighUsed:0,weeklyPool:0,weeklyAchieved:[],dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0}});
+  categories=[
+    {id:'work',name:'Work',color:'#60a5fa'},{id:'health',name:'Health',color:'#34d399'},
+    {id:'home',name:'Home',color:'#fb923c'},{id:'life',name:'Life',color:'#9b87d6'},
+    {id:'fitness',name:'Fitness',color:'#f87171'},{id:'events',name:'Events',color:'#fbbf24'},
+  ];
+  applyTheme('purple');
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('login-email').value='';
+  document.getElementById('login-password').value='';
+  switchAuthTab('login');
 }
-function adminAddWeekly(){
-  const amt=parseInt(document.getElementById('admin-weekly-amt').value)||0;
-  if(amt<=0)return;
-  player.weeklyPool=Math.min(player.weeklyPool+amt,700);
-  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
-  showToast(`📊 Weekly pool now ${player.weeklyPool}%`);
+
+function switchAuthTab(tab){
+  document.getElementById('auth-tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('auth-tab-signup').classList.toggle('active',tab==='signup');
+  document.getElementById('auth-login-form').style.display=tab==='login'?'flex':'none';
+  document.getElementById('auth-signup-form').style.display=tab==='signup'?'flex':'none';
+  clearAuthError('login');clearAuthError('signup');
 }
-function renderShopIfOpen(){if(document.getElementById('page-shop').classList.contains('active'))renderShop();}
+
+// Auto-save every 30 seconds while logged in
+setInterval(()=>{ if(getSession()) saveUserData(); }, 30000);
+// Save on page unload
+window.addEventListener('beforeunload', ()=>{ if(getSession()) saveUserData(); });
+
 
 // INIT
-buildCatSelect();
-// Auto-detect timezone and pre-select
+// Auto-detect timezone
 (function(){
   const detectedTz=-(new Date().getTimezoneOffset()/60);
   settings.timezone=detectedTz;
   const sel=document.getElementById('setting-timezone');
   if(sel){
-    // Find closest option
     let bestOpt=null,bestDiff=99;
     for(const opt of sel.options){
       const diff=Math.abs(parseFloat(opt.value)-detectedTz);
@@ -1564,7 +1738,19 @@ buildCatSelect();
     if(bestOpt)bestOpt.selected=true;
   }
 })();
-render();
+// Check for existing session
+const _existingSession=getSession();
+if(_existingSession){
+  const _users=getLocalUsers();
+  if(_users[_existingSession.email]){
+    loadUserData(_users[_existingSession.email]);
+    enterApp(_existingSession.name);
+  } else {
+    clearSession();
+  }
+}
+// Don't call render() or buildCatSelect() here — enterApp() handles it
+// If no session, auth screen stays visible (already shown by default)
 </script>
 </body>
 </html>
