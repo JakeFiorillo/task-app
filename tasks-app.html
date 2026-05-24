@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>My Tasks</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -622,12 +623,12 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="settings-section-title">Accessibility</div>
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Time Format</div><div class="setting-desc">12-hour or 24-hour display</div></div>
-        <div class="setting-control"><select id="setting-timeformat" onchange="saveSetting('timeFormat',this.value)"><option value="12">12-hour (2:30 PM)</option><option value="24">24-hour (14:30)</option></select></div>
+        <div class="setting-control"><select id="setting-timeformat" onchange="saveSetting('timeFormat',this.value);saveSettingsToDB()"><option value="12">12-hour (2:30 PM)</option><option value="24">24-hour (14:30)</option></select></div>
       </div>
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Time Zone</div><div class="setting-desc">Used for lottery close times and daily reset display</div></div>
         <div class="setting-control">
-          <select id="setting-timezone" onchange="saveSetting('timezone',this.value);renderLotteries()" style="min-width:220px">
+          <select id="setting-timezone" onchange="saveSetting('timezone',this.value);renderLotteries();saveSettingsToDB()" style="min-width:220px">
             <option value="-12">UTC-12 (Baker Island)</option>
             <option value="-11">UTC-11 (Samoa)</option>
             <option value="-10">UTC-10 Hawaii (HT)</option>
@@ -660,7 +661,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       </div>
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Week Starts On</div><div class="setting-desc">First day of the week</div></div>
-        <div class="setting-control"><select id="setting-weekstart" onchange="saveSetting('weekStart',parseInt(this.value))"><option value="0">Sunday</option><option value="1">Monday</option><option value="6">Saturday</option></select></div>
+        <div class="setting-control"><select id="setting-weekstart" onchange="saveSetting('weekStart',parseInt(this.value));saveSettingsToDB()"><option value="0">Sunday</option><option value="1">Monday</option><option value="6">Saturday</option></select></div>
       </div>
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Large Text</div><div class="setting-desc">Increase font size throughout the app</div></div>
@@ -686,7 +687,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="setting-row">
         <div class="setting-info"><div class="setting-label">Color Theme</div><div class="setting-desc">Changes background and accent colors throughout the app</div></div>
         <div class="setting-control">
-          <select id="setting-bg" onchange="applyTheme(this.value)">
+          <select id="setting-bg" onchange="applyTheme(this.value);saveSettingsToDB()">
             <option value="purple">Lavender (default)</option>
             <option value="blue">Sky Blue</option>
             <option value="green">Mint Green</option>
@@ -1023,6 +1024,7 @@ function toggleSetting(key){
     document.querySelectorAll('.task-name').forEach(el=>el.style.fontSize=settings[key]?'16px':'13px');
   }
   if(key==='colorBlind'){ render(); }
+  saveSettingsToDB();
 }
 function saveSetting(k,v){settings[k]=v;}
 
@@ -1139,7 +1141,7 @@ function requestTaskComplete(id){
   document.getElementById('task-confirm-overlay').style.display='flex';
 }
 function cancelTaskConfirm(){document.getElementById('task-confirm-overlay').style.display='none';pendingTaskId=null;}
-function confirmTaskComplete(){
+async function confirmTaskComplete(){
   document.getElementById('task-confirm-overlay').style.display='none';
   const id=pendingTaskId;pendingTaskId=null;
   const t=tasks.find(t=>t.id===id);if(!t)return;
@@ -1157,6 +1159,8 @@ function confirmTaskComplete(){
   } else {
     showToast(`<i class="ti ti-check"></i> Task completed!`);
   }
+  await saveTask(t);
+  await savePlayerState();
   render();
 }
 
@@ -1289,7 +1293,17 @@ function flipBoxCard(){
     for(let i=0;i<6;i++){const s=document.createElement('div');s.className='sparkle';s.textContent=['✨','⭐','💫','🌟'][Math.floor(Math.random()*4)];s.style.cssText=`left:${20+Math.random()*60}%;top:${20+Math.random()*60}%;animation-delay:${Math.random()*0.3}s`;overlay.appendChild(s);setTimeout(()=>s.remove(),1200);}
   },750);
 }
-function closeBoxOpen(){document.getElementById('box-open-overlay').style.display='none';boxOpenRarity=null;boxOpenCard=null;renderCollection();renderShop();}
+async function closeBoxOpen(){
+  document.getElementById('box-open-overlay').style.display='none';
+  // Save newly owned card to DB
+  if(boxOpenCard&&!boxOpenCard.isDupe&&boxOpenCard.card){
+    await addCardToCollection(boxOpenCard.card.id);
+  }
+  // Save dupe points and player state
+  if(boxOpenCard&&boxOpenCard.isDupe) await savePlayerState();
+  boxOpenRarity=null;boxOpenCard=null;
+  renderCollection();renderShop();
+}
 
 // Spawn one new daily lottery (to add after one expires)
 function makeOneDailyLottery(){
@@ -1481,46 +1495,29 @@ function openEditModal(id){const t=tasks.find(t=>t.id===id);if(!t)return;documen
 function closeTaskModal(){document.getElementById('task-modal').classList.remove('open');resetTaskForm();}
 function resetTaskForm(){['edit-id','new-name','new-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const nc=document.getElementById('new-cat');if(nc)nc.value=categories[0]?.id||'';document.getElementById('new-priority').value='low';document.getElementById('new-freq').value='once';document.getElementById('new-date').value=todayStr();document.getElementById('subtask-inputs').innerHTML='';document.getElementById('date-fields').style.display='';document.getElementById('recurring-note').style.display='none';}
 function addSubtaskInput(val=''){const c=document.getElementById('subtask-inputs');const row=document.createElement('div');row.className='subtask-input-row';row.innerHTML=`<input class="form-input" placeholder="Subtask item..." value="${val}"/><button class="remove-sub" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;c.appendChild(row);row.querySelector('input').focus();}
-function saveTask(){const name=document.getElementById('new-name').value.trim();if(!name){document.getElementById('new-name').focus();return;}const freq=document.getElementById('new-freq').value;const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);const editId=document.getElementById('edit-id').value;if(editId){const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;const old=t.subtasks;t.name=name;t.cat=document.getElementById('new-cat').value;t.priority=document.getElementById('new-priority').value;t.freq=freq;t.date=freq==='once'?document.getElementById('new-date').value:null;t.time=document.getElementById('new-time').value;t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});}else{tasks.push({id:nextId++,name,cat:document.getElementById('new-cat').value,priority:document.getElementById('new-priority').value,freq,date:freq==='once'?document.getElementById('new-date').value:null,time:document.getElementById('new-time').value,done:false,subtasks:subs.map(text=>({text,done:false}))});}closeTaskModal();render();}
+async function saveTask(){const name=document.getElementById('new-name').value.trim();if(!name){document.getElementById('new-name').focus();return;}const freq=document.getElementById('new-freq').value;const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);const editId=document.getElementById('edit-id').value;if(editId){const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;const old=t.subtasks;t.name=name;t.cat=document.getElementById('new-cat').value;t.priority=document.getElementById('new-priority').value;t.freq=freq;t.date=freq==='once'?document.getElementById('new-date').value:null;t.time=document.getElementById('new-time').value;t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});await saveTask(t);}else{const newTask={id:nextId++,name,cat:document.getElementById('new-cat').value,priority:document.getElementById('new-priority').value,freq,date:freq==='once'?document.getElementById('new-date').value:null,time:document.getElementById('new-time').value,done:false,subtasks:subs.map(text=>({text,done:false})),_isNew:true};tasks.push(newTask);await saveTask(newTask);}closeTaskModal();render();}
 
 // ══════════════ CATEGORY MODAL ══════════════
 function buildCatSelect(){const sel=document.getElementById('new-cat');if(sel)sel.innerHTML=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');}
 function openAddCatModal(){document.getElementById('cat-name').value='';selectedColor=CAT_COLORS[0];document.getElementById('color-chips').innerHTML=CAT_COLORS.map(c=>`<div class="color-chip ${c===selectedColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');document.getElementById('cat-modal').classList.add('open');setTimeout(()=>document.getElementById('cat-name').focus(),50);}
 function selectColor(c){selectedColor=c;document.querySelectorAll('.color-chip').forEach(el=>el.classList.toggle('selected',el.style.backgroundColor===c||el.style.background===c));}
 function closeCatModal(){document.getElementById('cat-modal').classList.remove('open');}
-function saveCategory(){const name=document.getElementById('cat-name').value.trim();if(!name)return;const id=name.toLowerCase().replace(/\s+/g,'-')+'-'+Date.now();categories.push({id,name,color:selectedColor});closeCatModal();buildCatSelect();render();}
+async function saveCategory(){const name=document.getElementById('cat-name').value.trim();if(!name)return;const id=name.toLowerCase().replace(/\s+/g,'-')+'-'+Date.now();const cat={id,name,color:selectedColor};categories.push(cat);await saveCategoryToDB(cat);closeCatModal();buildCatSelect();render();}
 
 // ══════════════ DELETE ══════════════
 function openDeleteConfirm(id){const t=tasks.find(t=>t.id===id);if(!t)return;deleteTargetId=id;document.getElementById('confirm-body').textContent=`"${t.name}" will be permanently removed.`;document.getElementById('confirm-modal').classList.add('open');}
 function closeConfirmModal(){document.getElementById('confirm-modal').classList.remove('open');deleteTargetId=null;}
-function confirmDelete(){if(deleteTargetId!==null){tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}closeConfirmModal();render();}
+async function confirmDelete(){if(deleteTargetId!==null){await deleteTaskFromDB(deleteTargetId);tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}closeConfirmModal();render();}
 function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='cat-modal')closeCatModal();if(id==='confirm-modal')closeConfirmModal();if(id==='level-modal')closeLevelModal();}}
 
 
 
-// ══════════════ AUTH ══════════════
-// Simple local auth for now — will connect to Supabase backend later.
-// Passwords are never stored in plain text even locally.
-// This simulates the auth flow so the UI is complete and ready to wire up.
+// ══════════════ SUPABASE AUTH ══════════════
+const SUPABASE_URL = 'https://szkyhxephooswxexsjar.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a3loeGVwaG9vc3d4ZXhzamFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODYyNjcsImV4cCI6MjA5NTE2MjI2N30.fz5kr4cvZacYXtGf-GBhHZM9KZz9CcJcraYdebM9OJY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const LOCAL_USERS_KEY = 'mytasks_users';
-const LOCAL_SESSION_KEY = 'mytasks_session';
-
-function getLocalUsers(){
-  try { return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY)||'{}'); } catch(e){ return {}; }
-}
-function saveLocalUsers(users){ localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users)); }
-function getSession(){ try { return JSON.parse(localStorage.getItem(LOCAL_SESSION_KEY)||'null'); } catch(e){ return null; } }
-function saveSession(session){ localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(session)); }
-function clearSession(){ localStorage.removeItem(LOCAL_SESSION_KEY); }
-
-// Simple hash for local storage (not cryptographic — backend will use proper hashing)
-async function hashPassword(password){
-  const msgBuffer = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
-}
+let currentUser = null; // holds the Supabase user object
 
 function checkPasswordStrength(pw){
   const el=document.getElementById('password-strength');
@@ -1531,20 +1528,14 @@ function checkPasswordStrength(pw){
   const long=pw.length>=12;
   if(pw.length<6){el.className='auth-strength weak';}
   else if(pw.length<8||(pw.length>=8&&!hasNum&&!hasSym)){el.className='auth-strength medium';}
-  else if(pw.length>=8&&(hasNum||hasSym)){el.className=long&&(hasNum||hasSym)?'auth-strength strong':'auth-strength medium';}
+  else{el.className=long?'auth-strength strong':'auth-strength medium';}
 }
 
-function isValidEmail(email){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+function isValidEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+function showAuthError(f,msg){const el=document.getElementById(f+'-error');if(el){el.textContent=msg;el.classList.add('show');}}
+function clearAuthError(f){const el=document.getElementById(f+'-error');if(el)el.classList.remove('show');}
 
-function showAuthError(formId, msg){
-  const el=document.getElementById(formId+'-error');
-  if(el){el.textContent=msg;el.classList.add('show');}
-}
-function clearAuthError(formId){
-  const el=document.getElementById(formId+'-error');
-  if(el)el.classList.remove('show');
-}
-
+// ── LOGIN ──
 async function handleLogin(){
   clearAuthError('login');
   const email=document.getElementById('login-email').value.trim().toLowerCase();
@@ -1553,18 +1544,18 @@ async function handleLogin(){
   if(!isValidEmail(email)){showAuthError('login','Please enter a valid email address.');return;}
   const btn=document.getElementById('login-btn');
   btn.disabled=true;btn.textContent='Signing in...';
-  const users=getLocalUsers();
-  const hash=await hashPassword(password);
-  if(!users[email]){showAuthError('login','No account found with that email.');btn.disabled=false;btn.textContent='Sign In';return;}
-  if(users[email].passwordHash!==hash){showAuthError('login','Incorrect password.');btn.disabled=false;btn.textContent='Sign In';return;}
-  // Load user data
-  const userData=users[email];
-  loadUserData(userData);
-  saveSession({email, name:userData.name});
-  enterApp(userData.name);
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error){
+    showAuthError('login',error.message==='Invalid login credentials'?'Incorrect email or password.':error.message);
+    btn.disabled=false;btn.textContent='Sign In';return;
+  }
+  currentUser=data.user;
+  await loadUserDataFromDB();
+  enterApp();
   btn.disabled=false;btn.textContent='Sign In';
 }
 
+// ── SIGNUP ──
 async function handleSignup(){
   clearAuthError('signup');
   const name=document.getElementById('signup-name').value.trim();
@@ -1576,100 +1567,174 @@ async function handleSignup(){
   if(password.length<8){showAuthError('signup','Password must be at least 8 characters.');return;}
   if(!/[\d\W]/.test(password)){showAuthError('signup','Password must include a number or symbol.');return;}
   if(password!==confirm){showAuthError('signup','Passwords do not match.');return;}
-  const users=getLocalUsers();
-  if(users[email]){showAuthError('signup','An account with that email already exists.');return;}
   const btn=document.getElementById('signup-btn');
   btn.disabled=true;btn.textContent='Creating account...';
-  const hash=await hashPassword(password);
-  const newUser={
-    name, email, passwordHash:hash,
-    createdAt:new Date().toISOString(),
-    // Fresh player state
-    playerData:{
-      totalXP:0,coins:100,streak:0,
-      coinPool:100,coinsEarnedToday:0,
-      dailyLowUsed:0,dailyMedUsed:0,dailyHighUsed:0,
-      weeklyPool:0,weeklyAchieved:[],
-      dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
-    },
-    tasks:[],
-    categories:[
-      {id:'work',   name:'Work',    color:'#60a5fa'},
-      {id:'health', name:'Health',  color:'#34d399'},
-      {id:'home',   name:'Home',    color:'#fb923c'},
-      {id:'life',   name:'Life',    color:'#9b87d6'},
-      {id:'fitness',name:'Fitness', color:'#f87171'},
-      {id:'events', name:'Events',  color:'#fbbf24'},
-    ],
-    settings:{timeFormat:'12',weekStart:0,colorBlind:false,largeText:false,bg:'purple',timezone:0},
-    lastDayReset: new Date().toISOString().split('T')[0],
-  };
-  users[email]=newUser;
-  saveLocalUsers(users);
-  loadUserData(newUser);
-  saveSession({email,name});
-  enterApp(name);
+  const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:name}}});
+  if(error){
+    showAuthError('signup',error.message);
+    btn.disabled=false;btn.textContent='Create Account';return;
+  }
+  currentUser=data.user;
+  await createFreshUserData(name);
+  enterApp();
   btn.disabled=false;btn.textContent='Create Account';
 }
 
-function loadUserData(userData){
-  // Load player state
-  if(userData.playerData) Object.assign(player, userData.playerData);
-  // Load tasks
-  if(userData.tasks) tasks=userData.tasks.map(t=>({...t}));
-  nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
-  // Load categories
-  if(userData.categories) categories=userData.categories;
-  // Load settings
-  if(userData.settings) Object.assign(settings,userData.settings);
-  // Apply settings
-  applyTheme(settings.bg||'purple');
-  if(settings.largeText) document.body.style.fontSize='18px';
-  // Auto day reset check
-  checkDayReset(userData);
+// ── CREATE FRESH USER DATA IN DB ──
+async function createFreshUserData(name){
+  const uid=currentUser.id;
+  const defaultCategories=[
+    {id:'work',user_id:uid,name:'Work',color:'#60a5fa'},
+    {id:'health',user_id:uid,name:'Health',color:'#34d399'},
+    {id:'home',user_id:uid,name:'Home',color:'#fb923c'},
+    {id:'life',user_id:uid,name:'Life',color:'#9b87d6'},
+    {id:'fitness',user_id:uid,name:'Fitness',color:'#f87171'},
+    {id:'events',user_id:uid,name:'Events',color:'#fbbf24'},
+  ];
+  await Promise.all([
+    sb.from('profiles').insert({id:uid,display_name:name}),
+    sb.from('player_state').insert({id:uid}),
+    sb.from('categories').insert(defaultCategories),
+    sb.from('user_settings').insert({id:uid}),
+  ]);
 }
 
-function checkDayReset(userData){
-  const today=todayStr();
-  const lastReset=userData.lastDayReset||today;
-  if(lastReset!==today){
-    // It's a new day — run the day rollover
-    const lv=getLevel();const cl=getCoinLevel(lv);
-    const dayPct=userData.lastDayPct||0;
-    player.weeklyPool=Math.min(player.weeklyPool+dayPct,700);
-    const tier=getWeeklyTier(lv);
-    const rewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
-    rewards.forEach(r=>{
-      if(player.weeklyPool>=r.pct&&!player.weeklyAchieved.includes(r.pct)){
-        player.weeklyAchieved.push(r.pct);
-      }
+// ── LOAD USER DATA FROM DB ──
+async function loadUserDataFromDB(){
+  const uid=currentUser.id;
+  const [profRes,stateRes,tasksRes,catsRes,settRes,collRes]=await Promise.all([
+    sb.from('profiles').select('*').eq('id',uid).single(),
+    sb.from('player_state').select('*').eq('id',uid).single(),
+    sb.from('tasks').select('*').eq('user_id',uid).order('created_at'),
+    sb.from('categories').select('*').eq('user_id',uid),
+    sb.from('user_settings').select('*').eq('id',uid).single(),
+    sb.from('collection').select('card_id').eq('user_id',uid),
+  ]);
+
+  // Player state
+  if(stateRes.data){
+    const s=stateRes.data;
+    Object.assign(player,{
+      totalXP:s.total_xp||0, coins:s.coins||100, streak:s.streak||0,
+      coinPool:s.coin_pool||100, coinsEarnedToday:s.coins_earned_today||0,
+      dailyLowUsed:s.daily_low_used||0, dailyMedUsed:s.daily_med_used||0, dailyHighUsed:s.daily_high_used||0,
+      weeklyPool:s.weekly_pool||0, weeklyAchieved:s.weekly_achieved||[],
+      dupePoints:s.dupe_points||{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
     });
-    player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
-    player.coinsEarnedToday=0;
-    player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
-    player.streak=Math.min(player.streak+1,35);
-    tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
-    // Update stored last reset
-    const users=getLocalUsers();
-    const session=getSession();
-    if(session&&users[session.email]){
-      users[session.email].lastDayReset=today;
-      saveLocalUsers(users);
-    }
+    // Day reset check
+    const today=todayStr();
+    const lastReset=s.last_day_reset||today;
+    if(lastReset!==today) await runDayReset(s.last_day_pct||0);
+  }
+
+  // Tasks
+  if(tasksRes.data){
+    tasks=tasksRes.data.map(t=>({
+      id:t.id, name:t.name, cat:t.category, priority:t.priority,
+      freq:t.freq, date:t.due_date, time:t.due_time||'',
+      done:t.done, subtasks:t.subtasks||[],
+    }));
+    nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
+  }
+
+  // Categories
+  if(catsRes.data&&catsRes.data.length>0){
+    categories=catsRes.data.map(c=>({id:c.id,name:c.name,color:c.color}));
+  }
+
+  // Settings
+  if(settRes.data){
+    const s=settRes.data;
+    Object.assign(settings,{
+      timeFormat:s.time_format||'12', weekStart:s.week_start||0,
+      colorBlind:s.color_blind||false, largeText:s.large_text||false,
+      bg:s.theme||'purple', timezone:s.timezone||0,
+    });
+    applyTheme(settings.bg);
+    if(settings.largeText)document.body.style.fontSize='18px';
+  }
+
+  // Collection
+  if(collRes.data){
+    const ownedIds=new Set(collRes.data.map(r=>r.card_id));
+    collection.forEach(c=>c.owned=ownedIds.has(c.id));
+  }
+
+  // Display name
+  if(profRes.data) currentUser._displayName=profRes.data.display_name;
+}
+
+// ── DAY RESET ──
+async function runDayReset(lastDayPct){
+  const lv=getLevel();const cl=getCoinLevel(lv);
+  player.weeklyPool=Math.min(player.weeklyPool+lastDayPct,700);
+  const tier=getWeeklyTier(lv);
+  const rewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
+  rewards.forEach(r=>{
+    if(player.weeklyPool>=r.pct&&!player.weeklyAchieved.includes(r.pct))
+      player.weeklyAchieved.push(r.pct);
+  });
+  player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
+  player.coinsEarnedToday=0;
+  player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
+  player.streak=Math.min(player.streak+1,35);
+  tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
+  await savePlayerState();
+}
+
+// ── SAVE FUNCTIONS ──
+async function savePlayerState(){
+  if(!currentUser)return;
+  await sb.from('player_state').upsert({
+    id:currentUser.id,
+    total_xp:player.totalXP, coins:player.coins, streak:player.streak,
+    coin_pool:player.coinPool, coins_earned_today:player.coinsEarnedToday,
+    daily_low_used:player.dailyLowUsed, daily_med_used:player.dailyMedUsed, daily_high_used:player.dailyHighUsed,
+    weekly_pool:player.weeklyPool, weekly_achieved:player.weeklyAchieved,
+    dupe_points:player.dupePoints,
+    last_day_reset:todayStr(), last_day_pct:getTodayCompletionPct(),
+    updated_at:new Date().toISOString(),
+  });
+}
+
+async function saveTask(taskObj){
+  if(!currentUser)return;
+  const row={
+    user_id:currentUser.id, name:taskObj.name, category:taskObj.cat,
+    priority:taskObj.priority, freq:taskObj.freq, due_date:taskObj.date||null,
+    due_time:taskObj.time||null, done:taskObj.done, subtasks:taskObj.subtasks,
+  };
+  if(taskObj._isNew){
+    const {data}=await sb.from('tasks').insert(row).select().single();
+    if(data)taskObj.id=data.id;
+    delete taskObj._isNew;
+  } else {
+    await sb.from('tasks').update(row).eq('id',taskObj.id).eq('user_id',currentUser.id);
   }
 }
 
-function saveUserData(){
-  const session=getSession();
-  if(!session)return;
-  const users=getLocalUsers();
-  if(!users[session.email])return;
-  users[session.email].playerData={...player};
-  users[session.email].tasks=tasks.map(t=>({...t}));
-  users[session.email].categories=[...categories];
-  users[session.email].settings={...settings};
-  users[session.email].lastDayPct=getTodayCompletionPct();
-  saveLocalUsers(users);
+async function deleteTaskFromDB(id){
+  if(!currentUser)return;
+  await sb.from('tasks').delete().eq('id',id).eq('user_id',currentUser.id);
+}
+
+async function saveCategoryToDB(cat){
+  if(!currentUser)return;
+  await sb.from('categories').upsert({id:cat.id,user_id:currentUser.id,name:cat.name,color:cat.color});
+}
+
+async function saveSettingsToDB(){
+  if(!currentUser)return;
+  await sb.from('user_settings').upsert({
+    id:currentUser.id, time_format:settings.timeFormat, week_start:settings.weekStart,
+    color_blind:settings.colorBlind, large_text:settings.largeText,
+    theme:settings.bg, timezone:settings.timezone,
+  });
+}
+
+async function addCardToCollection(cardId){
+  if(!currentUser)return;
+  await sb.from('collection').upsert({user_id:currentUser.id,card_id:cardId});
 }
 
 function getTodayCompletionPct(){
@@ -1679,29 +1744,32 @@ function getTodayCompletionPct(){
   return total>0?Math.round((done/total)*100):0;
 }
 
-function enterApp(name){
+// ── ENTER / SIGN OUT ──
+function enterApp(){
   document.getElementById('auth-screen').style.display='none';
-  // Update display name in settings
+  const name=currentUser?._displayName||currentUser?.user_metadata?.display_name||'';
   const nameInput=document.getElementById('setting-name');
   if(nameInput)nameInput.value=name;
   const emailInput=document.getElementById('setting-email');
-  const session=getSession();
-  if(emailInput&&session)emailInput.value=session.email;
+  if(emailInput)emailInput.value=currentUser?.email||'';
   buildCatSelect();
   render();
 }
 
-function signOut(){
-  saveUserData();
-  clearSession();
-  // Reset to clean state
+async function signOut(){
+  await savePlayerState();
+  await sb.auth.signOut();
+  currentUser=null;
   tasks=[];
-  Object.assign(player,{totalXP:0,coins:100,streak:0,coinPool:100,coinsEarnedToday:0,dailyLowUsed:0,dailyMedUsed:0,dailyHighUsed:0,weeklyPool:0,weeklyAchieved:[],dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0}});
+  Object.assign(player,{totalXP:0,coins:100,streak:0,coinPool:100,coinsEarnedToday:0,
+    dailyLowUsed:0,dailyMedUsed:0,dailyHighUsed:0,weeklyPool:0,weeklyAchieved:[],
+    dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0}});
   categories=[
     {id:'work',name:'Work',color:'#60a5fa'},{id:'health',name:'Health',color:'#34d399'},
     {id:'home',name:'Home',color:'#fb923c'},{id:'life',name:'Life',color:'#9b87d6'},
     {id:'fitness',name:'Fitness',color:'#f87171'},{id:'events',name:'Events',color:'#fbbf24'},
   ];
+  collection.forEach(c=>c.owned=false);
   applyTheme('purple');
   document.getElementById('auth-screen').style.display='flex';
   document.getElementById('login-email').value='';
@@ -1717,11 +1785,10 @@ function switchAuthTab(tab){
   clearAuthError('login');clearAuthError('signup');
 }
 
-// Auto-save every 30 seconds while logged in
-setInterval(()=>{ if(getSession()) saveUserData(); }, 30000);
+// Auto-save player state every 60 seconds
+setInterval(()=>{ if(currentUser) savePlayerState(); }, 60000);
 // Save on page unload
-window.addEventListener('beforeunload', ()=>{ if(getSession()) saveUserData(); });
-
+window.addEventListener('beforeunload',()=>{ if(currentUser) savePlayerState(); });
 
 // INIT
 // Auto-detect timezone
@@ -1738,19 +1805,16 @@ window.addEventListener('beforeunload', ()=>{ if(getSession()) saveUserData(); }
     if(bestOpt)bestOpt.selected=true;
   }
 })();
-// Check for existing session
-const _existingSession=getSession();
-if(_existingSession){
-  const _users=getLocalUsers();
-  if(_users[_existingSession.email]){
-    loadUserData(_users[_existingSession.email]);
-    enterApp(_existingSession.name);
-  } else {
-    clearSession();
+// Check for existing Supabase session on load
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    currentUser=session.user;
+    await loadUserDataFromDB();
+    enterApp();
   }
-}
-// Don't call render() or buildCatSelect() here — enterApp() handles it
-// If no session, auth screen stays visible (already shown by default)
+  // If no session, auth screen stays visible
+})();
 </script>
 </body>
 </html>
