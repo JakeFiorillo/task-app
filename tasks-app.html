@@ -1831,15 +1831,22 @@ async function handleLogin(){
   if(!isValidEmail(email)){showAuthError('login','Please enter a valid email address.');return;}
   const btn=document.getElementById('login-btn');
   btn.disabled=true;btn.textContent='Signing in...';
-  const {data,error}=await sb.auth.signInWithPassword({email,password});
-  if(error){
-    showAuthError('login',error.message==='Invalid login credentials'?'Incorrect email or password.':error.message);
-    btn.disabled=false;btn.textContent='Sign In';return;
+  try {
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){
+      showAuthError('login',error.message==='Invalid login credentials'?'Incorrect email or password.':error.message);
+      btn.disabled=false;btn.textContent='Sign In';return;
+    }
+    currentUser=data.user;
+    await loadUserDataFromDB();
+    await checkPendingRewards();
+    btn.disabled=false;btn.textContent='Sign In';
+    enterApp();
+  } catch(e){
+    console.error('Login error:',e);
+    showAuthError('login','Something went wrong. Please try again.');
+    btn.disabled=false;btn.textContent='Sign In';
   }
-  currentUser=data.user;
-  await loadUserDataFromDB();
-  await checkPendingRewards();
-  enterApp();
 }
 
 // ── SIGNUP ──
@@ -1856,16 +1863,22 @@ async function handleSignup(){
   if(password!==confirm){showAuthError('signup','Passwords do not match.');return;}
   const btn=document.getElementById('signup-btn');
   btn.disabled=true;btn.textContent='Creating account...';
-  const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:name}}});
-  if(error){
-    showAuthError('signup',error.message);
-    btn.disabled=false;btn.textContent='Create Account';return;
+  try {
+    const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:name}}});
+    if(error){
+      showAuthError('signup',error.message);
+      btn.disabled=false;btn.textContent='Create Account';return;
+    }
+    currentUser=data.user;
+    await createFreshUserData(name);
+    await checkPendingRewards();
+    btn.disabled=false;btn.textContent='Create Account';
+    enterApp();
+  } catch(e){
+    console.error('Signup error:',e);
+    showAuthError('signup','Something went wrong. Please try again.');
+    btn.disabled=false;btn.textContent='Create Account';
   }
-  currentUser=data.user;
-  await createFreshUserData(name);
-  await checkPendingRewards();
-  enterApp();
-  btn.disabled=false;btn.textContent='Create Account';
 }
 
 // ── CREATE FRESH USER DATA IN DB ──
