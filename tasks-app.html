@@ -1903,66 +1903,74 @@ async function createFreshUserData(name){
 // ── LOAD USER DATA FROM DB ──
 async function loadUserDataFromDB(){
   const uid=currentUser.id;
-  const [profRes,stateRes,tasksRes,catsRes,settRes,collRes]=await Promise.all([
-    sb.from('profiles').select('*').eq('id',uid).single(),
-    sb.from('player_state').select('*').eq('id',uid).single(),
-    sb.from('tasks').select('*').eq('user_id',uid).order('created_at'),
-    sb.from('categories').select('*').eq('user_id',uid),
-    sb.from('user_settings').select('*').eq('id',uid).single(),
-    sb.from('collection').select('card_id').eq('user_id',uid),
-  ]);
+  console.log('Loading user data for',uid);
+  try {
+    // Fetch all in parallel — use maybeSingle() instead of single() to avoid errors on missing rows
+    const [profRes,stateRes,tasksRes,catsRes,settRes,collRes]=await Promise.all([
+      sb.from('profiles').select('*').eq('id',uid).maybeSingle(),
+      sb.from('player_state').select('*').eq('id',uid).maybeSingle(),
+      sb.from('tasks').select('*').eq('user_id',uid).order('created_at'),
+      sb.from('categories').select('*').eq('user_id',uid),
+      sb.from('user_settings').select('*').eq('id',uid).maybeSingle(),
+      sb.from('collection').select('card_id').eq('user_id',uid),
+    ]);
+    console.log('DB responses received');
 
-  // Player state
-  if(stateRes.data){
-    const s=stateRes.data;
-    Object.assign(player,{
-      totalXP:s.total_xp||0, coins:s.coins||100, streak:s.streak||0,
-      coinPool:s.coin_pool||100, coinsEarnedToday:s.coins_earned_today||0,
-      dailyLowUsed:s.daily_low_used||0, dailyMedUsed:s.daily_med_used||0, dailyHighUsed:s.daily_high_used||0,
-      weeklyPool:s.weekly_pool||0, weeklyAchieved:s.weekly_achieved||[],
-      dupePoints:s.dupe_points||{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
-    });
-    // Day reset check
-    const today=todayStr();
-    const lastReset=s.last_day_reset||today;
-    if(lastReset!==today) await runDayReset(s.last_day_pct||0);
+    // Player state
+    if(stateRes.data){
+      const s=stateRes.data;
+      Object.assign(player,{
+        totalXP:s.total_xp||0, coins:s.coins||100, streak:s.streak||0,
+        coinPool:s.coin_pool||100, coinsEarnedToday:s.coins_earned_today||0,
+        dailyLowUsed:s.daily_low_used||0, dailyMedUsed:s.daily_med_used||0, dailyHighUsed:s.daily_high_used||0,
+        weeklyPool:s.weekly_pool||0, weeklyAchieved:s.weekly_achieved||[],
+        dupePoints:s.dupe_points||{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
+      });
+      const today=todayStr();
+      const lastReset=s.last_day_reset||today;
+      if(lastReset!==today) await runDayReset(s.last_day_pct||0);
+    }
+
+    // Tasks
+    if(tasksRes.data){
+      tasks=tasksRes.data.map(t=>({
+        id:t.id, name:t.name, cat:t.category, priority:t.priority,
+        freq:t.freq, date:t.due_date, time:t.due_time||'',
+        done:t.done, subtasks:t.subtasks||[],
+      }));
+      nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
+    }
+
+    // Categories
+    if(catsRes.data&&catsRes.data.length>0){
+      categories=catsRes.data.map(c=>({id:c.id,name:c.name,color:c.color}));
+    }
+
+    // Settings
+    if(settRes.data){
+      const s=settRes.data;
+      Object.assign(settings,{
+        timeFormat:s.time_format||'12', weekStart:s.week_start||0,
+        colorBlind:s.color_blind||false, largeText:s.large_text||false,
+        bg:s.theme||'purple', timezone:s.timezone||0,
+      });
+      applyTheme(settings.bg);
+      if(settings.largeText)document.body.style.fontSize='18px';
+    }
+
+    // Collection
+    if(collRes.data){
+      const ownedIds=new Set(collRes.data.map(r=>r.card_id));
+      collection.forEach(c=>c.owned=ownedIds.has(c.id));
+    }
+
+    // Display name
+    if(profRes.data) currentUser._displayName=profRes.data.display_name;
+    console.log('User data loaded successfully');
+  } catch(e){
+    console.error('loadUserDataFromDB error:',e);
+    // Don't block login — just proceed with defaults
   }
-
-  // Tasks
-  if(tasksRes.data){
-    tasks=tasksRes.data.map(t=>({
-      id:t.id, name:t.name, cat:t.category, priority:t.priority,
-      freq:t.freq, date:t.due_date, time:t.due_time||'',
-      done:t.done, subtasks:t.subtasks||[],
-    }));
-    nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
-  }
-
-  // Categories
-  if(catsRes.data&&catsRes.data.length>0){
-    categories=catsRes.data.map(c=>({id:c.id,name:c.name,color:c.color}));
-  }
-
-  // Settings
-  if(settRes.data){
-    const s=settRes.data;
-    Object.assign(settings,{
-      timeFormat:s.time_format||'12', weekStart:s.week_start||0,
-      colorBlind:s.color_blind||false, largeText:s.large_text||false,
-      bg:s.theme||'purple', timezone:s.timezone||0,
-    });
-    applyTheme(settings.bg);
-    if(settings.largeText)document.body.style.fontSize='18px';
-  }
-
-  // Collection
-  if(collRes.data){
-    const ownedIds=new Set(collRes.data.map(r=>r.card_id));
-    collection.forEach(c=>c.owned=ownedIds.has(c.id));
-  }
-
-  // Display name
-  if(profRes.data) currentUser._displayName=profRes.data.display_name;
 }
 
 // ── DAY RESET ──
