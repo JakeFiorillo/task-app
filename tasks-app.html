@@ -1013,6 +1013,12 @@ function getVisibleTasks(){
   const range=getViewRange();
   let list=tasks.filter(t=>{
     if(currentView==='all')return true;
+    if(currentView==='today'){
+      // Recurring tasks always show in today view
+      if(t.freq!=='once')return true;
+      // One-time tasks: only show if due today or overdue (not future)
+      return t.date && t.date<=range.end;
+    }
     if(t.freq!=='once')return true;
     return t.date&&t.date>=range.start&&t.date<=range.end;
   });
@@ -1209,10 +1215,11 @@ function rollCard(rarity){
 }
 function openBox(rarity){
   const cardRarity=rollCard(rarity);
-  const available=collection.filter(c=>c.rarity===cardRarity&&!c.owned);
-  let card,isDupe=false;
-  if(available.length>0){card=available[Math.floor(Math.random()*available.length)];card.owned=true;}
-  else{const all=collection.filter(c=>c.rarity===cardRarity);card=all[Math.floor(Math.random()*all.length)];isDupe=true;}
+  // Equal chance for every card of that rarity regardless of owned status
+  const all=collection.filter(c=>c.rarity===cardRarity);
+  const card=all[Math.floor(Math.random()*all.length)];
+  const isDupe=card.owned; // duplicate if already owned
+  if(!isDupe)card.owned=true; // mark as owned if new
   boxOpenRarity=cardRarity;boxOpenCard={card,isDupe};
   // Setup overlay
   document.getElementById('box-open-title').textContent=`Random ${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Card`;
@@ -1246,7 +1253,45 @@ function flipBoxCard(){
 }
 function closeBoxOpen(){document.getElementById('box-open-overlay').style.display='none';boxOpenRarity=null;boxOpenCard=null;renderCollection();renderShop();}
 
-// ══════════════ SHOP ══════════════
+// Spawn one new daily lottery (to add after one expires)
+function makeOneDailyLottery(){
+  const now=new Date();
+  function hUTC(h){const t=new Date();t.setUTCHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.round((t-now)/3600000);}
+  const allDailyPools=[
+    {name:'Common Box',    isRandom:true, rarity:'common',   cost:5, maxEntries:7,winners:10},
+    {name:'Uncommon Box',  isRandom:true, rarity:'uncommon', cost:5, maxEntries:7,winners:8},
+    {name:'Rare Box',      isRandom:true, rarity:'rare',     cost:10,maxEntries:6,winners:7},
+    {name:'Epic Box',      isRandom:true, rarity:'epic',     cost:10,maxEntries:6,winners:5},
+    {name:'Legendary Box', isRandom:true, rarity:'legendary',cost:15,maxEntries:5,winners:3},
+    {name:pickSpecificCard('common'),   isRandom:false,rarity:'common',   cost:10,maxEntries:6,winners:10},
+    {name:pickSpecificCard('uncommon'), isRandom:false,rarity:'uncommon', cost:10,maxEntries:6,winners:8},
+    {name:pickSpecificCard('rare'),     isRandom:false,rarity:'rare',     cost:15,maxEntries:5,winners:7},
+  ];
+  // Pick one not already active
+  const activeNames=new Set(lotteries.daily.map(l=>l.rarity+l.isRandom));
+  const available=allDailyPools.filter(p=>!activeNames.has(p.rarity+p.isRandom));
+  if(!available.length)return null;
+  const pick=available[Math.floor(Math.random()*available.length)];
+  const utcSlots=[0,6,12,18];
+  const freeSlot=utcSlots.find(h=>!lotteries.daily.find(l=>l.closeHour===h))||utcSlots[Math.floor(Math.random()*utcSlots.length)];
+  return{...pick,entries:0,entrants:Math.floor(Math.random()*80)+5,closeHour:freeSlot,hoursLeft:hUTC(freeSlot)+24,weekly:false};
+}
+
+// Spawn one new weekly lottery
+function makeOneWeeklyLottery(){
+  const wPool=[
+    {name:'Epic Box',     isRandom:true, rarity:'epic',     cost:15,maxEntries:4,winners:8},
+    {name:'Legendary Box',isRandom:true, rarity:'legendary',cost:20,maxEntries:4,winners:5},
+    {name:'Mythic Box',   isRandom:true, rarity:'mythic',   cost:25,maxEntries:3,winners:3},
+    {name:'Cosmic Box',   isRandom:true, rarity:'cosmic',   cost:35,maxEntries:2,winners:2},
+    {name:pickSpecificCard('cosmic'),isRandom:false,rarity:'cosmic',cost:40,maxEntries:1,winners:1},
+  ];
+  const activeRarities=new Set(lotteries.weekly.map(l=>l.rarity+l.isRandom));
+  const available=wPool.filter(p=>!activeRarities.has(p.rarity+p.isRandom));
+  if(!available.length)return null;
+  const pick=available[Math.floor(Math.random()*available.length)];
+  return{...pick,entries:0,entrants:Math.floor(Math.random()*200)+20,daysLeft:7,weekly:true};
+}
 
 // Build odds tooltip HTML for a box rarity
 function buildOddsTooltip(rarity){
@@ -1337,7 +1382,7 @@ function getLocalTzLabel(){
 function renderLotteries(){
   document.getElementById('lottery-coins-val').textContent=player.coins;
   const tzLabel=getLocalTzLabel();
-  function card(l){
+  function card(l,idx,isWeekly){
     const dots=Array.from({length:l.maxEntries},(_,i)=>`<div class="entry-dot ${i<l.entries?'filled':''}"></div>`).join('');
     const localClose=utcToLocal(l.closeHour);
     const ts=l.weekly
@@ -1371,19 +1416,24 @@ function renderLotteries(){
         <div class="entry-dots">${dots}</div>
         <div class="entry-right">
           <div class="entry-count">${l.entries}/${l.maxEntries} entries</div>
-          <button class="entry-btn" onclick="enterLottery('${l.name}',${l.weekly})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button>
+          <button class="entry-btn" onclick="enterLottery(${idx},${isWeekly})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button>
         </div>
       </div>
     </div>`;
   }
-  document.getElementById('daily-lottery-grid').innerHTML=[...lotteries.daily].sort((a,b)=>a.hoursLeft-b.hoursLeft).map(card).join('');
-  document.getElementById('weekly-lottery-grid').innerHTML=lotteries.weekly.map(card).join('');
+  // Sort daily by time remaining but preserve original index for enterLottery
+  const sortedDaily=[...lotteries.daily].map((l,i)=>({...l,_origIdx:i})).sort((a,b)=>a.hoursLeft-b.hoursLeft);
+  document.getElementById('daily-lottery-grid').innerHTML=sortedDaily.map(l=>card(l,l._origIdx,false)).join('');
+  document.getElementById('weekly-lottery-grid').innerHTML=lotteries.weekly.map((l,i)=>card(l,i,true)).join('');
 }
 
-function enterLottery(name,weekly){
-  const arr=weekly?lotteries.weekly:lotteries.daily;const l=arr.find(x=>x.name===name);
+function enterLottery(idx,weekly){
+  const arr=weekly?lotteries.weekly:lotteries.daily;
+  const l=arr[idx];
   if(!l||l.entries>=l.maxEntries||player.coins<l.cost)return;
-  player.coins-=l.cost;l.entries++;showToast(`<i class="ti ti-ticket"></i> Entered ${name} lottery!`);updateNavStats();renderLotteries();
+  player.coins-=l.cost;l.entries++;l.entrants++;
+  showToast(`<i class="ti ti-ticket"></i> Entered the ${l.name} lottery!`);
+  updateNavStats();renderLotteries();
 }
 
 // ══════════════ TASK MODAL ══════════════
@@ -1411,21 +1461,55 @@ function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')close
 // ══════════════ ADMIN TOOLS ══════════════
 function adminAdvanceDay(){
   const lv=getLevel();const cl=getCoinLevel(lv);
-  // Reset daily task limits
+
+  // 1. Calculate today's completion % and add to weekly pool
+  const todayTasks=getTodayTasks();
+  const done=todayTasks.filter(t=>t.done).length;
+  const total=todayTasks.length;
+  const dayPct=total>0?Math.round((done/total)*100):0;
+  player.weeklyPool=Math.min(player.weeklyPool+dayPct,700);
+
+  // 2. Check weekly reward thresholds newly crossed
+  const tier=getWeeklyTier(lv);
+  const rewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
+  rewards.forEach(r=>{
+    if(player.weeklyPool>=r.pct && !player.weeklyAchieved.includes(r.pct)){
+      player.weeklyAchieved.push(r.pct);
+      showToast('🏆 Weekly reward unlocked: '+r.reward);
+    }
+  });
+
+  // 3. Reset daily task limits
   player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
   player.coinsEarnedToday=0;
-  // Recharge coin pool up to max
-  player.coinPool=Math.min(player.coinPool+cl.recharge, cl.maxPool);
-  // Increment streak (simplified — assumes threshold was met)
+
+  // 4. Recharge coin pool up to max
+  player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
+
+  // 5. Increment streak
   player.streak=Math.min(player.streak+1,35);
-  // Un-done all daily tasks so they can be re-completed
-  tasks.forEach(t=>{if(t.freq==='daily')t.done=false;});
-  // Regenerate lotteries
-  lotteries=makeLotteries();
+
+  // 6. Un-done all daily/recurring tasks so they can be re-completed
+  tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
+
+  // 7. Tick down existing daily lotteries and remove expired ones
+  lotteries.daily.forEach(l=>l.hoursLeft=Math.max(0,l.hoursLeft-24));
+  lotteries.daily=lotteries.daily.filter(l=>l.hoursLeft>0);
+
+  // 8. Generate one fresh daily lottery to replace expired ones (maintain ~4 at a time)
+  const newDay=makeOneDailyLottery();
+  if(newDay)lotteries.daily.push(newDay);
+
+  // 9. Tick down weekly lotteries, add one new weekly lottery
+  lotteries.weekly.forEach(l=>l.daysLeft=Math.max(0,l.daysLeft-1));
+  lotteries.weekly=lotteries.weekly.filter(l=>l.daysLeft>0);
+  const newWeekly=makeOneWeeklyLottery();
+  if(newWeekly)lotteries.weekly.push(newWeekly);
+
   updateNavStats();render();
   if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
   if(document.getElementById('page-lottery').classList.contains('active'))renderLotteries();
-  showToast('🗓 Day advanced — daily limits reset, coin pool recharged, streak +1');
+  showToast(`🗓 Day advanced — +${dayPct}% to weekly pool, coin pool recharged`);
 }
 function adminGiveCoins(){
   const amt=parseInt(document.getElementById('admin-coins-amt').value)||0;
