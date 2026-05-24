@@ -510,7 +510,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     </div>
     <div class="lottery-section-title">📅 Daily Lotteries</div>
     <div class="lottery-grid" id="daily-lottery-grid"></div>
-    <div class="lottery-section-title">⭐ Weekly Lottery</div>
+    <div class="lottery-section-title">⭐ Weekly Lotteries</div>
     <div class="lottery-grid" id="weekly-lottery-grid"></div>
   </div>
 </div>
@@ -607,6 +607,45 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
             <option value="gray">Soft Gray</option>
           </select>
         </div>
+      </div>
+    </div>
+    <div class="settings-section" style="border-color:#E24B4A55">
+      <div class="settings-section-title" style="background:#fff5f5;color:#A32D2D">🛠 Admin / Testing Tools</div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Advance Day</div><div class="setting-desc">Simulates 4am rollover — resets daily limits and recharges coin pool</div></div>
+        <div class="setting-control"><button class="shop-buy-btn" onclick="adminAdvanceDay()" style="background:#E24B4A">+ 1 Day</button></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Give Coins</div><div class="setting-desc">Add coins directly to your balance</div></div>
+        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="admin-coins-amt" value="100" min="1" max="9999" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+          <button class="shop-buy-btn" onclick="adminGiveCoins()" style="background:#E24B4A">Give</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Give XP</div><div class="setting-desc">Add XP directly to your total</div></div>
+        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="admin-xp-amt" value="100" min="1" max="9999" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+          <button class="shop-buy-btn" onclick="adminGiveXP()" style="background:#E24B4A">Give</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Set Streak</div><div class="setting-desc">Jump to a specific streak day to test multipliers</div></div>
+        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="admin-streak-amt" value="7" min="0" max="35" style="width:70px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+          <button class="shop-buy-btn" onclick="adminSetStreak()" style="background:#E24B4A">Set</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Add Weekly %</div><div class="setting-desc">Add to weekly pool to test reward thresholds</div></div>
+        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="admin-weekly-amt" value="75" min="1" max="700" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+          <button class="shop-buy-btn" onclick="adminAddWeekly()" style="background:#E24B4A">Add</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Reset Streak</div><div class="setting-desc">Set streak back to 0</div></div>
+        <div class="setting-control"><button class="shop-buy-btn" onclick="adminResetStreak()" style="background:#E24B4A">Reset</button></div>
       </div>
     </div>
   </div>
@@ -1251,20 +1290,20 @@ function makeLotteries(){
   function hUTC(h){const t=new Date();t.setUTCHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.round((t-now)/3600000);}
   // Daily pool: random card = random rarity card; specific card = named card
   const dPool=[
-    {name:'Random Common Card',   isRandom:true,  rarity:'common',    cost:5, maxEntries:7,winners:10},
+    {name:'Common Box',           isRandom:true,  rarity:'common',    cost:5, maxEntries:7,winners:10},
     {name:pickSpecificCard('common'),   isRandom:false, rarity:'common',    cost:10,maxEntries:6,winners:10},
-    {name:'Random Uncommon Card', isRandom:true,  rarity:'uncommon',  cost:5, maxEntries:7,winners:8},
+    {name:'Uncommon Box',         isRandom:true,  rarity:'uncommon',  cost:5, maxEntries:7,winners:8},
     {name:pickSpecificCard('uncommon'), isRandom:false, rarity:'uncommon',  cost:10,maxEntries:6,winners:8},
-    {name:'Random Rare Card',     isRandom:true,  rarity:'rare',      cost:10,maxEntries:6,winners:7},
+    {name:'Rare Box',             isRandom:true,  rarity:'rare',      cost:10,maxEntries:6,winners:7},
     {name:pickSpecificCard('rare'),     isRandom:false, rarity:'rare',      cost:15,maxEntries:5,winners:7},
-    {name:'Random Epic Card',     isRandom:true,  rarity:'epic',      cost:10,maxEntries:6,winners:5},
-    {name:'Random Legendary Card',isRandom:true,  rarity:'legendary', cost:15,maxEntries:5,winners:3},
+    {name:'Epic Box',             isRandom:true,  rarity:'epic',      cost:10,maxEntries:6,winners:5},
+    {name:'Legendary Box',        isRandom:true,  rarity:'legendary', cost:15,maxEntries:5,winners:3},
   ];
   const wPool=[
-    {name:'Random Epic Card',     isRandom:true,  rarity:'epic',      cost:15,maxEntries:4,winners:8},
-    {name:'Random Legendary Card',isRandom:true,  rarity:'legendary', cost:20,maxEntries:4,winners:5},
-    {name:'Random Mythic Card',   isRandom:true,  rarity:'mythic',    cost:25,maxEntries:3,winners:3},
-    {name:'Random Cosmic Card',   isRandom:true,  rarity:'cosmic',    cost:35,maxEntries:2,winners:2},
+    {name:'Epic Box',             isRandom:true,  rarity:'epic',      cost:15,maxEntries:4,winners:8},
+    {name:'Legendary Box',        isRandom:true,  rarity:'legendary', cost:20,maxEntries:4,winners:5},
+    {name:'Mythic Box',           isRandom:true,  rarity:'mythic',    cost:25,maxEntries:3,winners:3},
+    {name:'Cosmic Box',           isRandom:true,  rarity:'cosmic',    cost:35,maxEntries:2,winners:2},
     {name:pickSpecificCard('cosmic'),   isRandom:false, rarity:'cosmic',    cost:40,maxEntries:1,winners:1},
   ];
   const sh=a=>[...a].sort(()=>0.5-Math.random());
@@ -1368,6 +1407,61 @@ function openDeleteConfirm(id){const t=tasks.find(t=>t.id===id);if(!t)return;del
 function closeConfirmModal(){document.getElementById('confirm-modal').classList.remove('open');deleteTargetId=null;}
 function confirmDelete(){if(deleteTargetId!==null){tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}closeConfirmModal();render();}
 function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='cat-modal')closeCatModal();if(id==='confirm-modal')closeConfirmModal();if(id==='level-modal')closeLevelModal();}}
+
+// ══════════════ ADMIN TOOLS ══════════════
+function adminAdvanceDay(){
+  const lv=getLevel();const cl=getCoinLevel(lv);
+  // Reset daily task limits
+  player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
+  player.coinsEarnedToday=0;
+  // Recharge coin pool up to max
+  player.coinPool=Math.min(player.coinPool+cl.recharge, cl.maxPool);
+  // Increment streak (simplified — assumes threshold was met)
+  player.streak=Math.min(player.streak+1,35);
+  // Un-done all daily tasks so they can be re-completed
+  tasks.forEach(t=>{if(t.freq==='daily')t.done=false;});
+  // Regenerate lotteries
+  lotteries=makeLotteries();
+  updateNavStats();render();
+  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
+  if(document.getElementById('page-lottery').classList.contains('active'))renderLotteries();
+  showToast('🗓 Day advanced — daily limits reset, coin pool recharged, streak +1');
+}
+function adminGiveCoins(){
+  const amt=parseInt(document.getElementById('admin-coins-amt').value)||0;
+  if(amt<=0)return;
+  player.coins+=amt;updateNavStats();renderShopIfOpen();
+  showToast(`🪙 +${amt} coins added`);
+}
+function adminGiveXP(){
+  const amt=parseInt(document.getElementById('admin-xp-amt').value)||0;
+  if(amt<=0)return;
+  const oldLv=getLevel();player.totalXP+=amt;const newLv=getLevel();
+  updateNavStats();
+  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
+  if(newLv>oldLv)showToast(`⭐ +${amt} XP — Level up! Now Level ${newLv}`);
+  else showToast(`⭐ +${amt} XP added (${player.totalXP} total)`);
+}
+function adminSetStreak(){
+  const amt=parseInt(document.getElementById('admin-streak-amt').value)||0;
+  player.streak=Math.max(0,Math.min(35,amt));
+  updateNavStats();
+  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
+  showToast(`🔥 Streak set to ${player.streak}`);
+}
+function adminResetStreak(){
+  player.streak=0;updateNavStats();
+  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
+  showToast('🔥 Streak reset to 0');
+}
+function adminAddWeekly(){
+  const amt=parseInt(document.getElementById('admin-weekly-amt').value)||0;
+  if(amt<=0)return;
+  player.weeklyPool=Math.min(player.weeklyPool+amt,700);
+  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
+  showToast(`📊 Weekly pool now ${player.weeklyPool}%`);
+}
+function renderShopIfOpen(){if(document.getElementById('page-shop').classList.contains('active'))renderShop();}
 
 // INIT
 buildCatSelect();
