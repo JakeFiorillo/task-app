@@ -159,6 +159,46 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .task-card.pinned-card { border-left:3px solid var(--accent); }
 .pin-badge { font-size:10px; color:var(--accent); font-weight:600; display:flex; align-items:center; gap:2px; }
 
+
+/* ── DAILY REPORT ── */
+.report-overlay { position:fixed; inset:0; background:rgba(20,10,50,0.6); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; }
+.report-modal { background:var(--bg); border-radius:20px; border:0.5px solid var(--border); width:520px; max-width:96vw; max-height:90vh; overflow-y:auto; padding:28px; box-shadow:0 12px 48px rgba(0,0,0,0.15); }
+.report-title { font-size:20px; font-weight:700; letter-spacing:-0.3px; margin-bottom:4px; }
+.report-date { font-size:12px; color:var(--text3); margin-bottom:22px; }
+.report-section { margin-bottom:20px; padding-bottom:20px; border-bottom:0.5px solid var(--border); }
+.report-section:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+.report-section-title { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
+.report-stat { display:flex; align-items:center; justify-content:space-between; padding:7px 0; }
+.report-stat-label { font-size:13px; color:var(--text2); }
+.report-stat-val { font-size:14px; font-weight:700; color:var(--text); }
+.report-stat-val.green { color:#059669; }
+.report-stat-val.orange { color:#ea580c; }
+.report-stat-val.red { color:#E24B4A; }
+.report-big { font-size:36px; font-weight:800; color:var(--accent); text-align:center; margin:6px 0 2px; }
+.report-big-sub { font-size:12px; color:var(--text3); text-align:center; margin-bottom:10px; }
+.report-xp-bar { height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; margin:8px 0 4px; }
+.report-xp-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-mid)); border-radius:4px; transition:width 0.6s ease; }
+.report-xp-meta { display:flex; justify-content:space-between; font-size:11px; color:var(--text3); }
+.streak-status { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:var(--radius-lg); margin-bottom:10px; }
+.streak-status.kept { background:#fff7ed; border:0.5px solid #fed7aa; }
+.streak-status.lost { background:#fff1f2; border:0.5px solid #fda4af; }
+.streak-status-icon { font-size:28px; }
+.streak-status-text { flex:1; }
+.streak-status-title { font-size:14px; font-weight:700; }
+.streak-status-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+.streak-saver-btn { padding:7px 14px; font-size:12px; font-weight:600; background:#ea580c; color:white; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; white-space:nowrap; }
+.streak-saver-btn:hover { opacity:0.85; }
+.reward-row { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:var(--radius); background:var(--bg2); margin-bottom:6px; }
+.reward-row-icon { font-size:20px; flex-shrink:0; }
+.reward-row-info { flex:1; }
+.reward-row-name { font-size:13px; font-weight:600; }
+.reward-row-sub { font-size:11px; color:var(--text3); }
+.reward-claim-btn { padding:6px 14px; font-size:12px; font-weight:600; background:var(--accent); color:white; border:none; border-radius:var(--radius); cursor:pointer; font-family:inherit; white-space:nowrap; }
+.reward-claim-btn:hover { opacity:0.85; }
+.reward-claim-btn:disabled { opacity:0.4; cursor:default; }
+.report-proceed-btn { width:100%; padding:12px; font-size:15px; font-weight:700; background:var(--accent); color:white; border:none; border-radius:var(--radius-lg); cursor:pointer; font-family:inherit; margin-top:18px; transition:opacity 0.15s; }
+.report-proceed-btn:hover { opacity:0.88; }
+
 .empty-state { text-align:center; padding:48px 20px; color:var(--text3); font-size:13px; }
 .empty-state i { font-size:32px; display:block; margin-bottom:10px; color:var(--accent-mid); }
 
@@ -701,6 +741,11 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 </div>
 </div>
 
+<!-- DAILY REPORT -->
+<div class="report-overlay" id="daily-report-overlay" style="display:none">
+  <div class="report-modal" id="daily-report-modal"></div>
+</div>
+
 <!-- LEVEL MODAL -->
 <div class="modal-overlay" id="level-modal" onclick="closeModalOutside(event,'level-modal')">
   <div class="level-modal">
@@ -927,7 +972,7 @@ let player={
   totalXP:0, coins:100, streak:0,
   coinPool:100, coinsEarnedToday:0,
   dailyLowUsed:0, dailyMedUsed:0, dailyHighUsed:0,
-  weeklyPool:0, weeklyAchieved:[],
+  weeklyPool:0, weeklyAchieved:[], streakSaverUsedWeek:false,
   dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
 };
 
@@ -1131,7 +1176,7 @@ function updateUpcoming(){
       const db=b.date||'9999-12-31';
       return da<db?-1:da>db?1:0;
     })
-    .slice(0,5);
+    .slice(0,7);
   document.getElementById('upcoming-list').innerHTML=upcoming.length
     ?upcoming.map(t=>`<div class="upcoming-item">
         <div class="upcoming-name" style="display:flex;align-items:center;gap:5px">
@@ -1362,14 +1407,19 @@ function flipBoxCard(){
 }
 async function closeBoxOpen(){
   document.getElementById('box-open-overlay').style.display='none';
-  // Save newly owned card to DB
   if(boxOpenCard&&!boxOpenCard.isDupe&&boxOpenCard.card){
     await addCardToCollection(boxOpenCard.card.id);
   }
-  // Save dupe points and player state
   if(boxOpenCard&&boxOpenCard.isDupe) await savePlayerState();
   boxOpenRarity=null;boxOpenCard=null;
   renderCollection();renderShop();
+  // Show next pending box from level/weekly rewards
+  if(_pendingBoxOpens.length>0){
+    const rarity=_pendingBoxOpens.shift();
+    setTimeout(()=>openBox(rarity),300);
+  } else if(_pendingLotteryRewards.length>0){
+    setTimeout(()=>showNextLotteryReward(),300);
+  }
 }
 
 // Spawn one new daily lottery (to add after one expires)
@@ -1640,23 +1690,256 @@ async function spawnNextLottery(lottery){
   });
 }
 
-// Check for pending rewards and deliver them on login
+
+// ══════════════ DAILY REPORT ══════════════
+let _reportData = null;
+let _reportStreakSaverUsed = false;
+let _reportLevelRewardsClaimed = new Set();
+let _reportWeeklyRewardsClaimed = new Set();
+
+function showDailyReport(data){
+  _reportData = data;
+  _reportStreakSaverUsed = false;
+  _reportLevelRewardsClaimed = new Set();
+  _reportWeeklyRewardsClaimed = new Set();
+  renderDailyReport();
+  document.getElementById('daily-report-overlay').style.display='flex';
+}
+
+function renderDailyReport(){
+  const d=_reportData;
+  const lv=d.oldLv;
+  const nextLvData=LEVEL_DATA[Math.min(lv,19)];
+  const currentLvData=LEVEL_DATA[lv-1];
+  const xpInLevel=d.newTotalXP - currentLvData.totalXP;
+  const xpNeeded=d.newLv<20?nextLvData.xpNeeded:1;
+  const xpPct=Math.min(100,Math.round((xpInLevel/xpNeeded)*100));
+  const today=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  let html=`<div class="report-title">📋 Daily Summary</div>
+  <div class="report-date">${today}</div>`;
+
+  // ── Tasks section ──
+  html+=`<div class="report-section">
+    <div class="report-section-title">Tasks</div>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px">
+      <div class="report-big">${d.done}/${d.total}</div>
+      <div style="flex:1">
+        <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:4px">
+          <div style="height:100%;width:${d.total>0?Math.round((d.done/d.total)*100):0}%;background:var(--accent);border-radius:4px"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3)">${d.pctDone}% completed</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── Streak section ──
+  html+=`<div class="report-section">
+    <div class="report-section-title">Streak</div>
+    <div class="streak-status ${d.keptStreak?'kept':'lost'}">
+      <div class="streak-status-icon">${d.keptStreak?'🔥':'💔'}</div>
+      <div class="streak-status-text">
+        <div class="streak-status-title">${d.keptStreak
+          ?`Streak kept! Now ${d.newStreakIfKept} days 🎉`
+          :`Streak ${d.currentStreak>0?'lost':''}${d.currentStreak===0?'still at 0':''}` }</div>
+        <div class="streak-status-sub">${d.keptStreak
+          ?`You completed ${d.pctDone}% — needed ${d.neededPct}%`
+          :`You completed ${d.pctDone}% — needed ${d.neededPct}%. Your streak will go from ${d.currentStreak} → ${d.newStreakIfLost}.`}</div>
+      </div>
+      ${!d.keptStreak&&d.currentStreak>0&&!player.streakSaverUsedWeek&&!_reportStreakSaverUsed&&player.coins>=25
+        ?`<button class="streak-saver-btn" onclick="useStreakSaverInReport()">🛡️ Use Streak Saver (25 coins)</button>`
+        :''}
+      ${!d.keptStreak&&d.currentStreak>0&&(player.streakSaverUsedWeek||_reportStreakSaverUsed)
+        ?`<span style="font-size:11px;color:var(--text3)">Streak saver already used this week</span>`
+        :''}
+    </div>
+  </div>`;
+
+  // ── XP section ──
+  html+=`<div class="report-section">
+    <div class="report-section-title">XP Earned</div>
+    <div class="report-stat"><span class="report-stat-label">Base XP</span><span class="report-stat-val">+${d.baseXP} XP</span></div>
+    <div class="report-stat"><span class="report-stat-label">Streak multiplier</span><span class="report-stat-val">${d.streakMult.toFixed(2)}×</span></div>
+    <div class="report-stat"><span class="report-stat-label">Total earned</span><span class="report-stat-val green">+${d.earnedXP} XP</span></div>
+    <div style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
+        <span>Level ${d.newLv} progress</span><span>${Math.min(xpInLevel,xpNeeded)} / ${xpNeeded} XP</span>
+      </div>
+      <div class="report-xp-bar"><div class="report-xp-fill" style="width:${xpPct}%"></div></div>
+      ${d.newLv<20?`<div style="font-size:11px;color:var(--text3);margin-top:3px">${xpNeeded-Math.min(xpInLevel,xpNeeded)} XP to Level ${d.newLv+1}</div>`:'<div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">Max Level!</div>'}
+    </div>
+  </div>`;
+
+  // ── Level up rewards ──
+  if(d.levelUps&&d.levelUps.length>0){
+    html+=`<div class="report-section">
+      <div class="report-section-title">🎉 Level Up${d.levelUps.length>1?'s':''}!</div>`;
+    d.levelUps.forEach(lu=>{
+      const claimed=_reportLevelRewardsClaimed.has(lu.level);
+      html+=`<div class="reward-row">
+        <div class="reward-row-icon">⭐</div>
+        <div class="reward-row-info">
+          <div class="reward-row-name">Level ${lu.level} — ${lu.benefit}</div>
+          <div class="reward-row-sub">+${lu.coins} coins on claim</div>
+        </div>
+        <button class="reward-claim-btn" onclick="claimLevelReward(${lu.level},${lu.coins},'${lu.benefit}')" ${claimed?'disabled':''}>
+          ${claimed?'Claimed ✓':'Claim'}
+        </button>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // ── Weekly rewards ──
+  if(d.newWeeklyRewards&&d.newWeeklyRewards.length>0){
+    html+=`<div class="report-section">
+      <div class="report-section-title">🏆 Weekly Reward${d.newWeeklyRewards.length>1?'s':''}!</div>`;
+    d.newWeeklyRewards.forEach(r=>{
+      const claimed=_reportWeeklyRewardsClaimed.has(r.pct);
+      html+=`<div class="reward-row">
+        <div class="reward-row-icon">📦</div>
+        <div class="reward-row-info">
+          <div class="reward-row-name">${r.reward}</div>
+          <div class="reward-row-sub">${r.pct}% weekly completion milestone</div>
+        </div>
+        <button class="reward-claim-btn" onclick="claimWeeklyReward(${r.pct},'${r.reward}')" ${claimed?'disabled':''}>
+          ${claimed?'Claimed ✓':'Claim'}
+        </button>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  html+=`<button class="report-proceed-btn" onclick="proceedFromReport()">Claim & Continue →</button>`;
+  document.getElementById('daily-report-modal').innerHTML=html;
+}
+
+function useStreakSaverInReport(){
+  if(player.coins<25||player.streakSaverUsedWeek||_reportStreakSaverUsed)return;
+  player.coins-=25;
+  player.streakSaverUsedWeek=true;
+  _reportStreakSaverUsed=true;
+  _reportData.keptStreak=true;
+  _reportData.newStreakIfKept=Math.min(_reportData.currentStreak+1,35);
+  showToast('🛡️ Streak Saver used! Your streak is safe.');
+  renderDailyReport();
+}
+
+function claimLevelReward(level,coins,benefit){
+  if(_reportLevelRewardsClaimed.has(level))return;
+  _reportLevelRewardsClaimed.add(level);
+  player.coins+=coins;
+  showToast(`⭐ Level ${level} reward: +${coins} coins!`);
+  // If benefit is a box, open it
+  const rarity=benefit.toLowerCase().includes('cosmic')?'cosmic'
+    :benefit.toLowerCase().includes('mythic')?'mythic'
+    :benefit.toLowerCase().includes('legendary')?'legendary'
+    :benefit.toLowerCase().includes('epic')?'epic'
+    :benefit.toLowerCase().includes('rare')?'rare'
+    :benefit.toLowerCase().includes('uncommon')?'uncommon'
+    :benefit.toLowerCase().includes('common')?'common':null;
+  if(rarity&&benefit.toLowerCase().includes('box')){
+    // Queue box open after report closes
+    _pendingBoxOpens.push(rarity);
+  }
+  updateNavStats();
+  renderDailyReport();
+}
+
+function claimWeeklyReward(pct,reward){
+  if(_reportWeeklyRewardsClaimed.has(pct))return;
+  _reportWeeklyRewardsClaimed.add(pct);
+  // Parse reward string
+  if(reward.toLowerCase().includes('coins')){
+    const amt=parseInt(reward.match(/\d+/)?.[0]||0);
+    player.coins+=amt;
+    showToast(`🏆 Weekly reward: +${amt} coins!`);
+  } else {
+    // It's a box — parse count and rarity
+    const match=reward.match(/(\d+)?×?\s*(\w+)\s+box/i);
+    if(match){
+      const count=parseInt(match[1]||1);
+      const rarity=match[2].toLowerCase();
+      for(let i=0;i<count;i++) _pendingBoxOpens.push(rarity);
+      showToast(`🏆 Weekly reward: ${reward}!`);
+    }
+  }
+  player.weeklyAchieved.push(pct);
+  updateNavStats();
+  renderDailyReport();
+}
+
+let _pendingBoxOpens=[];
+let _pendingLotteryRewards=[];
+
+async function proceedFromReport(){
+  const d=_reportData;
+  // Apply XP
+  player.totalXP+=d.earnedXP;
+  // Apply streak
+  if(d.keptStreak||_reportStreakSaverUsed){
+    player.streak=d.newStreakIfKept;
+  } else {
+    player.streak=d.newStreakIfLost;
+  }
+  // Apply weekly pool
+  player.weeklyPool=d.newWeeklyPool;
+  // Reset daily limits and recharge coin pool
+  const lv=getLevel();const cl=getCoinLevel(lv);
+  player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
+  player.coinsEarnedToday=0;
+  player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
+  // Reset recurring tasks
+  tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
+  // Save
+  await savePlayerState();
+  // Close report
+  document.getElementById('daily-report-overlay').style.display='none';
+  _reportData=null;
+  updateNavStats();
+  render();
+  // Open any pending boxes from level/weekly rewards
+  if(_pendingBoxOpens.length>0){
+    const rarity=_pendingBoxOpens.shift();
+    openBox(rarity);
+    // Queue remaining for after each box is closed
+  }
+  // Then show lottery rewards
+  if(_pendingBoxOpens.length===0&&_pendingLotteryRewards.length>0){
+    await showNextLotteryReward();
+  }
+}
+
+// ── LOTTERY REWARD DELIVERY ──
+async function showNextLotteryReward(){
+  if(_pendingLotteryRewards.length===0)return;
+  const reward=_pendingLotteryRewards.shift();
+  if(reward.reward_type==='box'||reward.reward_type==='card'){
+    openBox(reward.rarity);
+    // After box close, next lottery reward shown via closeBoxOpen
+  } else if(reward.reward_type==='coins'){
+    const amt=parseInt(reward.reward_value)||0;
+    player.coins+=amt;
+    await savePlayerState();
+    updateNavStats();
+    showToast(`🏆 Lottery win: +${amt} coins from "${reward.lottery_name}"!`);
+    setTimeout(()=>showNextLotteryReward(),1000);
+  }
+}
+
+
+// Check for pending rewards — queue them for after the daily report
 async function checkPendingRewards(){
   if(!currentUser)return;
   const {data:rewards}=await sb.from('pending_rewards')
     .select('*').eq('user_id',currentUser.id).eq('claimed',false);
   if(!rewards||rewards.length===0)return;
+  // Mark all as claimed in DB
   for(const reward of rewards){
-    if(reward.reward_type==='box'||reward.reward_type==='card'){
-      openBox(reward.rarity);
-    } else if(reward.reward_type==='coins'){
-      const amt=parseInt(reward.reward_value)||0;
-      player.coins+=amt;
-      showToast(`🏆 Lottery win: +${amt} coins from "${reward.lottery_name}"!`);
-    }
     await sb.from('pending_rewards').update({claimed:true}).eq('id',reward.id);
   }
-  await savePlayerState();
+  // Queue for delivery after daily report
+  _pendingLotteryRewards.push(...rewards);
 }
 
 // ── Countdown ticker ──
@@ -2043,12 +2326,12 @@ async function loadUserDataFromDB(){
         totalXP:s.total_xp||0, coins:s.coins||100, streak:s.streak||0,
         coinPool:s.coin_pool||100, coinsEarnedToday:s.coins_earned_today||0,
         dailyLowUsed:s.daily_low_used||0, dailyMedUsed:s.daily_med_used||0, dailyHighUsed:s.daily_high_used||0,
-        weeklyPool:s.weekly_pool||0, weeklyAchieved:s.weekly_achieved||[],
+        weeklyPool:s.weekly_pool||0, weeklyAchieved:s.weekly_achieved||[], streakSaverUsedWeek:s.streak_saver_used_week||false,
         dupePoints:s.dupe_points||{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
       });
       const today=todayStr();
       const lastReset=s.last_day_reset||today;
-      if(lastReset!==today) await runDayReset(s.last_day_pct||0);
+      if(lastReset!==today) await runDayReset(s.last_day_pct||0, s.last_day_done||0, s.last_day_total||0);
     }
 
     // Tasks
@@ -2095,21 +2378,48 @@ async function loadUserDataFromDB(){
 }
 
 // ── DAY RESET ──
-async function runDayReset(lastDayPct){
-  const lv=getLevel();const cl=getCoinLevel(lv);
-  player.weeklyPool=Math.min(player.weeklyPool+lastDayPct,700);
+async function runDayReset(lastDayPct, lastDayDone, lastDayTotal){
+  // Build report data — don't apply XP or streak yet, that happens when user claims
+  const lv=getLevel();
+  const cl=getCoinLevel(lv);
+  const si=getStreakInfo();
+
+  // Calculate XP earned
+  const baseXP=calcBaseXP(lastDayDone||0, lastDayTotal||0);
+  const streakMult=player.streak>0?si.mult:1.0;
+  const earnedXP=Math.round(baseXP*streakMult);
+
+  // Streak check
+  const pctDone=lastDayTotal>0?Math.round(((lastDayDone||0)/lastDayTotal)*100):0;
+  const neededPct=si.pct;
+  const keptStreak=pctDone>=neededPct;
+  const newStreakIfKept=Math.min(player.streak+1,35);
+  const newStreakIfLost=Math.floor(player.streak*(1-0.4));
+
+  // Weekly pool update
+  const newWeeklyPool=Math.min(player.weeklyPool+pctDone,700);
   const tier=getWeeklyTier(lv);
-  const rewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
-  rewards.forEach(r=>{
-    if(player.weeklyPool>=r.pct&&!player.weeklyAchieved.includes(r.pct))
-      player.weeklyAchieved.push(r.pct);
+  const weeklyRewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
+  const newWeeklyRewards=weeklyRewards.filter(r=>newWeeklyPool>=r.pct&&!player.weeklyAchieved.includes(r.pct));
+
+  // Level up check
+  const oldLv=lv;
+  const newTotalXP=player.totalXP+earnedXP;
+  let newLv=oldLv;
+  for(let i=LEVEL_DATA.length-1;i>=0;i--){if(newTotalXP>=LEVEL_DATA[i].totalXP){newLv=LEVEL_DATA[i].level;break;}}
+  newLv=Math.min(newLv,20);
+  const levelUps=[];
+  for(let l=oldLv+1;l<=newLv;l++) levelUps.push(LEVEL_DATA[l-1]);
+
+  // Show the daily report modal
+  showDailyReport({
+    done:lastDayDone||0, total:lastDayTotal||0, pctDone,
+    baseXP, streakMult, earnedXP,
+    keptStreak, newStreakIfKept, newStreakIfLost,
+    currentStreak:player.streak,
+    neededPct, cl, newWeeklyPool, newWeeklyRewards,
+    levelUps, oldLv, newLv, newTotalXP,
   });
-  player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
-  player.coinsEarnedToday=0;
-  player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
-  player.streak=Math.min(player.streak+1,35);
-  tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
-  await savePlayerState();
 }
 
 // ── SAVE FUNCTIONS ──
@@ -2120,9 +2430,11 @@ async function savePlayerState(){
     total_xp:player.totalXP, coins:player.coins, streak:player.streak,
     coin_pool:player.coinPool, coins_earned_today:player.coinsEarnedToday,
     daily_low_used:player.dailyLowUsed, daily_med_used:player.dailyMedUsed, daily_high_used:player.dailyHighUsed,
-    weekly_pool:player.weeklyPool, weekly_achieved:player.weeklyAchieved,
+    weekly_pool:player.weeklyPool, weekly_achieved:player.weeklyAchieved, streak_saver_used_week:player.streakSaverUsedWeek,
     dupe_points:player.dupePoints,
     last_day_reset:todayStr(), last_day_pct:getTodayCompletionPct(),
+    last_day_done:getTodayTasks().filter(t=>t.done).length,
+    last_day_total:getTodayTasks().length,
     updated_at:new Date().toISOString(),
   });
 }
