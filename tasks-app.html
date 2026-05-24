@@ -262,7 +262,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .lottery-section-title { font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; margin-top:18px; }
 .lottery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; }
 .lottery-card { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:14px; }
-.lottery-card.weekly-card { border-color:var(--accent-mid); background:var(--accent-light); }
+.lottery-card.weekly-card { border-color:var(--accent-mid); background:var(--bg); }
 .lottery-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
 .lottery-reward-name { font-size:13px; font-weight:600; }
 .weekly-badge { font-size:10px; font-weight:700; background:var(--accent); color:var(--btn-text); padding:2px 7px; border-radius:7px; }
@@ -340,6 +340,17 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .confirm-modal { background:var(--bg); border-radius:var(--radius-lg); padding:22px; width:320px; max-width:95vw; }
 .confirm-title { font-size:14px; font-weight:600; margin-bottom:7px; }
 .confirm-body { font-size:13px; color:var(--text2); margin-bottom:18px; line-height:1.5; }
+
+
+/* ── ODDS TOOLTIP ── */
+.odds-btn { background:none; border:1px solid var(--border2); color:var(--text3); border-radius:50%; width:18px; height:18px; font-size:10px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-family:inherit; font-weight:700; flex-shrink:0; position:relative; }
+.odds-btn:hover { background:var(--accent-light); color:var(--accent); border-color:var(--accent); }
+.odds-tooltip { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:var(--text); color:white; border-radius:var(--radius-lg); padding:10px 14px; font-size:11px; white-space:nowrap; z-index:100; pointer-events:none; opacity:0; transition:opacity 0.15s; box-shadow:0 4px 16px rgba(0,0,0,0.2); min-width:160px; }
+.odds-tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--text); }
+.odds-btn:hover .odds-tooltip { opacity:1; }
+.odds-row { display:flex; justify-content:space-between; gap:16px; padding:2px 0; }
+.odds-rarity { font-weight:600; }
+.odds-pct { color:rgba(255,255,255,0.75); }
 
 .toast { position:fixed; bottom:20px; right:20px; background:var(--text); color:white; padding:10px 16px; border-radius:var(--radius-lg); font-size:13px; font-weight:500; z-index:400; transform:translateY(60px); opacity:0; transition:all 0.3s; display:flex; align-items:center; gap:7px; max-width:320px; }
 .toast.show { transform:translateY(0); opacity:1; }
@@ -476,11 +487,11 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <div class="page-title">Shop</div>
     <div class="page-sub" id="shop-coins-label">You have 142 coins</div>
     <div class="dupe-section">
-      <div class="dupe-title"><i class="ti ti-copy"></i> Craft Random Cards from Duplicate Points (100 pts each)</div>
+      <div class="dupe-title"><i class="ti ti-copy"></i> Craft Boxes from Duplicate Points (100 pts each)</div>
       <div id="dupe-craft-list"></div>
     </div>
     <div class="shop-section">
-      <div class="shop-section-title"><i class="ti ti-cards"></i>Random Cards</div>
+      <div class="shop-section-title"><i class="ti ti-package"></i>Collectable Boxes</div>
       <div class="shop-grid" id="box-shop"></div>
     </div>
     <div class="shop-section">
@@ -922,8 +933,17 @@ function toggleSetting(key){
   if(settings[key]){track.classList.add('on');label.textContent='On';}
   else{track.classList.remove('on');label.textContent='Off';}
   if(key==='largeText'){
-    document.body.style.fontSize=settings[key]?'16px':'14px';
-    document.body.style.lineHeight=settings[key]?'1.6':'1.5';
+    const sz=settings[key]?'18px':'14px';
+    document.body.style.fontSize=sz;
+    document.body.style.lineHeight=settings[key]?'1.65':'1.5';
+    // Scale nav, headings, cards proportionally
+    document.documentElement.style.setProperty('--large-text-scale', settings[key]?'1.25':'1');
+    document.querySelectorAll('.topbar-title').forEach(el=>el.style.fontSize=settings[key]?'22px':'17px');
+    document.querySelectorAll('.page-title').forEach(el=>el.style.fontSize=settings[key]?'24px':'18px');
+    document.querySelectorAll('.xp-level,.streak-num,.coins-num').forEach(el=>el.style.fontSize=settings[key]?'48px':'38px');
+    document.querySelectorAll('.nav-item').forEach(el=>el.style.fontSize=settings[key]?'14px':'12px');
+    document.querySelectorAll('.sidebar-item').forEach(el=>el.style.fontSize=settings[key]?'15px':'13px');
+    document.querySelectorAll('.task-name').forEach(el=>el.style.fontSize=settings[key]?'16px':'13px');
   }
   if(key==='colorBlind'){ render(); }
 }
@@ -1057,7 +1077,23 @@ function confirmTaskComplete(){
   render();
 }
 
-function toggleSub(tid,i){const t=tasks.find(t=>t.id===tid);if(!t||!t.subtasks[i])return;t.subtasks[i].done=!t.subtasks[i].done;render();}
+function toggleSub(tid,i){
+  const t=tasks.find(t=>t.id===tid);
+  if(!t||!t.subtasks[i])return;
+  t.subtasks[i].done=!t.subtasks[i].done;
+  // Check if all subtasks are now done and task itself isn't done yet
+  if(!t.done && t.subtasks.length>0 && t.subtasks.every(s=>s.done)){
+    render();
+    // Small delay so the checkmark renders first
+    setTimeout(()=>{
+      pendingTaskId=tid;
+      document.getElementById('task-confirm-name').textContent=`All subtasks complete! Mark "${t.name}" as done?`;
+      document.getElementById('task-confirm-overlay').style.display='flex';
+    },200);
+    return;
+  }
+  render();
+}
 function toggleFilter(f){activeFilters.has(f)?activeFilters.delete(f):activeFilters.add(f);document.getElementById('filter-'+f).classList.toggle('active',activeFilters.has(f));render();}
 function setView(v){currentView=v;viewOffset=0;document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));document.getElementById('view-'+v)?.classList.add('active');const m={today:'day',week:'week',month:'month'};if(m[v]){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+m[v])?.classList.add('active');}render();}
 function setTab(t){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');setView({day:'today',week:'week',month:'month'}[t]);}
@@ -1172,6 +1208,15 @@ function flipBoxCard(){
 function closeBoxOpen(){document.getElementById('box-open-overlay').style.display='none';boxOpenRarity=null;boxOpenCard=null;renderCollection();renderShop();}
 
 // ══════════════ SHOP ══════════════
+
+// Build odds tooltip HTML for a box rarity
+function buildOddsTooltip(rarity){
+  const drops=BOX_DROPS[rarity]||[];
+  const total=drops.reduce((s,d)=>s+d.w,0);
+  const rows=drops.map(d=>`<div class="odds-row"><span class="odds-rarity" style="color:${RARITY_COLORS[d.r]}">${d.r.charAt(0).toUpperCase()+d.r.slice(1)}</span><span class="odds-pct">${Math.round((d.w/total)*100)}%</span></div>`).join('');
+  return`<div class="odds-tooltip"><div style="font-weight:700;margin-bottom:6px;border-bottom:0.5px solid rgba(255,255,255,0.2);padding-bottom:4px">Drop Rates</div>${rows}</div>`;
+}
+
 function renderShop(){
   const lv=getLevel();
   document.getElementById('shop-coins-label').textContent=`You have ${player.coins} coins`;
@@ -1183,7 +1228,8 @@ function renderShop(){
   const boxRarities=['common','uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('box-shop').innerHTML=boxRarities.map(r=>{
     const ulv=BOX_UNLOCK_LEVELS[r];const cost=BOX_COSTS[r];const unlocked=lv>=ulv;
-    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div class="shop-item-name">Random ${r.charAt(0).toUpperCase()+r.slice(1)} Card</div><div class="shop-item-desc">${unlocked?`Reveals a random ${r} rarity card from the collection.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
+    const oddsBtn=unlocked?`<button class="odds-btn" tabindex="0">?${buildOddsTooltip(r)}</button>`:'';
+    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
   }).join('');
   document.getElementById('util-shop').innerHTML=`
     <div class="shop-item"><div class="shop-item-icon">🛡️</div><div class="shop-item-name">Streak Saver</div><div class="shop-item-desc">Protects your streak for one missed day. Usable once per week.</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>25</div><button class="shop-buy-btn" onclick="buyStreakSaver()" ${player.coins<25?'disabled':''}>Buy</button></div></div>`;
@@ -1270,7 +1316,7 @@ function renderLotteries(){
           <div class="lottery-reward-name">${l.name}</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
             <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
-            ${l.isRandom?'<span style="font-size:10px;color:var(--text3)">Random card</span>':'<span style="font-size:10px;color:var(--text3);font-style:italic">Guaranteed card</span>'}
+            ${l.isRandom?`<span style="font-size:10px;color:var(--text3)">Random card</span><button class="odds-btn" style="margin-left:4px" tabindex="0">?${buildOddsTooltip(l.rarity)}</button>`:'<span style="font-size:10px;color:var(--text3);font-style:italic">Guaranteed card</span>'}
           </div>
         </div>
         ${l.weekly?'<span class="weekly-badge">⭐ Weekly</span>':''}
