@@ -1634,18 +1634,54 @@ function startLotteryCountdown(){
 }
 
 function lotteryCard(l,idx,isWeekly){
+  const lv=getLevel();
+  // Level requirements
+  const requiredLevel=isWeekly?7:3;
+  const locked=lv<requiredLevel;
+
   const dots=Array.from({length:l.maxEntries},(_,i)=>`<div class="entry-dot ${i<l.entries?'filled':''}"></div>`).join('');
   const secs=secsUntil(l.closesAt);
   const urgent=secs<7200;
-  const can=l.entries<l.maxEntries&&player.coins>=l.cost;
+  const can=!locked&&l.entries<l.maxEntries&&player.coins>=l.cost;
   const rc=RARITY_COLORS[l.rarity]||'var(--accent)';
   const rl=l.rarity?l.rarity.charAt(0).toUpperCase()+l.rarity.slice(1):'';
-  // Close day/time in local
   const closeLocal=tsToDayLocal(l.closesAt)+' '+tsToLocal(l.closesAt);
-  // Prize display: box shows odds button, specific card shows card name
   const prizeDisplay=l.isRandom
     ?`<span style="font-size:10px;color:var(--text3)">Random card</span><button class="odds-btn" style="margin-left:4px" tabindex="0">?${buildOddsTooltip(l.rarity)}</button>`
     :`<span style="font-size:10px;color:var(--text3);font-style:italic">🎯 ${l.name}</span>`;
+
+  // Locked overlay content
+  if(locked){
+    return`<div class="lottery-card ${isWeekly?'weekly-card':''}" style="position:relative;overflow:hidden;">
+      <div style="filter:blur(2px);opacity:0.4;pointer-events:none;">
+        <div class="lottery-top">
+          <div>
+            <div class="lottery-reward-name">${l.isRandom?l.name:'Guaranteed Card'}</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
+              ${prizeDisplay}
+            </div>
+          </div>
+          ${isWeekly?'<span class="weekly-badge">⭐ Weekly</span>':''}
+        </div>
+        <div class="lottery-meta">
+          <span class="lottery-meta-chip"><i class="ti ti-trophy"></i>${l.winners} winners</span>
+          <span class="lottery-meta-chip"><i class="ti ti-users"></i>${l.entrants} entered</span>
+          <span class="lottery-meta-chip"><i class="ti ti-coin"></i>${l.cost}/entry</span>
+          <span class="lottery-meta-chip">Max ${l.maxEntries}</span>
+        </div>
+      </div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.6);border-radius:var(--radius-lg);">
+        <span style="font-size:28px">🔒</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text)">Reach Level ${requiredLevel} to unlock</span>
+        <span style="font-size:11px;color:var(--text2)">You are Level ${lv}</span>
+        <div style="height:6px;width:120px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:2px">
+          <div style="height:100%;width:${Math.round((lv/requiredLevel)*100)}%;background:var(--accent);border-radius:3px;"></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
   return`<div class="lottery-card ${isWeekly?'weekly-card':''}">
     <div class="lottery-top">
       <div>
@@ -1672,7 +1708,9 @@ function lotteryCard(l,idx,isWeekly){
       <div class="entry-dots">${dots}</div>
       <div class="entry-right">
         <div class="entry-count">${l.entries}/${l.maxEntries} entries</div>
-        <button class="entry-btn" onclick="enterLottery(${l.id})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button>
+        <button class="entry-btn" onclick="enterLottery(${l.id})" ${can?'':'disabled'}>
+          ${player.coins<l.cost?'Not enough coins':`Enter ${l.cost}`}<i class="ti ti-coin" style="font-size:10px"></i>
+        </button>
       </div>
     </div>
   </div>`;
@@ -1708,6 +1746,13 @@ async function enterLottery(lotteryId){
   const l=allLots.find(x=>x.id===lotteryId);
   if(!l||l.entries>=l.maxEntries||player.coins<l.cost)return;
   if(!currentUser){showToast('Please sign in to enter lotteries.');return;}
+  // Level check
+  const lv=getLevel();
+  const requiredLevel=l.weekly?7:3;
+  if(lv<requiredLevel){
+    showToast(`🔒 Reach Level ${requiredLevel} to enter ${l.weekly?'weekly':'daily'} lotteries.`);
+    return;
+  }
   // Check user hasn't already hit max entries for this lottery
   const {data:existing}=await sb.from('lottery_entries')
     .select('id').eq('user_id',currentUser.id).eq('lottery_id',lotteryId);
