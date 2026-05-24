@@ -921,8 +921,22 @@ let player={
   dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
 };
 
-function todayStr(){return new Date().toISOString().split('T')[0];}
-function dateOffset(d){const[y,m,dd]=todayStr().split('-').map(Number);return new Date(y,m-1,dd+d).toISOString().split('T')[0];}
+function todayStr(){
+  // Use local date not UTC so tasks line up with the user's actual calendar day
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return`${y}-${m}-${day}`;
+}
+function dateOffset(days){
+  const base=new Date();
+  base.setDate(base.getDate()+days);
+  const y=base.getFullYear();
+  const m=String(base.getMonth()+1).padStart(2,'0');
+  const d=String(base.getDate()).padStart(2,'0');
+  return`${y}-${m}-${d}`;
+}
 
 let tasks=[];
 let nextId=1;
@@ -1502,47 +1516,44 @@ async function seedLotteriesIfNeeded(){
 async function fetchLotteriesFromDB(){
   const {data:dbLotteries,error}=await sb.from('lotteries')
     .select('*').eq('is_active',true).order('closes_at');
-  if(error||!dbLotteries){console.error('Lottery fetch:',error);return;}
+  if(error){console.error('Lottery fetch error:',error.message);lotteries={daily:[],weekly:[]};return;}
+  if(!dbLotteries||dbLotteries.length===0){
+    console.log('No active lotteries in DB — will seed');
+    lotteries={daily:[],weekly:[]};return;
+  }
+  console.log('Found',dbLotteries.length,'active lotteries');
 
-  // Handle any expired ones
+  // Handle expired ones
   const now=new Date();
   const expired=dbLotteries.filter(l=>new Date(l.closes_at)<=now);
   for(const l of expired) await handleExpiredLottery(l);
-
   const active=dbLotteries.filter(l=>new Date(l.closes_at)>now);
+  if(active.length===0){lotteries={daily:[],weekly:[]};return;}
 
-  // Get total entry counts per lottery
-  const {data:allEntries}=await sb.from('lottery_entries')
-    .select('lottery_id').in('lottery_id',active.map(l=>l.id));
+  // Entry counts
+  const activeIds=active.map(l=>l.id);
+  const {data:allEntries}=await sb.from('lottery_entries').select('lottery_id').in('lottery_id',activeIds);
   const countMap={};
   (allEntries||[]).forEach(r=>{countMap[r.lottery_id]=(countMap[r.lottery_id]||0)+1;});
-
-  // Get user's own entry counts
   const myEntryMap={};
   if(currentUser){
     const {data:myEntries}=await sb.from('lottery_entries')
-      .select('lottery_id').eq('user_id',currentUser.id)
-      .in('lottery_id',active.map(l=>l.id));
+      .select('lottery_id').eq('user_id',currentUser.id).in('lottery_id',activeIds);
     (myEntries||[]).forEach(r=>{myEntryMap[r.lottery_id]=(myEntryMap[r.lottery_id]||0)+1;});
   }
 
   // Build client objects
-  lotteries.daily=active.filter(l=>!l.is_weekly).map(l=>({
-    id:l.id, slotKey:l.slot_key, name:l.name, rarity:l.rarity,
-    isRandom:l.is_random, weekly:false,
+  const mapLottery=(l,isWeekly)=>({
+    id:l.id, slotKey:l.slot_key||'', name:l.name, rarity:l.rarity,
+    isRandom:l.is_random, weekly:isWeekly,
     cost:l.cost, maxEntries:l.max_entries, winners:l.winners,
     closesAt:l.closes_at,
     entrants:countMap[l.id]||0,
     entries:Math.min(myEntryMap[l.id]||0,l.max_entries),
-  }));
-  lotteries.weekly=active.filter(l=>l.is_weekly).map(l=>({
-    id:l.id, slotKey:l.slot_key, name:l.name, rarity:l.rarity,
-    isRandom:l.is_random, weekly:true,
-    cost:l.cost, maxEntries:l.max_entries, winners:l.winners,
-    closesAt:l.closes_at,
-    entrants:countMap[l.id]||0,
-    entries:Math.min(myEntryMap[l.id]||0,l.max_entries),
-  }));
+  });
+  lotteries.daily=active.filter(l=>!l.is_weekly).map(l=>mapLottery(l,false));
+  lotteries.weekly=active.filter(l=>l.is_weekly).map(l=>mapLottery(l,true));
+  console.log('Daily lotteries:',lotteries.daily.length,'Weekly:',lotteries.weekly.length);
 }
 
 // Draw winners, distribute pending rewards, spawn next lottery
@@ -1682,8 +1693,14 @@ function renderLotteries(){
 
 // Load lotteries from DB (or seed if missing) then render
 async function loadLotteries(){
-  await seedLotteriesIfNeeded();
-  await fetchLotteriesFromDB();
+  document.getElementById('daily-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading lotteries...</div>';
+  document.getElementById('weekly-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading...</div>';
+  try {
+    await seedLotteriesIfNeeded();
+    await fetchLotteriesFromDB();
+  } catch(e){
+    console.error('loadLotteries error:',e);
+  }
   renderLotteries();
 }
 
