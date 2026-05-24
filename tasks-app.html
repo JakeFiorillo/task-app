@@ -896,7 +896,7 @@ const WEEKLY_TIERS={
 };
 
 const BOX_COSTS={common:15,uncommon:30,rare:50,epic:85,legendary:140,mythic:220,cosmic:400};
-const BOX_UNLOCK_LEVELS={common:2,uncommon:2,rare:5,epic:8,legendary:12,mythic:15,cosmic:18};
+const BOX_UNLOCK_LEVELS={common:1,uncommon:5,rare:5,epic:10,legendary:13,mythic:15,cosmic:18};
 
 // Drop rate tables per box rarity
 const BOX_DROPS={
@@ -1445,8 +1445,8 @@ function renderShop(){
     const oddsBtn=unlocked?`<button class="odds-btn" tabindex="0">?${buildOddsTooltip(r)}</button>`:'';
     return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
   }).join('');
-  document.getElementById('util-shop').innerHTML=`
-    <div class="shop-item"><div class="shop-item-icon">🛡️</div><div class="shop-item-name">Streak Saver</div><div class="shop-item-desc">Protects your streak for one missed day. Usable once per week.</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>25</div><button class="shop-buy-btn" onclick="buyStreakSaver()" ${player.coins<25?'disabled':''}>Buy</button></div></div>`;
+  document.getElementById('util-shop').innerHTML='';
+  document.getElementById('util-shop').closest('.shop-section').style.display='none';
 }
 function craftBox(r){if((player.dupePoints[r]||0)<100)return;player.dupePoints[r]-=100;showToast(`Crafted a ${r} box!`);openBox(r);}
 function buyBox(r,cost){if(player.coins<cost)return;player.coins-=cost;updateNavStats();openBox(r);}
