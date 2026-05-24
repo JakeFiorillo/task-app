@@ -1691,12 +1691,11 @@ function renderLotteries(){
   startLotteryCountdown();
 }
 
-// Load lotteries from DB (or seed if missing) then render
+// Load lotteries from DB then render
 async function loadLotteries(){
   document.getElementById('daily-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading lotteries...</div>';
   document.getElementById('weekly-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading...</div>';
   try {
-    await seedLotteriesIfNeeded();
     await fetchLotteriesFromDB();
   } catch(e){
     console.error('loadLotteries error:',e);
@@ -2033,6 +2032,58 @@ function switchAuthTab(tab){
 setInterval(()=>{ if(currentUser) savePlayerState(); }, 60000);
 // Save on page unload
 window.addEventListener('beforeunload',()=>{ if(currentUser) savePlayerState(); });
+
+// ── INACTIVITY AUTO-LOGOUT (30 minutes) ──
+const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in ms
+let inactivityTimer = null;
+let warningTimer = null;
+let warningToastShown = false;
+
+function resetInactivityTimer(){
+  if(!currentUser) return;
+  // Clear existing timers
+  clearTimeout(inactivityTimer);
+  clearTimeout(warningTimer);
+  warningToastShown = false;
+
+  // Warn at 25 minutes
+  warningTimer = setTimeout(()=>{
+    if(!currentUser) return;
+    warningToastShown = true;
+    showToast('⚠️ You will be signed out in 5 minutes due to inactivity.');
+  }, 25 * 60 * 1000);
+
+  // Sign out at 30 minutes
+  inactivityTimer = setTimeout(async ()=>{
+    if(!currentUser) return;
+    showToast('🔒 Signed out due to inactivity.');
+    await new Promise(r => setTimeout(r, 1500)); // let toast show
+    signOut();
+  }, INACTIVITY_LIMIT);
+}
+
+// Track user activity — reset timer on any interaction
+['mousedown','mousemove','keydown','touchstart','scroll','click'].forEach(evt => {
+  document.addEventListener(evt, ()=>{ if(currentUser) resetInactivityTimer(); }, { passive: true });
+});
+
+// Start timer when user logs in
+const _origEnterApp = enterApp;
+// Patch enterApp to also start inactivity timer
+function enterApp(){
+  _origEnterApp();
+  resetInactivityTimer();
+}
+
+// Stop timer on sign out
+const _origSignOut = signOut;
+async function signOut(){
+  clearTimeout(inactivityTimer);
+  clearTimeout(warningTimer);
+  inactivityTimer = null;
+  warningTimer = null;
+  await _origSignOut();
+}
 
 // INIT
 // Auto-detect timezone
