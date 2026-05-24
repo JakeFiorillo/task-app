@@ -727,7 +727,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <div id="date-fields"><div class="form-row-2"><div><label class="form-label">Due date</label><input class="form-input" id="new-date" type="date" /></div><div><label class="form-label">Due time (optional)</label><input class="form-input" id="new-time" type="time" /></div></div></div>
     <div id="recurring-note" style="display:none" class="freq-note">Recurring tasks appear in every relevant view automatically.</div>
     <div class="form-row"><label class="form-label">Subtasks (optional)</label><div id="subtask-inputs"></div><button class="add-sub-btn" onclick="addSubtaskInput()"><i class="ti ti-plus"></i>Add subtask</button></div>
-    <div class="modal-actions"><button class="btn-cancel" onclick="closeTaskModal()">Cancel</button><button class="btn-save" onclick="saveTask()">Save task</button></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeTaskModal()">Cancel</button><button class="btn-save" onclick="submitTaskForm()">Save task</button></div>
   </div>
 </div>
 
@@ -1037,7 +1037,7 @@ function showPage(name){
   if(name==='game')renderGamePage();
   if(name==='collection')renderCollection();
   if(name==='shop')renderShop();
-  if(name==='lottery')renderLotteries();
+  if(name==='lottery'){renderLotteries();refreshLotteryEntrants();}
 }
 
 // ══════════════ TASKS ══════════════
@@ -1326,7 +1326,7 @@ function makeOneDailyLottery(){
   const pick=available[Math.floor(Math.random()*available.length)];
   const utcSlots=[0,6,12,18];
   const freeSlot=utcSlots.find(h=>!lotteries.daily.find(l=>l.closeHour===h))||utcSlots[Math.floor(Math.random()*utcSlots.length)];
-  return{...pick,entries:0,entrants:Math.floor(Math.random()*80)+5,closeHour:freeSlot,hoursLeft:hUTC(freeSlot)+24,weekly:false};
+  return{...pick,entries:0,entrants:0,closeHour:freeSlot,hoursLeft:hUTC(freeSlot)+24,weekly:false};
 }
 
 // Spawn one new weekly lottery
@@ -1342,7 +1342,7 @@ function makeOneWeeklyLottery(){
   const available=wPool.filter(p=>!activeRarities.has(p.rarity+p.isRandom));
   if(!available.length)return null;
   const pick=available[Math.floor(Math.random()*available.length)];
-  return{...pick,entries:0,entrants:Math.floor(Math.random()*200)+20,daysLeft:7,weekly:true};
+  return{...pick,entries:0,entrants:0,daysLeft:7,weekly:true};
 }
 
 // Build odds tooltip HTML for a box rarity
@@ -1405,8 +1405,8 @@ function makeLotteries(){
   ];
   const sh=a=>[...a].sort(()=>0.5-Math.random());
   const utc=[0,6,12,18];
-  const daily=sh(dPool).slice(0,4).map((r,i)=>({...r,entries:0,entrants:Math.floor(Math.random()*80)+5,closeHour:utc[i],hoursLeft:hUTC(utc[i]),weekly:false}));
-  const weekly=[{...sh(wPool)[0],entries:0,entrants:Math.floor(Math.random()*200)+20,daysLeft:5,weekly:true}];
+  const daily=sh(dPool).slice(0,4).map((r,i)=>({...r,entries:0,entrants:0,closeHour:utc[i],hoursLeft:hUTC(utc[i]),weekly:false}));
+  const weekly=[{...sh(wPool)[0],entries:0,entrants:0,daysLeft:5,weekly:true}];
   return{daily,weekly};
 }
 
@@ -1479,13 +1479,59 @@ function renderLotteries(){
   document.getElementById('weekly-lottery-grid').innerHTML=lotteries.weekly.map((l,i)=>card(l,i,true)).join('');
 }
 
-function enterLottery(idx,weekly){
+async function enterLottery(idx,weekly){
   const arr=weekly?lotteries.weekly:lotteries.daily;
   const l=arr[idx];
   if(!l||l.entries>=l.maxEntries||player.coins<l.cost)return;
+  if(!currentUser){showToast('Please sign in to enter lotteries.');return;}
   player.coins-=l.cost;l.entries++;l.entrants++;
+  // Save entry to Supabase
+  await sb.from('lottery_entries').insert({
+    user_id:currentUser.id,
+    lottery_name:l.name,
+    lottery_rarity:l.rarity,
+    is_weekly:l.weekly,
+    close_hour:l.closeHour||0,
+    cost:l.cost,
+    entered_at:new Date().toISOString(),
+  });
+  await savePlayerState();
   showToast(`<i class="ti ti-ticket"></i> Entered the ${l.name} lottery!`);
   updateNavStats();renderLotteries();
+}
+
+// Fetch real entrant counts from Supabase and update lottery display
+async function refreshLotteryEntrants(){
+  if(!currentUser)return;
+  try {
+    const {data}=await sb.from('lottery_entries')
+      .select('lottery_name, lottery_rarity, is_weekly, close_hour')
+      .gte('entered_at', new Date(Date.now()-7*24*3600*1000).toISOString());
+    if(!data)return;
+    // Count entries per lottery slot
+    const counts={};
+    data.forEach(row=>{
+      const key=`${row.lottery_name}_${row.is_weekly}_${row.close_hour}`;
+      counts[key]=(counts[key]||0)+1;
+    });
+    // Also count user's own entries
+    const userEntries={};
+    const {data:myData}=await sb.from('lottery_entries')
+      .select('lottery_name,is_weekly,close_hour')
+      .eq('user_id',currentUser.id)
+      .gte('entered_at', new Date(Date.now()-7*24*3600*1000).toISOString());
+    if(myData) myData.forEach(row=>{
+      const key=`${row.lottery_name}_${row.is_weekly}_${row.close_hour}`;
+      userEntries[key]=(userEntries[key]||0)+1;
+    });
+    // Update lottery objects
+    [...lotteries.daily,...lotteries.weekly].forEach(l=>{
+      const key=`${l.name}_${l.weekly}_${l.closeHour||0}`;
+      l.entrants=counts[key]||0;
+      l.entries=Math.min(userEntries[key]||0,l.maxEntries);
+    });
+    renderLotteries();
+  } catch(e){ console.error('Lottery fetch error:',e); }
 }
 
 // ══════════════ TASK MODAL ══════════════
@@ -1495,7 +1541,7 @@ function openEditModal(id){const t=tasks.find(t=>t.id===id);if(!t)return;documen
 function closeTaskModal(){document.getElementById('task-modal').classList.remove('open');resetTaskForm();}
 function resetTaskForm(){['edit-id','new-name','new-time'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const nc=document.getElementById('new-cat');if(nc)nc.value=categories[0]?.id||'';document.getElementById('new-priority').value='low';document.getElementById('new-freq').value='once';document.getElementById('new-date').value=todayStr();document.getElementById('subtask-inputs').innerHTML='';document.getElementById('date-fields').style.display='';document.getElementById('recurring-note').style.display='none';}
 function addSubtaskInput(val=''){const c=document.getElementById('subtask-inputs');const row=document.createElement('div');row.className='subtask-input-row';row.innerHTML=`<input class="form-input" placeholder="Subtask item..." value="${val}"/><button class="remove-sub" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>`;c.appendChild(row);row.querySelector('input').focus();}
-async function saveTask(){const name=document.getElementById('new-name').value.trim();if(!name){document.getElementById('new-name').focus();return;}const freq=document.getElementById('new-freq').value;const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);const editId=document.getElementById('edit-id').value;if(editId){const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;const old=t.subtasks;t.name=name;t.cat=document.getElementById('new-cat').value;t.priority=document.getElementById('new-priority').value;t.freq=freq;t.date=freq==='once'?document.getElementById('new-date').value:null;t.time=document.getElementById('new-time').value;t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});await saveTask(t);}else{const newTask={id:nextId++,name,cat:document.getElementById('new-cat').value,priority:document.getElementById('new-priority').value,freq,date:freq==='once'?document.getElementById('new-date').value:null,time:document.getElementById('new-time').value,done:false,subtasks:subs.map(text=>({text,done:false})),_isNew:true};tasks.push(newTask);await saveTask(newTask);}closeTaskModal();render();}
+async function submitTaskForm(){const name=document.getElementById('new-name').value.trim();if(!name){document.getElementById('new-name').focus();return;}const freq=document.getElementById('new-freq').value;const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);const editId=document.getElementById('edit-id').value;if(editId){const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;const old=t.subtasks;t.name=name;t.cat=document.getElementById('new-cat').value;t.priority=document.getElementById('new-priority').value;t.freq=freq;t.date=freq==='once'?document.getElementById('new-date').value:null;t.time=document.getElementById('new-time').value;t.subtasks=subs.map(text=>old.find(s=>s.text===text)||{text,done:false});await saveTask(t);}else{const newTask={id:nextId++,name,cat:document.getElementById('new-cat').value,priority:document.getElementById('new-priority').value,freq,date:freq==='once'?document.getElementById('new-date').value:null,time:document.getElementById('new-time').value,done:false,subtasks:subs.map(text=>({text,done:false})),_isNew:true};tasks.push(newTask);await saveTask(newTask);}closeTaskModal();render();}
 
 // ══════════════ CATEGORY MODAL ══════════════
 function buildCatSelect(){const sel=document.getElementById('new-cat');if(sel)sel.innerHTML=categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');}
@@ -1514,7 +1560,7 @@ function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')close
 
 // ══════════════ SUPABASE AUTH ══════════════
 const SUPABASE_URL = 'https://szkyhxephooswxexsjar.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6a3loeGVwaG9vc3d4ZXhzamFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODYyNjcsImV4cCI6MjA5NTE2MjI2N30.fz5kr4cvZacYXtGf-GBhHZM9KZz9CcJcraYdebM9OJY';
+const SUPABASE_ANON_KEY = 'PASTE_YOUR_ANON_KEY_HERE';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null; // holds the Supabase user object
