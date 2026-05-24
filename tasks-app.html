@@ -971,7 +971,8 @@ function makeLotteries(){
   const weekly=[{...sh(wPool)[0],entries:0,daysLeft:5,weekly:true}];
   return{daily,weekly};
 }
-let lotteries=makeLotteries();
+// Lotteries now loaded from Supabase DB — start empty
+let lotteries={daily:[],weekly:[]};
 
 // ══════════════ HELPERS ══════════════
 function getLevel(){let l=1;for(let i=LEVEL_DATA.length-1;i>=0;i--){if(player.totalXP>=LEVEL_DATA[i].totalXP){l=LEVEL_DATA[i].level;break;}}return Math.min(l,20);}
@@ -1034,14 +1035,14 @@ function showPage(name){
   if(name==='game')renderGamePage();
   if(name==='collection')renderCollection();
   if(name==='shop')renderShop();
-  if(name==='lottery'){renderLotteries();refreshLotteryEntrants();}
+  if(name==='lottery'){loadLotteries();}
 }
 
 // ══════════════ TASKS ══════════════
 function getViewRange(){
   const base=new Date();base.setHours(0,0,0,0);
   if(currentView==='today'){base.setDate(base.getDate()+viewOffset);const ds=base.toISOString().split('T')[0];return{start:ds,end:ds,label:viewOffset===0?'Today':base.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})};}
-  if(currentView==='week'){const s=new Date(base);s.setDate(base.getDate()-base.getDay()+viewOffset*7);const e=new Date(s);e.setDate(s.getDate()+6);return{start:s.toISOString().split('T')[0],end:e.toISOString().split('T')[0],label:`Week of ${s.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`};}
+  if(currentView==='week'){const s=new Date(base);const dow=base.getDay()||7;s.setDate(base.getDate()-(dow-1)+viewOffset*7);const e=new Date(s);e.setDate(s.getDate()+6);return{start:s.toISOString().split('T')[0],end:e.toISOString().split('T')[0],label:`Week of ${s.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`};}
   if(currentView==='month'){const s=new Date(base.getFullYear(),base.getMonth()+viewOffset,1);const e=new Date(s.getFullYear(),s.getMonth()+1,0);return{start:s.toISOString().split('T')[0],end:e.toISOString().split('T')[0],label:s.toLocaleDateString('en-US',{month:'long',year:'numeric'})};}
   return{start:'',end:'9999-12-31',label:'All Tasks'};
 }
@@ -1073,7 +1074,7 @@ function render(){
 
 function updateBadges(){
   const t=todayStr();
-  const we=(()=>{const d=new Date();d.setDate(d.getDate()+(6-d.getDay()));return d.toISOString().split('T')[0];})();
+  const we=(()=>{const d=new Date();const dow=d.getDay()||7;d.setDate(d.getDate()+(7-dow));return d.toISOString().split('T')[0];})();
   const me=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];})();
   document.getElementById('badge-today').textContent=tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=t).length;
   document.getElementById('badge-week').textContent=tasks.filter(x=>x.freq!=='once'||!x.date||x.date<=we).length;
@@ -1303,45 +1304,6 @@ async function closeBoxOpen(){
 }
 
 // Spawn one new daily lottery (to add after one expires)
-function makeOneDailyLottery(){
-  const now=new Date();
-  function hUTC(h){const t=new Date();t.setUTCHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.round((t-now)/3600000);}
-  const allDailyPools=[
-    {name:'Common Box',    isRandom:true, rarity:'common',   cost:5, maxEntries:7,winners:10},
-    {name:'Uncommon Box',  isRandom:true, rarity:'uncommon', cost:5, maxEntries:7,winners:8},
-    {name:'Rare Box',      isRandom:true, rarity:'rare',     cost:10,maxEntries:6,winners:7},
-    {name:'Epic Box',      isRandom:true, rarity:'epic',     cost:10,maxEntries:6,winners:5},
-    {name:'Legendary Box', isRandom:true, rarity:'legendary',cost:15,maxEntries:5,winners:3},
-    {name:pickSpecificCard('common'),   isRandom:false,rarity:'common',   cost:10,maxEntries:6,winners:10},
-    {name:pickSpecificCard('uncommon'), isRandom:false,rarity:'uncommon', cost:10,maxEntries:6,winners:8},
-    {name:pickSpecificCard('rare'),     isRandom:false,rarity:'rare',     cost:15,maxEntries:5,winners:7},
-  ];
-  // Pick one not already active
-  const activeNames=new Set(lotteries.daily.map(l=>l.rarity+l.isRandom));
-  const available=allDailyPools.filter(p=>!activeNames.has(p.rarity+p.isRandom));
-  if(!available.length)return null;
-  const pick=available[Math.floor(Math.random()*available.length)];
-  const utcSlots=[0,6,12,18];
-  const freeSlot=utcSlots.find(h=>!lotteries.daily.find(l=>l.closeHour===h))||utcSlots[Math.floor(Math.random()*utcSlots.length)];
-  return{...pick,entries:0,entrants:0,closeHour:freeSlot,hoursLeft:hUTC(freeSlot)+24,weekly:false};
-}
-
-// Spawn one new weekly lottery
-function makeOneWeeklyLottery(){
-  const wPool=[
-    {name:'Epic Box',     isRandom:true, rarity:'epic',     cost:15,maxEntries:4,winners:8},
-    {name:'Legendary Box',isRandom:true, rarity:'legendary',cost:20,maxEntries:4,winners:5},
-    {name:'Mythic Box',   isRandom:true, rarity:'mythic',   cost:25,maxEntries:3,winners:3},
-    {name:'Cosmic Box',   isRandom:true, rarity:'cosmic',   cost:35,maxEntries:2,winners:2},
-    {name:pickSpecificCard('cosmic'),isRandom:false,rarity:'cosmic',cost:40,maxEntries:1,winners:1},
-  ];
-  const activeRarities=new Set(lotteries.weekly.map(l=>l.rarity+l.isRandom));
-  const available=wPool.filter(p=>!activeRarities.has(p.rarity+p.isRandom));
-  if(!available.length)return null;
-  const pick=available[Math.floor(Math.random()*available.length)];
-  return{...pick,entries:0,entrants:0,daysLeft:7,weekly:true};
-}
-
 // Build odds tooltip HTML for a box rarity
 function buildOddsTooltip(rarity){
   const drops=BOX_DROPS[rarity]||[];
@@ -1476,107 +1438,276 @@ function getLocalTzLabel(){
   const h=Math.floor(abs);const m=abs%1===0.5?'30':'00';
   return`UTC${sign}${h}${m!=='00'?':'+m:''}`;
 }
-function renderLotteries(){
-  document.getElementById('lottery-coins-val').textContent=player.coins;
-  const tzLabel=getLocalTzLabel();
-  function card(l,idx,isWeekly){
-    const dots=Array.from({length:l.maxEntries},(_,i)=>`<div class="entry-dot ${i<l.entries?'filled':''}"></div>`).join('');
-    const localClose=utcToLocal(l.closeHour);
-    const ts=l.weekly
-      ?`${l.daysLeft}d left — closes Mon ${utcToLocal(0)} (${tzLabel})`
-      :l.hoursLeft<=2
-        ?`${l.hoursLeft}h left — closing soon!`
-        :`${l.hoursLeft}h left — closes ${localClose} (${tzLabel})`;
-    const urgent=!l.weekly&&l.hoursLeft<=2;
-    const can=l.entries<l.maxEntries&&player.coins>=l.cost;
-    const rc=RARITY_COLORS[l.rarity]||'var(--accent)';
-    const rl=l.rarity?l.rarity.charAt(0).toUpperCase()+l.rarity.slice(1):'';
-    return`<div class="lottery-card ${l.weekly?'weekly-card':''}">
-      <div class="lottery-top">
-        <div>
-          <div class="lottery-reward-name">${l.name}</div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
-            ${l.isRandom?`<span style="font-size:10px;color:var(--text3)">Random card</span><button class="odds-btn" style="margin-left:4px" tabindex="0">?${buildOddsTooltip(l.rarity)}</button>`:'<span style="font-size:10px;color:var(--text3);font-style:italic">Guaranteed card</span>'}
-          </div>
-        </div>
-        ${l.weekly?'<span class="weekly-badge">⭐ Weekly</span>':''}
-      </div>
-      <div class="lottery-meta">
-        <span class="lottery-meta-chip"><i class="ti ti-trophy"></i>${l.winners} winners</span>
-        <span class="lottery-meta-chip"><i class="ti ti-users"></i>${l.entrants} entered</span>
-        <span class="lottery-meta-chip"><i class="ti ti-coin"></i>${l.cost}/entry</span>
-        <span class="lottery-meta-chip">Max ${l.maxEntries}</span>
-      </div>
-      <div class="lottery-time ${urgent?'urgent':''}"><i class="ti ti-clock"></i>${ts}</div>
-      <div class="entry-row">
-        <div class="entry-dots">${dots}</div>
-        <div class="entry-right">
-          <div class="entry-count">${l.entries}/${l.maxEntries} entries</div>
-          <button class="entry-btn" onclick="enterLottery(${idx},${isWeekly})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button>
-        </div>
-      </div>
-    </div>`;
+// ══════════════ LOTTERY DB FUNCTIONS ══════════════
+
+// Seed all 11 lottery slots into DB if they don't exist yet
+async function seedLotteriesIfNeeded(){
+  const {data:existing}=await sb.from('lotteries').select('slot_key').eq('is_active',true);
+  const existingKeys=new Set((existing||[]).map(r=>r.slot_key));
+  const sh=a=>[...a].sort(()=>0.5-Math.random());
+  const toInsert=[];
+
+  // 4 daily slots
+  const dailySlotDefs=[
+    {key:'daily_6', utcHour:6},
+    {key:'daily_12',utcHour:12},
+    {key:'daily_18',utcHour:18},
+    {key:'daily_0', utcHour:0},
+  ];
+  const shuffledDaily=sh([...DAILY_POOL]);
+  dailySlotDefs.forEach((slot,i)=>{
+    if(!existingKeys.has(slot.key)){
+      const prize=shuffledDaily[i%shuffledDaily.length];
+      toInsert.push({
+        slot_key:slot.key, name:prize.name, rarity:prize.rarity,
+        is_random:prize.isRandom, is_weekly:false,
+        cost:prize.cost, max_entries:prize.maxEntries, winners:prize.winners,
+        closes_at:nextDailyClose(slot.utcHour).toISOString(), is_active:true,
+      });
+    }
+  });
+
+  // 7 weekly slots — one per day of week, closes at 12:00 AM UTC on that day
+  // utcDay: 1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat,7=Sun
+  const weeklySlotDefs=[
+    {key:'weekly_1',utcDay:1},{key:'weekly_2',utcDay:2},{key:'weekly_3',utcDay:3},
+    {key:'weekly_4',utcDay:4},{key:'weekly_5',utcDay:5},{key:'weekly_6',utcDay:6},
+    {key:'weekly_7',utcDay:7},
+  ];
+  const shuffledWeekly=sh([...WEEKLY_POOL]);
+  weeklySlotDefs.forEach((slot,i)=>{
+    if(!existingKeys.has(slot.key)){
+      const prize=shuffledWeekly[i%shuffledWeekly.length];
+      toInsert.push({
+        slot_key:slot.key, name:prize.name, rarity:prize.rarity,
+        is_random:prize.isRandom, is_weekly:true,
+        cost:prize.cost, max_entries:prize.maxEntries, winners:prize.winners,
+        closes_at:nextWeeklyClose(slot.utcDay).toISOString(), is_active:true,
+      });
+    }
+  });
+
+  if(toInsert.length>0){
+    const {error}=await sb.from('lotteries').insert(toInsert);
+    if(error)console.error('Seed error:',error);
+    else console.log('Seeded',toInsert.length,'lottery slots');
   }
-  // Sort daily by time remaining but preserve original index for enterLottery
-  const sortedDaily=[...lotteries.daily].map((l,i)=>({...l,_origIdx:i})).sort((a,b)=>a.hoursLeft-b.hoursLeft);
-  document.getElementById('daily-lottery-grid').innerHTML=sortedDaily.map(l=>card(l,l._origIdx,false)).join('');
-  document.getElementById('weekly-lottery-grid').innerHTML=lotteries.weekly.map((l,i)=>card(l,i,true)).join('');
 }
 
-async function enterLottery(idx,weekly){
-  const arr=weekly?lotteries.weekly:lotteries.daily;
-  const l=arr[idx];
+// Fetch active lotteries from DB, handle expired ones, populate client state
+async function fetchLotteriesFromDB(){
+  const {data:dbLotteries,error}=await sb.from('lotteries')
+    .select('*').eq('is_active',true).order('closes_at');
+  if(error||!dbLotteries){console.error('Lottery fetch:',error);return;}
+
+  // Handle any expired ones
+  const now=new Date();
+  const expired=dbLotteries.filter(l=>new Date(l.closes_at)<=now);
+  for(const l of expired) await handleExpiredLottery(l);
+
+  const active=dbLotteries.filter(l=>new Date(l.closes_at)>now);
+
+  // Get total entry counts per lottery
+  const {data:allEntries}=await sb.from('lottery_entries')
+    .select('lottery_id').in('lottery_id',active.map(l=>l.id));
+  const countMap={};
+  (allEntries||[]).forEach(r=>{countMap[r.lottery_id]=(countMap[r.lottery_id]||0)+1;});
+
+  // Get user's own entry counts
+  const myEntryMap={};
+  if(currentUser){
+    const {data:myEntries}=await sb.from('lottery_entries')
+      .select('lottery_id').eq('user_id',currentUser.id)
+      .in('lottery_id',active.map(l=>l.id));
+    (myEntries||[]).forEach(r=>{myEntryMap[r.lottery_id]=(myEntryMap[r.lottery_id]||0)+1;});
+  }
+
+  // Build client objects
+  lotteries.daily=active.filter(l=>!l.is_weekly).map(l=>({
+    id:l.id, slotKey:l.slot_key, name:l.name, rarity:l.rarity,
+    isRandom:l.is_random, weekly:false,
+    cost:l.cost, maxEntries:l.max_entries, winners:l.winners,
+    closesAt:l.closes_at,
+    entrants:countMap[l.id]||0,
+    entries:Math.min(myEntryMap[l.id]||0,l.max_entries),
+  }));
+  lotteries.weekly=active.filter(l=>l.is_weekly).map(l=>({
+    id:l.id, slotKey:l.slot_key, name:l.name, rarity:l.rarity,
+    isRandom:l.is_random, weekly:true,
+    cost:l.cost, maxEntries:l.max_entries, winners:l.winners,
+    closesAt:l.closes_at,
+    entrants:countMap[l.id]||0,
+    entries:Math.min(myEntryMap[l.id]||0,l.max_entries),
+  }));
+}
+
+// Draw winners, distribute pending rewards, spawn next lottery
+async function handleExpiredLottery(lottery){
+  await sb.from('lotteries').update({is_active:false}).eq('id',lottery.id);
+  const {data:entries}=await sb.from('lottery_entries').select('user_id').eq('lottery_id',lottery.id);
+  if(entries&&entries.length>0){
+    const shuffled=[...entries].sort(()=>0.5-Math.random());
+    const winnerIds=[...new Set(shuffled.slice(0,Math.min(lottery.winners,shuffled.length)).map(e=>e.user_id))];
+    const rewards=winnerIds.map(uid=>({
+      user_id:uid, reward_type:lottery.is_random?'box':'card',
+      reward_value:lottery.rarity, rarity:lottery.rarity,
+      lottery_name:lottery.name, claimed:false,
+    }));
+    if(rewards.length>0) await sb.from('pending_rewards').insert(rewards);
+  }
+  await spawnNextLottery(lottery);
+}
+
+async function spawnNextLottery(lottery){
+  const sh=a=>[...a].sort(()=>0.5-Math.random());
+  let closesAt,prize;
+  if(lottery.is_weekly){
+    // Find utcDay from slot_key e.g. "weekly_3" → 3
+    const utcDay=parseInt(lottery.slot_key.split('_')[1])||1;
+    closesAt=nextWeeklyClose(utcDay).toISOString();
+    prize=sh(WEEKLY_POOL)[0];
+  } else {
+    const utcHour=parseInt(lottery.slot_key.split('_')[1]);
+    closesAt=nextDailyClose(isNaN(utcHour)?6:utcHour).toISOString();
+    prize=sh(DAILY_POOL)[Math.floor(Math.random()*DAILY_POOL.length)];
+  }
+  await sb.from('lotteries').insert({
+    slot_key:lottery.slot_key, name:prize.name, rarity:prize.rarity,
+    is_random:prize.isRandom, is_weekly:lottery.is_weekly,
+    cost:prize.cost, max_entries:prize.maxEntries, winners:prize.winners,
+    closes_at:closesAt, is_active:true,
+  });
+}
+
+// Check for pending rewards and deliver them on login
+async function checkPendingRewards(){
+  if(!currentUser)return;
+  const {data:rewards}=await sb.from('pending_rewards')
+    .select('*').eq('user_id',currentUser.id).eq('claimed',false);
+  if(!rewards||rewards.length===0)return;
+  for(const reward of rewards){
+    if(reward.reward_type==='box'||reward.reward_type==='card'){
+      openBox(reward.rarity);
+    } else if(reward.reward_type==='coins'){
+      const amt=parseInt(reward.reward_value)||0;
+      player.coins+=amt;
+      showToast(`🏆 Lottery win: +${amt} coins from "${reward.lottery_name}"!`);
+    }
+    await sb.from('pending_rewards').update({claimed:true}).eq('id',reward.id);
+  }
+  await savePlayerState();
+}
+
+// ── Countdown ticker ──
+let lotteryCountdownInterval=null;
+function startLotteryCountdown(){
+  if(lotteryCountdownInterval)clearInterval(lotteryCountdownInterval);
+  lotteryCountdownInterval=setInterval(()=>{
+    // Update all countdown displays live
+    const allLots=[...lotteries.daily,...lotteries.weekly];
+    allLots.forEach(l=>{
+      const el=document.getElementById('lottery-countdown-'+l.id);
+      if(el){
+        const secs=secsUntil(l.closesAt);
+        const urgent=secs<7200;
+        el.textContent=formatCountdown(secs);
+        el.parentElement.className='lottery-time'+(urgent?' urgent':'');
+        if(secs<=0) loadLotteries(); // refresh when one expires
+      }
+    });
+  },1000);
+}
+
+function lotteryCard(l,idx,isWeekly){
+  const dots=Array.from({length:l.maxEntries},(_,i)=>`<div class="entry-dot ${i<l.entries?'filled':''}"></div>`).join('');
+  const secs=secsUntil(l.closesAt);
+  const urgent=secs<7200;
+  const can=l.entries<l.maxEntries&&player.coins>=l.cost;
+  const rc=RARITY_COLORS[l.rarity]||'var(--accent)';
+  const rl=l.rarity?l.rarity.charAt(0).toUpperCase()+l.rarity.slice(1):'';
+  // Close day/time in local
+  const closeLocal=tsToDayLocal(l.closesAt)+' '+tsToLocal(l.closesAt);
+  // Prize display: box shows odds button, specific card shows card name
+  const prizeDisplay=l.isRandom
+    ?`<span style="font-size:10px;color:var(--text3)">Random card</span><button class="odds-btn" style="margin-left:4px" tabindex="0">?${buildOddsTooltip(l.rarity)}</button>`
+    :`<span style="font-size:10px;color:var(--text3);font-style:italic">🎯 ${l.name}</span>`;
+  return`<div class="lottery-card ${isWeekly?'weekly-card':''}">
+    <div class="lottery-top">
+      <div>
+        <div class="lottery-reward-name">${l.isRandom?l.name:'Guaranteed Card'}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
+          ${prizeDisplay}
+        </div>
+      </div>
+      ${isWeekly?'<span class="weekly-badge">⭐ Weekly</span>':''}
+    </div>
+    <div class="lottery-meta">
+      <span class="lottery-meta-chip"><i class="ti ti-trophy"></i>${l.winners} winners</span>
+      <span class="lottery-meta-chip"><i class="ti ti-users"></i>${l.entrants} entered</span>
+      <span class="lottery-meta-chip"><i class="ti ti-coin"></i>${l.cost}/entry</span>
+      <span class="lottery-meta-chip">Max ${l.maxEntries}</span>
+    </div>
+    <div class="lottery-time${urgent?' urgent':''}" style="display:flex;align-items:center;gap:6px">
+      <i class="ti ti-clock"></i>
+      <span id="lottery-countdown-${l.id}">${formatCountdown(secs)}</span>
+      <span style="font-size:10px;color:var(--text3)">— closes ${closeLocal}</span>
+    </div>
+    <div class="entry-row">
+      <div class="entry-dots">${dots}</div>
+      <div class="entry-right">
+        <div class="entry-count">${l.entries}/${l.maxEntries} entries</div>
+        <button class="entry-btn" onclick="enterLottery(${l.id})" ${can?'':'disabled'}>Enter ${l.cost}<i class="ti ti-coin" style="font-size:10px"></i></button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderLotteries(){
+  document.getElementById('lottery-coins-val').textContent=player.coins;
+  const sortedDaily=[...lotteries.daily].sort((a,b)=>new Date(a.closesAt)-new Date(b.closesAt));
+  const sortedWeekly=[...lotteries.weekly].sort((a,b)=>new Date(a.closesAt)-new Date(b.closesAt));
+  document.getElementById('daily-lottery-grid').innerHTML=
+    sortedDaily.length?sortedDaily.map((l,i)=>lotteryCard(l,i,false)).join('')
+    :'<div style="color:var(--text3);font-size:13px;padding:20px">No daily lotteries right now — check back soon.</div>';
+  document.getElementById('weekly-lottery-grid').innerHTML=
+    sortedWeekly.length?sortedWeekly.map((l,i)=>lotteryCard(l,i,true)).join('')
+    :'<div style="color:var(--text3);font-size:13px;padding:20px">No weekly lotteries right now.</div>';
+  startLotteryCountdown();
+}
+
+// Load lotteries from DB (or seed if missing) then render
+async function loadLotteries(){
+  await seedLotteriesIfNeeded();
+  await fetchLotteriesFromDB();
+  renderLotteries();
+}
+
+async function enterLottery(lotteryId){
+  const allLots=[...lotteries.daily,...lotteries.weekly];
+  const l=allLots.find(x=>x.id===lotteryId);
   if(!l||l.entries>=l.maxEntries||player.coins<l.cost)return;
   if(!currentUser){showToast('Please sign in to enter lotteries.');return;}
+  // Check user hasn't already hit max entries for this lottery
+  const {data:existing}=await sb.from('lottery_entries')
+    .select('id').eq('user_id',currentUser.id).eq('lottery_id',lotteryId);
+  if((existing||[]).length>=l.maxEntries){
+    showToast('You have reached the maximum entries for this lottery.');return;
+  }
   player.coins-=l.cost;l.entries++;l.entrants++;
-  // Save entry to Supabase
   await sb.from('lottery_entries').insert({
     user_id:currentUser.id,
+    lottery_id:lotteryId,
     lottery_name:l.name,
     lottery_rarity:l.rarity,
     is_weekly:l.weekly,
-    close_hour:l.closeHour||0,
+    close_hour:0,
     cost:l.cost,
     entered_at:new Date().toISOString(),
   });
   await savePlayerState();
-  showToast(`<i class="ti ti-ticket"></i> Entered the ${l.name} lottery!`);
+  showToast(`<i class="ti ti-ticket"></i> Entered the ${l.isRandom?l.name:l.name+' lottery'}!`);
   updateNavStats();renderLotteries();
-}
-
-// Fetch real entrant counts from Supabase and update lottery display
-async function refreshLotteryEntrants(){
-  if(!currentUser)return;
-  try {
-    const {data}=await sb.from('lottery_entries')
-      .select('lottery_name, lottery_rarity, is_weekly, close_hour')
-      .gte('entered_at', new Date(Date.now()-7*24*3600*1000).toISOString());
-    if(!data)return;
-    // Count entries per lottery slot
-    const counts={};
-    data.forEach(row=>{
-      const key=`${row.lottery_name}_${row.is_weekly}_${row.close_hour}`;
-      counts[key]=(counts[key]||0)+1;
-    });
-    // Also count user's own entries
-    const userEntries={};
-    const {data:myData}=await sb.from('lottery_entries')
-      .select('lottery_name,is_weekly,close_hour')
-      .eq('user_id',currentUser.id)
-      .gte('entered_at', new Date(Date.now()-7*24*3600*1000).toISOString());
-    if(myData) myData.forEach(row=>{
-      const key=`${row.lottery_name}_${row.is_weekly}_${row.close_hour}`;
-      userEntries[key]=(userEntries[key]||0)+1;
-    });
-    // Update lottery objects
-    [...lotteries.daily,...lotteries.weekly].forEach(l=>{
-      const key=`${l.name}_${l.weekly}_${l.closeHour||0}`;
-      l.entrants=counts[key]||0;
-      l.entries=Math.min(userEntries[key]||0,l.maxEntries);
-    });
-    renderLotteries();
-  } catch(e){ console.error('Lottery fetch error:',e); }
 }
 
 // ══════════════ TASK MODAL ══════════════
@@ -1642,8 +1773,8 @@ async function handleLogin(){
   }
   currentUser=data.user;
   await loadUserDataFromDB();
+  await checkPendingRewards();
   enterApp();
-  btn.disabled=false;btn.textContent='Sign In';
 }
 
 // ── SIGNUP ──
@@ -1667,6 +1798,7 @@ async function handleSignup(){
   }
   currentUser=data.user;
   await createFreshUserData(name);
+  await checkPendingRewards();
   enterApp();
   btn.disabled=false;btn.textContent='Create Account';
 }
@@ -1902,6 +2034,7 @@ window.addEventListener('beforeunload',()=>{ if(currentUser) savePlayerState(); 
   if(session){
     currentUser=session.user;
     await loadUserDataFromDB();
+    await checkPendingRewards();
     enterApp();
   }
   // If no session, auth screen stays visible
