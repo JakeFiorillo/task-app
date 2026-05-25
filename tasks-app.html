@@ -528,9 +528,9 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
         <div class="topbar-title" id="topbar-title">Today</div>
       </div>
       <div class="nav-arrows">
+        <div class="nav-arrow" id="btn-go-current" onclick="goToCurrent()" style="display:none;font-size:10px;font-weight:600;width:auto;padding:0 8px;color:var(--accent);border-color:var(--accent)">Now</div>
         <div class="nav-arrow" onclick="shiftView(-1)"><i class="ti ti-chevron-left"></i></div>
         <div class="nav-arrow" onclick="shiftView(1)"><i class="ti ti-chevron-right"></i></div>
-        <div class="nav-arrow" id="btn-go-current" onclick="goToCurrent()" style="display:none;font-size:10px;font-weight:600;width:auto;padding:0 8px;color:var(--accent);border-color:var(--accent)">Now</div>
       </div>
       <div class="view-tabs">
         <div class="view-tab active" id="tab-day" onclick="setTab('day')">Day</div>
@@ -1176,9 +1176,16 @@ function getViewRange(){
 
 function getVisibleTasks(){
   const range=getViewRange();
+  const isPastView = viewOffset<0;
   let list=tasks.filter(t=>{
     if(currentView==='missed') return (t.missed||isOverdue(t))&&!t.done&&t.freq==='once';
-    // Exclude missed/overdue tasks from all other views
+    // In past views, show missed/incomplete tasks so users can see history
+    if(isPastView){
+      if(t.freq!=='once') return true; // recurring tasks always show
+      // One-time tasks: show if they fall in the past range (including missed/incomplete)
+      return t.date&&t.date>=range.start&&t.date<=range.end;
+    }
+    // In current/future views: exclude missed/overdue tasks
     if(t.missed||(isOverdue(t)&&t.freq==='once')) return false;
     if(currentView==='all')return true;
     if(currentView==='today'){
@@ -1334,8 +1341,10 @@ function makeCard(t){
   if(t.freq&&t.freq!=='once')meta+=`<span class="task-freq">· ${t.freq}</span>`;
   let subs='';
   if(t.subtasks.length>0){const dc=t.subtasks.filter(s=>s.done).length;const pct=Math.round((dc/t.subtasks.length)*100);subs=`<div class="subtasks"><div class="subtask-progress-row"><div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div><span class="subtask-label">${dc}/${t.subtasks.length} done</span></div>${t.subtasks.map((s,i)=>`<div class="subtask-item"><div class="subtask-box ${s.done?'checked':''}" onclick="toggleSub(${t.id},${i})"></div><span class="subtask-text ${s.done?'done':''}">${s.text}</span></div>`).join('')}</div>`;}
-  const cbClass=t.done?'checked':'';
-  const cbClick=t.done?'':`onclick="requestTaskComplete(${t.id})"`;
+  // In past views, lock incomplete tasks so they can't be checked off
+  const isPastLocked = viewOffset<0 && !t.done && t.freq==='once';
+  const cbClass=t.done?'checked':isPastLocked?'locked-check':'';
+  const cbClick=t.done||isPastLocked?'':`onclick="requestTaskComplete(${t.id})"`;
   const notesHtml=t.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;white-space:pre-wrap">${t.notes}</div>`:'';
   const pinIcon=t.pinned?'ti-pin-filled':'ti-pin';
   const pinColor=t.pinned?'color:var(--accent)':'';
@@ -1357,7 +1366,7 @@ function makeCard(t){
     </div>${subs}`;
     return card;
   }
-  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick}></div><div class="task-content"><div class="task-name ${t.done?'done-text':''}" style="display:flex;align-items:center;gap:5px">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions"><button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
+  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick} title="${isPastLocked?'Cannot complete past tasks':''}"></div><div class="task-content"><div class="task-name ${t.done?'done-text':isPastLocked?'done-text':''}" style="display:flex;align-items:center;gap:5px;${isPastLocked?'opacity:0.55;':''}">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions"><button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
   return card;
 }
 
