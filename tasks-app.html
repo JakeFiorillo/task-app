@@ -1242,17 +1242,25 @@ function updateBadges(){
 }
 
 function updateUpcoming(){
-  const t=todayStr();
-  const future=tasks.filter(x=>!x.done&&x.date&&x.date>t&&x.freq==='once').sort((a,b)=>a.date<b.date?-1:1).slice(0,6);
-  // Show up to 5 upcoming tasks: pinned first, then by closest deadline
+  const now=new Date();
   const t2=todayStr();
   const upcoming=tasks
-    .filter(x=>!x.done&&(x.pinned||(x.date&&x.date>=t2&&x.freq==='once')))
+    .filter(x=>{
+      if(x.done||x.missed)return false;
+      // Check if overdue by date
+      if(x.freq==='once'&&x.date&&x.date<t2)return false;
+      // Check if overdue by time (today but time already passed)
+      if(x.freq==='once'&&x.date===t2&&x.time){
+        const[h,m]=x.time.split(':').map(Number);
+        const taskTime=new Date();taskTime.setHours(h,m,0,0);
+        if(now>taskTime)return false;
+      }
+      // Include pinned tasks (recurring ok) or future one-time tasks
+      return x.pinned||(x.date&&x.date>=t2&&x.freq==='once');
+    })
     .sort((a,b)=>{
-      // Pinned always first
       if(a.pinned&&!b.pinned)return -1;
       if(!a.pinned&&b.pinned)return 1;
-      // Then by date ascending (soonest first), null dates go last
       const da=a.date||'9999-12-31';
       const db=b.date||'9999-12-31';
       return da<db?-1:da>db?1:0;
