@@ -737,6 +737,27 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
         </div>
       </div>
     </div>
+    <div class="settings-section" style="border-color:#E24B4A55">
+      <div class="settings-section-title" style="background:#fff5f5;color:#A32D2D">🛠 Admin / Testing</div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Simulate Day End</div><div class="setting-desc">Triggers the daily report as if it's the next morning after 4AM</div></div>
+        <div class="setting-control"><button class="shop-buy-btn" onclick="adminSimulateDayEnd()" style="background:#E24B4A">Simulate</button></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Give XP</div><div class="setting-desc">Add XP directly to your total</div></div>
+        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="admin-xp-amt" value="100" min="1" max="9999" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+          <button class="shop-buy-btn" onclick="adminGiveXP()" style="background:#E24B4A">Give</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-label">Give Coins</div><div class="setting-desc">Add coins directly to your balance</div></div>
+        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="admin-coins-amt" value="100" min="1" max="9999" style="width:80px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+          <button class="shop-buy-btn" onclick="adminGiveCoins()" style="background:#E24B4A">Give</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 </div>
@@ -2918,6 +2939,38 @@ function updateClock(){
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ══════════════ ADMIN TOOLS ══════════════
+async function adminSimulateDayEnd(){
+  // Use yesterday's task completion stats
+  const tod=getTodayTasks();
+  const done=tod.filter(t=>t.done).length;
+  const total=tod.length;
+  const pct=total>0?Math.round((done/total)*100):0;
+  await runDayReset(pct, done, total);
+  showToast('🗓 Day end simulated — daily report should appear');
+}
+async function adminGiveXP(){
+  const amt=parseInt(document.getElementById('admin-xp-amt').value)||0;
+  if(amt<=0)return;
+  const oldLv=getLevel();
+  player.totalXP+=amt;
+  const newLv=getLevel();
+  await savePlayerState();
+  updateNavStats();
+  if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
+  if(newLv>oldLv)showToast(`⭐ +${amt} XP — Level up! Now Level ${newLv}`);
+  else showToast(`⭐ +${amt} XP (${player.totalXP} total)`);
+}
+async function adminGiveCoins(){
+  const amt=parseInt(document.getElementById('admin-coins-amt').value)||0;
+  if(amt<=0)return;
+  player.coins+=amt;
+  await savePlayerState();
+  updateNavStats();
+  if(document.getElementById('page-shop').classList.contains('active'))renderShop();
+  showToast(`🪙 +${amt} coins`);
+}
 
 // INIT
 // Auto-detect timezone
