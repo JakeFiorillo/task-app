@@ -497,6 +497,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   <button class="nav-item" id="nav-lottery" onclick="showPage('lottery')"><i class="ti ti-ticket"></i>Lottery</button>
   <button class="nav-item" id="nav-settings" onclick="showPage('settings')"><i class="ti ti-settings"></i>Settings</button>
   <div class="nav-right">
+    <div id="nav-clock" style="font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);padding:3px 10px;border-radius:20px;border:0.5px solid var(--border);font-variant-numeric:tabular-nums;white-space:nowrap;"></div>
     <div class="nav-stat xp"><i class="ti ti-star"></i><span id="nav-xp">340</span> XP</div>
     <div class="nav-stat coins"><i class="ti ti-coin"></i><span id="nav-coins">142</span></div>
     <div class="nav-stat streak"><i class="ti ti-flame"></i><span id="nav-streak">7</span></div>
@@ -512,6 +513,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="sidebar-item" id="view-week" onclick="setView('week')"><i class="ti ti-calendar-week"></i>This Week<span class="sidebar-badge" id="badge-week">0</span></div>
       <div class="sidebar-item" id="view-month" onclick="setView('month')"><i class="ti ti-calendar-month"></i>This Month<span class="sidebar-badge" id="badge-month">0</span></div>
       <div class="sidebar-item" id="view-all" onclick="setView('all')"><i class="ti ti-list"></i>All Tasks<span class="sidebar-badge" id="badge-all">0</span></div>
+      <div class="sidebar-item" id="view-missed" onclick="setView('missed')" style="color:#A32D2D;display:none"><i class="ti ti-alert-circle"></i>Missed<span class="sidebar-badge" id="badge-missed" style="background:#FCEBEB;color:#A32D2D;border-color:#F09595">0</span></div>
     </div>
 
     <div class="upcoming-panel">
@@ -620,10 +622,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <div class="shop-section">
       <div class="shop-section-title"><i class="ti ti-package"></i>Collectable Boxes</div>
       <div class="shop-grid" id="box-shop"></div>
-    </div>
-    <div class="shop-section">
-      <div class="shop-section-title"><i class="ti ti-tool"></i>Utilities</div>
-      <div class="shop-grid" id="util-shop"></div>
     </div>
   </div>
 </div>
@@ -739,6 +737,26 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     </div>
   </div>
 </div>
+</div>
+
+<!-- RESCHEDULE MODAL -->
+<div class="modal-overlay" id="reschedule-modal" onclick="closeModalOutside(event,'reschedule-modal')">
+  <div class="modal" style="width:340px">
+    <div class="modal-title">Reschedule Task</div>
+    <input type="hidden" id="reschedule-id" />
+    <div class="form-row">
+      <label class="form-label">New due date</label>
+      <input class="form-input" id="reschedule-date" type="date" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">New due time (optional)</label>
+      <input class="form-input" id="reschedule-time" type="time" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeRescheduleModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmReschedule()">Reschedule</button>
+    </div>
+  </div>
 </div>
 
 <!-- DAILY REPORT -->
@@ -1119,12 +1137,13 @@ function getViewRange(){
 function getVisibleTasks(){
   const range=getViewRange();
   let list=tasks.filter(t=>{
+    if(currentView==='missed') return t.missed===true&&!t.done;
     if(currentView==='all')return true;
     if(currentView==='today'){
       // Recurring tasks always show in today view
       if(t.freq!=='once')return true;
-      // One-time tasks: only show if due today or overdue (not future)
-      return t.date && t.date<=range.end;
+      // One-time tasks: only show if due exactly today, not overdue (overdue goes to missed view)
+      return t.date && t.date===range.end;
     }
     if(t.freq!=='once')return true;
     return t.date&&t.date>=range.start&&t.date<=range.end;
@@ -1157,7 +1176,11 @@ function updateBadges(){
   document.getElementById('badge-today').textContent=tasks.filter(x=>incomplete(x)&&fitsToday(x)).length;
   document.getElementById('badge-week').textContent=tasks.filter(x=>incomplete(x)&&fitsWeek(x)).length;
   document.getElementById('badge-month').textContent=tasks.filter(x=>incomplete(x)&&fitsMonth(x)).length;
-  document.getElementById('badge-all').textContent=tasks.filter(x=>!x.done).length;
+  document.getElementById('badge-all').textContent=tasks.filter(x=>!x.done&&!x.missed).length;
+  const missedCount=tasks.filter(x=>x.missed&&!x.done).length;
+  document.getElementById('badge-missed').textContent=missedCount;
+  const missedEl=document.getElementById('view-missed');
+  if(missedEl) missedEl.style.display=missedCount>0?'flex':'none';
 }
 
 function updateUpcoming(){
@@ -1233,6 +1256,24 @@ function makeCard(t){
   const notesHtml=t.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;white-space:pre-wrap">${t.notes}</div>`:'';
   const pinIcon=t.pinned?'ti-pin-filled':'ti-pin';
   const pinColor=t.pinned?'color:var(--accent)':'';
+  // Missed tasks get reschedule instead of checkbox
+  if(t.missed){
+    card.className='task-card overdue';
+    card.innerHTML=`<div class="task-top">
+      <div style="font-size:18px;margin-top:1px;flex-shrink:0">⚠️</div>
+      <div class="task-content">
+        <div class="task-name" style="color:#A32D2D">${t.name}</div>
+        <div class="task-meta">${meta}</div>
+        ${notesHtml}
+      </div>
+      <div class="task-actions" style="opacity:1">
+        <button class="task-action-btn" onclick="openRescheduleModal(${t.id})" title="Reschedule" style="color:#185FA5"><i class="ti ti-calendar-event"></i></button>
+        <button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})" title="Delete"><i class="ti ti-trash"></i></button>
+      </div>
+      <div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div>
+    </div>${subs}`;
+    return card;
+  }
   card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick}></div><div class="task-content"><div class="task-name ${t.done?'done-text':''}" style="display:flex;align-items:center;gap:5px">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions"><button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
   return card;
 }
@@ -1445,8 +1486,7 @@ function renderShop(){
     const oddsBtn=unlocked?`<button class="odds-btn" tabindex="0">?${buildOddsTooltip(r)}</button>`:'';
     return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
   }).join('');
-  document.getElementById('util-shop').innerHTML='';
-  document.getElementById('util-shop').closest('.shop-section').style.display='none';
+  // Utilities section removed
 }
 function craftBox(r){if((player.dupePoints[r]||0)<100)return;player.dupePoints[r]-=100;showToast(`Crafted a ${r} box!`);openBox(r);}
 function buyBox(r,cost){if(player.coins<cost)return;player.coins-=cost;updateNavStats();openBox(r);}
@@ -1702,8 +1742,19 @@ function showDailyReport(data){
   _reportStreakSaverUsed = false;
   _reportLevelRewardsClaimed = new Set();
   _reportWeeklyRewardsClaimed = new Set();
-  renderDailyReport();
-  document.getElementById('daily-report-overlay').style.display='flex';
+  // Don't show yet if auth screen is still visible — enterApp will call showPendingReport
+  const authVisible = document.getElementById('auth-screen').style.display !== 'none';
+  if(!authVisible){
+    renderDailyReport();
+    document.getElementById('daily-report-overlay').style.display='flex';
+  }
+}
+
+function showPendingReport(){
+  if(_reportData){
+    renderDailyReport();
+    document.getElementById('daily-report-overlay').style.display='flex';
+  }
 }
 
 function renderDailyReport(){
@@ -1890,7 +1941,15 @@ async function proceedFromReport(){
   player.coinsEarnedToday=0;
   player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
   // Reset recurring tasks
+  // Reset recurring tasks
   tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
+  // Mark incomplete one-time tasks from previous days as missed
+  const today2=todayStr();
+  tasks.forEach(t=>{
+    if(t.freq==='once'&&!t.done&&t.date&&t.date<today2&&!t.missed){
+      t.missed=true;
+    }
+  });
   // Save
   await savePlayerState();
   // Close report
@@ -2198,7 +2257,7 @@ async function saveCategory(){const name=document.getElementById('cat-name').val
 function openDeleteConfirm(id){const t=tasks.find(t=>t.id===id);if(!t)return;deleteTargetId=id;document.getElementById('confirm-body').textContent=`"${t.name}" will be permanently removed.`;document.getElementById('confirm-modal').classList.add('open');}
 function closeConfirmModal(){document.getElementById('confirm-modal').classList.remove('open');deleteTargetId=null;}
 async function confirmDelete(){if(deleteTargetId!==null){await deleteTaskFromDB(deleteTargetId);tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}closeConfirmModal();render();}
-function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='cat-modal')closeCatModal();if(id==='confirm-modal')closeConfirmModal();if(id==='level-modal')closeLevelModal();}}
+function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='cat-modal')closeCatModal();if(id==='confirm-modal')closeConfirmModal();if(id==='level-modal')closeLevelModal();if(id==='reschedule-modal')closeRescheduleModal();}}
 
 
 
@@ -2331,7 +2390,11 @@ async function loadUserDataFromDB(){
       });
       const today=todayStr();
       const lastReset=s.last_day_reset||today;
-      if(lastReset!==today) await runDayReset(s.last_day_pct||0, s.last_day_done||0, s.last_day_total||0);
+      if(lastReset!==today){
+        // Store report data — will be shown after enterApp() renders the UI
+        await runDayReset(s.last_day_pct||0, s.last_day_done||0, s.last_day_total||0);
+        window._pendingDailyReport=true;
+      }
     }
 
     // Tasks
@@ -2340,7 +2403,7 @@ async function loadUserDataFromDB(){
         id:t.id, name:t.name, cat:t.category, priority:t.priority,
         freq:t.freq, date:t.due_date, time:t.due_time||'',
         done:t.done, subtasks:t.subtasks||[],
-        notes:t.notes||'', pinned:t.pinned||false,
+        notes:t.notes||'', pinned:t.pinned||false, missed:t.missed||false,
       }));
       nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
     }
@@ -2445,7 +2508,7 @@ async function saveTask(taskObj){
     user_id:currentUser.id, name:taskObj.name, category:taskObj.cat,
     priority:taskObj.priority, freq:taskObj.freq, due_date:taskObj.date||null,
     due_time:taskObj.time||null, done:taskObj.done, subtasks:taskObj.subtasks,
-    notes:taskObj.notes||null, pinned:taskObj.pinned||false,
+    notes:taskObj.notes||null, pinned:taskObj.pinned||false, missed:taskObj.missed||false,
   };
   if(taskObj._isNew){
     const {data}=await sb.from('tasks').insert(row).select().single();
@@ -2498,6 +2561,8 @@ function enterApp(){
   buildCatSelect();
   render();
   resetInactivityTimer();
+  // Show daily report if one is pending from day reset
+  setTimeout(()=>showPendingReport(), 400);
 }
 
 async function signOut(){
@@ -2538,6 +2603,29 @@ setInterval(()=>{ if(currentUser) savePlayerState(); }, 60000);
 // Save on page unload
 window.addEventListener('beforeunload',()=>{ if(currentUser) savePlayerState(); });
 
+
+// ── RESCHEDULE MISSED TASK ──
+function openRescheduleModal(id){
+  const t=tasks.find(t=>t.id===id);if(!t)return;
+  document.getElementById('reschedule-id').value=id;
+  document.getElementById('reschedule-date').value=todayStr();
+  document.getElementById('reschedule-time').value=t.time||'';
+  document.getElementById('reschedule-modal').classList.add('open');
+}
+function closeRescheduleModal(){document.getElementById('reschedule-modal').classList.remove('open');}
+async function confirmReschedule(){
+  const id=parseInt(document.getElementById('reschedule-id').value);
+  const date=document.getElementById('reschedule-date').value;
+  const time=document.getElementById('reschedule-time').value;
+  if(!date){document.getElementById('reschedule-date').focus();return;}
+  const t=tasks.find(t=>t.id===id);if(!t)return;
+  t.date=date;t.time=time;t.missed=false;
+  await saveTask(t);
+  closeRescheduleModal();
+  render();
+  showToast(`📅 Task rescheduled to ${formatDisplayDate(date)}`);
+}
+
 // ── INACTIVITY AUTO-LOGOUT (30 minutes) ──
 const INACTIVITY_LIMIT = 30 * 60 * 1000;
 let inactivityTimer = null;
@@ -2563,6 +2651,22 @@ function resetInactivityTimer(){
 ['mousedown','mousemove','keydown','touchstart','scroll','click'].forEach(evt=>{
   document.addEventListener(evt,()=>{ if(currentUser) resetInactivityTimer(); },{passive:true});
 });
+
+
+// ── NAVBAR CLOCK ──
+function updateClock(){
+  const el=document.getElementById('nav-clock');
+  if(!el)return;
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString([],{
+    hour:'numeric', minute:'2-digit', second:'2-digit',
+    hour12:settings.timeFormat==='12'
+  });
+  const dateStr=now.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'});
+  el.textContent=`${dateStr} · ${timeStr}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
 
 // INIT
 // Auto-detect timezone
