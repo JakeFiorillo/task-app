@@ -1227,14 +1227,14 @@ function updateBadges(){
   const me=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];})();
   const ms=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];})();
   // Only count incomplete tasks that actually appear in each view
-  const incomplete=x=>!x.done;
+  const incomplete=x=>!x.done&&!x.missed&&!(isOverdue(x)&&x.freq==='once');
   const fitsToday=x=>x.freq!=='once'||(x.date&&x.date===t);
   const fitsWeek=x=>x.freq!=='once'||(x.date&&x.date>=ws&&x.date<=we);
   const fitsMonth=x=>x.freq!=='once'||(x.date&&x.date>=ms&&x.date<=me);
   document.getElementById('badge-today').textContent=tasks.filter(x=>incomplete(x)&&fitsToday(x)).length;
   document.getElementById('badge-week').textContent=tasks.filter(x=>incomplete(x)&&fitsWeek(x)).length;
   document.getElementById('badge-month').textContent=tasks.filter(x=>incomplete(x)&&fitsMonth(x)).length;
-  document.getElementById('badge-all').textContent=tasks.filter(x=>!x.done&&!x.missed).length;
+  document.getElementById('badge-all').textContent=tasks.filter(x=>incomplete(x)).length;
   const missedCount=tasks.filter(x=>(x.missed||isOverdue(x))&&!x.done&&x.freq==='once').length;
   document.getElementById('badge-missed').textContent=missedCount;
   const missedEl=document.getElementById('view-missed');
