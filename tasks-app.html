@@ -1008,6 +1008,11 @@ function get4AMDate(offsetDays=0){
   return`${y}-${m}-${day}`;
 }
 function todayStr(){ return get4AMDate(0); }
+function dateOffset_from(dateStr, days){
+  const[y,m,d]=dateStr.split('-').map(Number);
+  const dt=new Date(y,m-1,d+days);
+  return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
 function dateOffset(days){ return get4AMDate(days); }
 
 // Raw calendar date for DB day-reset detection only
@@ -1182,12 +1187,33 @@ function getVisibleTasks(){
     if(currentView==='missed') return (t.missed||isOverdue(t))&&!t.done&&t.freq==='once';
     // In past views, show missed/incomplete tasks so users can see history
     if(isPastView){
-      if(t.freq!=='once') return true; // recurring tasks always show
-      // One-time tasks: show if they fall in the past range (including missed/incomplete)
-      return t.date&&t.date>=range.start&&t.date<=range.end;
+      if(t.freq!=='once') return true;
+      if(!t.date) return false;
+      // Tasks within range by calendar date
+      if(t.date>=range.start&&t.date<=range.end) return true;
+      // Tasks due before 4AM on the day AFTER range.end belong to range.end's "day"
+      // e.g. task due May 25 at 1:00 AM belongs to May 24's view
+      const dayAfterEnd=dateOffset_from(range.end, 1);
+      if(t.date===dayAfterEnd&&t.time){
+        const[h]=t.time.split(':').map(Number);
+        if(h<4) return true;
+      }
+      return false;
     }
-    // In current/future views: exclude missed/overdue tasks
-    if(t.missed||(isOverdue(t)&&t.freq==='once')) return false;
+    // In current/future views: exclude missed/overdue tasks from today view only
+    // But show them in week/month/all views so users can see what they missed this period
+    if(currentView==='today'){
+      if(t.missed||(isOverdue(t)&&t.freq==='once')) return false;
+    } else {
+      // For week/month/all: show missed tasks that fall within the range
+      if((t.missed||isTaskOverdue(t))&&t.freq==='once'){
+        if(!t.date)return false;
+        const dayAfterEnd=dateOffset_from(range.end,1);
+        if(t.date>=range.start&&t.date<=range.end)return true;
+        if(t.date===dayAfterEnd&&t.time){const[h]=t.time.split(':').map(Number);if(h<4)return true;}
+        return false;
+      }
+    }
     if(currentView==='all')return true;
     if(currentView==='today'){
       // Recurring tasks always show in today view
@@ -1297,9 +1323,17 @@ function updateProgress(){
     label='Daily progress';
   } else {
     // Get all tasks in range including missed/incomplete for history
+    const dayAfterEnd=dateOffset_from(range.end,1);
     const inRange=tasks.filter(t=>{
       if(t.freq!=='once')return true;
-      return t.date&&t.date>=range.start&&t.date<=range.end;
+      if(!t.date)return false;
+      if(t.date>=range.start&&t.date<=range.end)return true;
+      // Pre-4AM tasks on next day belong to this range
+      if(t.date===dayAfterEnd&&t.time){
+        const[h]=t.time.split(':').map(Number);
+        if(h<4)return true;
+      }
+      return false;
     });
     doneTasks=inRange.filter(t=>t.done);
     missedTasks=inRange.filter(t=>!t.done&&(t.missed||isTaskOverdue(t)));
@@ -1385,7 +1419,9 @@ function makeCard(t){
     </div>${subs}`;
     return card;
   }
-  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick} title="${isPastLocked?'Cannot complete past tasks':''}"></div><div class="task-content"><div class="task-name ${t.done?'done-text':isPastLocked?'done-text':''}" style="display:flex;align-items:center;gap:5px;${isPastLocked?'opacity:0.55;':''}">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions"><button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button></div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
+  // Completed and missed tasks cannot be edited or deleted
+  const isLocked=t.done||t.missed||isPastLocked;
+  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick} title="${isPastLocked?'Cannot complete past tasks':''}"></div><div class="task-content"><div class="task-name ${t.done?'done-text':isPastLocked?'done-text':''}" style="display:flex;align-items:center;gap:5px;${isPastLocked?'opacity:0.55;':''}">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions"><button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button>${!isLocked?`<button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button>`:''}</div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
   return card;
 }
 
