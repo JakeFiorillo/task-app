@@ -1238,11 +1238,7 @@ function getVisibleTasks(){
     }
     // Pre-4AM tasks on the day after range.end belong to this period's last day
     const dayAfterRangeEnd=dateOffset_from(range.end,1);
-    if(t.date===dayAfterRangeEnd&&t.time&&parseInt(t.time.split(':')[0])<4){
-      console.log('Pre-4AM next-day match:',t.name,t.date,t.time,'range.end:',range.end,'dayAfter:',dayAfterRangeEnd);
-      return true;
-    }
-    if(t.date===dayAfterRangeEnd) console.log('dayAfter match but excluded:',t.name,t.date,t.time);
+    if(t.date===dayAfterRangeEnd&&t.time&&parseInt(t.time.split(':')[0])<4)return true;
     return false;
   });
   if(activeFilters.has('incomplete'))list=list.filter(t=>!t.done);
@@ -1433,7 +1429,6 @@ function makeCard(t){
       </div>
       <div class="task-actions" style="opacity:1">
         <button class="task-action-btn" onclick="openRescheduleModal(${t.id})" title="Reschedule" style="color:#185FA5"><i class="ti ti-calendar-event"></i></button>
-        <button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})" title="Delete"><i class="ti ti-trash"></i></button>
       </div>
       <div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div>
     </div>${subs}`;
@@ -1441,7 +1436,7 @@ function makeCard(t){
   }
   // Completed and missed tasks cannot be edited or deleted
   const isLocked=t.done||t.missed||isPastLocked;
-  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick} title="${isPastLocked?'Cannot complete past tasks':''}"></div><div class="task-content"><div class="task-name ${t.done?'done-text':isPastLocked?'done-text':''}" style="display:flex;align-items:center;gap:5px;${isPastLocked?'opacity:0.55;':''}">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions"><button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button>${!isLocked?`<button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button>`:''}</div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
+  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick} title="${isPastLocked?'Cannot complete past tasks':''}"></div><div class="task-content"><div class="task-name ${t.done?'done-text':isPastLocked?'done-text':''}" style="display:flex;align-items:center;gap:5px;${isPastLocked?'opacity:0.55;':''}">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions">${!isLocked?`<button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button>`:''}</div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
   return card;
 }
 
@@ -1458,6 +1453,7 @@ async function confirmTaskComplete(){
   const id=pendingTaskId;pendingTaskId=null;
   const t=tasks.find(t=>t.id===id);if(!t)return;
   t.done=true;
+  if(t.pinned){t.pinned=false;} // unpin completed tasks
   const lv=getLevel();const cl=getCoinLevel(lv);
   const limits={low:cl.maxLow,medium:cl.maxMed,high:cl.maxHigh};
   const used={low:player.dailyLowUsed,medium:player.dailyMedUsed,high:player.dailyHighUsed};
@@ -2329,7 +2325,7 @@ async function enterLottery(lotteryId){
 
 // ══════════════ TASK MODAL ══════════════
 function handleFreqChange(){const f=document.getElementById('new-freq').value;const r=f!=='once';document.getElementById('date-fields').style.display=r?'none':'';document.getElementById('recurring-note').style.display=r?'block':'none';}
-function openAddModal(){document.getElementById('modal-title').textContent='New Task';document.getElementById('edit-id').value='';resetTaskForm();document.getElementById('new-date').value=todayStr();document.getElementById('task-modal').classList.add('open');setTimeout(()=>document.getElementById('new-name').focus(),50);}
+function openAddModal(){document.getElementById('modal-title').textContent='New Task';document.getElementById('edit-id').value='';resetTaskForm();const nd=document.getElementById('new-date');nd.value=todayStr();nd.min=todayStr();document.getElementById('task-modal').classList.add('open');setTimeout(()=>document.getElementById('new-name').focus(),50);}
 function openEditModal(id){
   const t=tasks.find(t=>t.id===id);if(!t)return;
   document.getElementById('modal-title').textContent='Edit Task';
@@ -2372,6 +2368,16 @@ async function submitTaskForm(){
   const notes=document.getElementById('new-notes').value.trim();
   const pinned=document.getElementById('toggle-pinned').classList.contains('on');
   const subs=[...document.querySelectorAll('#subtask-inputs input')].map(i=>i.value.trim()).filter(Boolean);
+  // Validate date/time not in the past
+  if(freq==='once'){
+    const dateVal=document.getElementById('new-date').value;
+    const timeVal=document.getElementById('new-time').value;
+    if(dateVal){
+      const today=todayStr();
+      if(dateVal<today){showToast('⚠️ Cannot schedule a task in the past.');return;}
+      if(dateVal===today&&timeVal&&timeHasPassed(timeVal)){showToast('⚠️ That time has already passed today.');return;}
+    }
+  }
   const editId=document.getElementById('edit-id').value;
   if(editId){
     const t=tasks.find(t=>t.id===parseInt(editId));if(!t)return;
@@ -2805,6 +2811,7 @@ function openRescheduleModal(id){
   const t=tasks.find(t=>t.id===id);if(!t)return;
   document.getElementById('reschedule-id').value=id;
   document.getElementById('reschedule-date').value=todayStr();
+  document.getElementById('reschedule-date').min=todayStr();
   document.getElementById('reschedule-time').value=t.time||'';
   document.getElementById('reschedule-modal').classList.add('open');
 }
@@ -2814,6 +2821,10 @@ async function confirmReschedule(){
   const date=document.getElementById('reschedule-date').value;
   const time=document.getElementById('reschedule-time').value;
   if(!date){document.getElementById('reschedule-date').focus();return;}
+  // Validate not in the past
+  const today=todayStr();
+  if(date<today){showToast('⚠️ Cannot reschedule to a past date.');return;}
+  if(date===today&&time&&timeHasPassed(time)){showToast('⚠️ That time has already passed today.');return;}
   const t=tasks.find(t=>t.id===id);if(!t)return;
   t.date=date;t.time=time;t.missed=false;
   await saveTask(t);
