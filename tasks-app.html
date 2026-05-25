@@ -917,17 +917,17 @@ const LEVEL_DATA=[
   {level:7, xpNeeded:500,  totalXP:1650,  benefit:'Weekly Lotteries',                  coins:35, weeklyTier:2},
   {level:8, xpNeeded:650,  totalXP:2300,  benefit:'Epic Collectable Packs',            coins:35, weeklyTier:2},
   {level:9, xpNeeded:800,  totalXP:3100,  benefit:'Weekly Reward Tier 3 Unlocked',     coins:50, weeklyTier:3},
-  {level:10,xpNeeded:950,  totalXP:4050,  benefit:'Free Epic Card (user chooses)',     coins:50, weeklyTier:3},
+  {level:10,xpNeeded:950,  totalXP:4050,  benefit:'2× Epic Packs',      coins:50, weeklyTier:3},
   {level:11,xpNeeded:1150, totalXP:5200,  benefit:'Coin Task Increases',               coins:50, weeklyTier:3},
   {level:12,xpNeeded:1350, totalXP:6550,  benefit:'Legendary Collectable Packs',       coins:70, weeklyTier:3},
-  {level:13,xpNeeded:1550, totalXP:8100,  benefit:'Free Legendary Card (user chooses)',coins:70, weeklyTier:3},
+  {level:13,xpNeeded:1550, totalXP:8100,  benefit:'2× Legendary Packs', coins:70, weeklyTier:3},
   {level:14,xpNeeded:1800, totalXP:9900,  benefit:'Weekly Reward Tier 4 Unlocked',     coins:70, weeklyTier:4},
   {level:15,xpNeeded:2050, totalXP:11950, benefit:'Mythic Collectable Packs',          coins:100,weeklyTier:4},
   {level:16,xpNeeded:2300, totalXP:14250, benefit:'Coin Task Increases',               coins:100,weeklyTier:4},
-  {level:17,xpNeeded:2600, totalXP:16850, benefit:'Free Mythic Card (user chooses)',   coins:100,weeklyTier:4},
+  {level:17,xpNeeded:2600, totalXP:16850, benefit:'2× Mythic Packs',    coins:100,weeklyTier:4},
   {level:18,xpNeeded:2900, totalXP:19750, benefit:'Cosmic Collectable Packs',          coins:150,weeklyTier:4},
   {level:19,xpNeeded:3200, totalXP:22950, benefit:'Weekly Reward Tier 5 Unlocked',     coins:150,weeklyTier:5},
-  {level:20,xpNeeded:3550, totalXP:26500, benefit:'Free Cosmic Card (user chooses)',   coins:150,weeklyTier:5},
+  {level:20,xpNeeded:3550, totalXP:26500, benefit:'2× Cosmic Packs',    coins:150,weeklyTier:5},
 ];
 
 const COIN_LEVELS=[
@@ -2118,8 +2118,8 @@ function claimLevelReward(level,coins,benefit){
     :benefit.toLowerCase().includes('uncommon')?'uncommon'
     :benefit.toLowerCase().includes('common')?'common':null;
   if(rarity&&benefit.toLowerCase().includes('pack')){
-    // Queue box open after report closes
-    _pendingBoxOpens.push(rarity);
+    const count=benefit.startsWith('2×')?2:1;
+    for(let i=0;i<count;i++) _pendingBoxOpens.push(rarity);
   }
   updateNavStats();
   renderDailyReport();
@@ -3020,7 +3020,8 @@ function claimLevelUpReward(level, coins, benefit){
   showToast(`⭐ Level ${level} reward: +${coins} coins!`);
   const rarity=['cosmic','mythic','legendary','epic','rare','uncommon','common'].find(r=>benefit.toLowerCase().includes(r));
   if(rarity&&benefit.toLowerCase().includes('pack')){
-    _pendingBoxOpens.push(rarity);
+    const count=benefit.startsWith('2×')?2:1;
+    for(let i=0;i<count;i++) _pendingBoxOpens.push(rarity);
   }
   updateNavStats();
   savePlayerState();
