@@ -1664,22 +1664,24 @@ function renderShop(){
   }).join('');
   // Utilities section removed
 }
-function craftBox(r){
+async function craftBox(r){
   if((player.dupePoints[r]||0)<100)return;
   player.dupePoints[r]-=100;
   const xp=BOX_XP[r]||0;
   player.totalXP+=xp;
   showToast(`Crafted a ${r} box! +${xp} XP`);
   updateNavStats();
+  await savePlayerState();
   openBox(r);
 }
-function buyBox(r,cost){
+async function buyBox(r,cost){
   if(player.coins<cost)return;
   player.coins-=cost;
   const xp=BOX_XP[r]||0;
   player.totalXP+=xp;
+  showToast(`+${xp} XP from ${r.charAt(0).toUpperCase()+r.slice(1)} Box!`);
   updateNavStats();
-  savePlayerState();
+  await savePlayerState();
   openBox(r);
 }
 function buyStreakSaver(){if(player.coins<25)return;player.coins-=25;updateNavStats();showToast('🛡️ Streak Saver purchased!');renderShop();}
