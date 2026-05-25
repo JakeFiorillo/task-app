@@ -1965,7 +1965,7 @@ let _pendingLotteryRewards=[];
 
 async function proceedFromReport(){
   const d=_reportData;
-  // Apply XP
+  // Apply XP (resets already happened in runDayReset)
   player.totalXP+=d.earnedXP;
   // Apply streak
   if(d.keptStreak||_reportStreakSaverUsed){
@@ -1975,21 +1975,6 @@ async function proceedFromReport(){
   }
   // Apply weekly pool
   player.weeklyPool=d.newWeeklyPool;
-  // Reset daily limits and recharge coin pool
-  const lv=getLevel();const cl=getCoinLevel(lv);
-  player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
-  player.coinsEarnedToday=0;
-  player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
-  // Reset recurring tasks
-  // Reset recurring tasks
-  tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
-  // Mark incomplete one-time tasks from previous days as missed
-  const today2=todayStr();
-  tasks.forEach(t=>{
-    if(t.freq==='once'&&!t.done&&t.date&&t.date<today2&&!t.missed){
-      t.missed=true;
-    }
-  });
   // Save
   await savePlayerState();
   // Close report
@@ -2482,30 +2467,40 @@ async function loadUserDataFromDB(){
 
 // ── DAY RESET ──
 async function runDayReset(lastDayPct, lastDayDone, lastDayTotal){
-  // Build report data — don't apply XP or streak yet, that happens when user claims
   const lv=getLevel();
   const cl=getCoinLevel(lv);
   const si=getStreakInfo();
 
-  // Calculate XP earned
+  // ── Apply non-XP resets IMMEDIATELY so progress bar and limits are correct ──
+  player.dailyLowUsed=0;player.dailyMedUsed=0;player.dailyHighUsed=0;
+  player.coinsEarnedToday=0;
+  player.coinPool=Math.min(player.coinPool+cl.recharge,cl.maxPool);
+  // Reset recurring tasks
+  tasks.forEach(t=>{if(t.freq==='daily'||t.freq==='weekly'||t.freq==='monthly')t.done=false;});
+  // Mark overdue one-time tasks as missed
+  const today=todayStr();
+  tasks.forEach(t=>{
+    if(t.freq==='once'&&!t.done&&!t.missed&&t.date&&t.date<today){
+      t.missed=true;
+      saveTask(t);
+    }
+  });
+  // Save the reset state immediately
+  await savePlayerState();
+
+  // ── Build XP/streak/reward data for the report modal ──
   const baseXP=calcBaseXP(lastDayDone||0, lastDayTotal||0);
   const streakMult=player.streak>0?si.mult:1.0;
   const earnedXP=Math.round(baseXP*streakMult);
-
-  // Streak check
   const pctDone=lastDayTotal>0?Math.round(((lastDayDone||0)/lastDayTotal)*100):0;
   const neededPct=si.pct;
   const keptStreak=pctDone>=neededPct;
   const newStreakIfKept=Math.min(player.streak+1,35);
   const newStreakIfLost=Math.floor(player.streak*(1-0.4));
-
-  // Weekly pool update
   const newWeeklyPool=Math.min(player.weeklyPool+pctDone,700);
   const tier=getWeeklyTier(lv);
   const weeklyRewards=WEEKLY_TIERS[tier]||WEEKLY_TIERS[1];
   const newWeeklyRewards=weeklyRewards.filter(r=>newWeeklyPool>=r.pct&&!player.weeklyAchieved.includes(r.pct));
-
-  // Level up check
   const oldLv=lv;
   const newTotalXP=player.totalXP+earnedXP;
   let newLv=oldLv;
@@ -2514,7 +2509,7 @@ async function runDayReset(lastDayPct, lastDayDone, lastDayTotal){
   const levelUps=[];
   for(let l=oldLv+1;l<=newLv;l++) levelUps.push(LEVEL_DATA[l-1]);
 
-  // Show the daily report modal
+  // Show report — XP/streak applied when user clicks Claim & Continue
   showDailyReport({
     done:lastDayDone||0, total:lastDayTotal||0, pctDone,
     baseXP, streakMult, earnedXP,
@@ -2650,12 +2645,25 @@ window.addEventListener('beforeunload',()=>{ if(currentUser) savePlayerState(); 
 // Check for any tasks that have become overdue since last session and mark them missed
 function markOverdueTasks(){
   const today=todayStr();
+  const now=new Date();
   let changed=false;
   tasks.forEach(t=>{
-    if(t.freq==='once'&&!t.done&&!t.missed&&t.date&&t.date<today){
+    if(t.freq!=='once'||t.done||t.missed||!t.date)return;
+    let isNowOverdue=false;
+    if(t.date<today){
+      // Previous day — definitely overdue
+      isNowOverdue=true;
+    } else if(t.date===today&&t.time){
+      // Same day — check if time has passed
+      const[h,m]=t.time.split(':').map(Number);
+      const taskTime=new Date();
+      taskTime.setHours(h,m,0,0);
+      if(now>taskTime) isNowOverdue=true;
+    }
+    if(isNowOverdue){
       t.missed=true;
       changed=true;
-      saveTask(t); // save to DB
+      saveTask(t);
     }
   });
   if(changed) render();
