@@ -1238,7 +1238,11 @@ function getVisibleTasks(){
     }
     // Pre-4AM tasks on the day after range.end belong to this period's last day
     const dayAfterRangeEnd=dateOffset_from(range.end,1);
-    if(t.date===dayAfterRangeEnd&&t.time&&parseInt(t.time.split(':')[0])<4)return true;
+    if(t.date===dayAfterRangeEnd&&t.time&&parseInt(t.time.split(':')[0])<4){
+      console.log('Pre-4AM next-day match:',t.name,t.date,t.time,'range.end:',range.end,'dayAfter:',dayAfterRangeEnd);
+      return true;
+    }
+    if(t.date===dayAfterRangeEnd) console.log('dayAfter match but excluded:',t.name,t.date,t.time);
     return false;
   });
   if(activeFilters.has('incomplete'))list=list.filter(t=>!t.done);
