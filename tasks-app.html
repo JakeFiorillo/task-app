@@ -1693,19 +1693,16 @@ async function craftBox(r){
   if((player.dupePoints[r]||0)<100)return;
   player.dupePoints[r]-=100;
   const xp=PACK_XP[r]||0;
-  player.totalXP+=xp;
-  showToast(`Crafted a ${r} pack! +${xp} XP`);
-  updateNavStats();
+  await awardXP(xp, r.charAt(0).toUpperCase()+r.slice(1)+' Pack craft');
   await savePlayerState();
   openBox(r);
 }
 async function buyBox(r,cost){
   if(player.coins<cost)return;
   player.coins-=cost;
-  const xp=PACK_XP[r]||0;
-  player.totalXP+=xp;
-  showToast(`+${xp} XP from ${r.charAt(0).toUpperCase()+r.slice(1)} Pack!`);
   updateNavStats();
+  const xp=PACK_XP[r]||0;
+  await awardXP(xp, r.charAt(0).toUpperCase()+r.slice(1)+' Pack');
   await savePlayerState();
   openBox(r);
 }
@@ -2951,6 +2948,85 @@ function updateClock(){
 setInterval(updateClock, 1000);
 updateClock();
 
+
+// ══════════════ XP AWARD + LEVEL UP ══════════════
+// Central function to award XP outside the daily report
+// Checks for level-ups and shows claim modal if needed
+async function awardXP(amount, source=''){
+  if(!amount||amount<=0)return;
+  const oldLv=getLevel();
+  player.totalXP+=amount;
+  const newLv=getLevel();
+  updateNavStats();
+  if(newLv>oldLv){
+    // Collect all level-up rewards
+    const levelUps=[];
+    for(let l=oldLv+1;l<=newLv;l++) levelUps.push(LEVEL_DATA[l-1]);
+    showLevelUpModal(levelUps);
+  } else if(source){
+    showToast(`⭐ +${amount} XP${source?' from '+source:''}!`);
+  }
+}
+
+let _levelupClaimed=new Set();
+
+function showLevelUpModal(levelUps){
+  _levelupClaimed=new Set();
+  renderLevelUpModal(levelUps);
+  document.getElementById('levelup-modal').classList.add('open');
+}
+
+function renderLevelUpModal(levelUps){
+  const allClaimed=_levelupClaimed.size>=levelUps.length;
+  let html=`<div style="text-align:center;margin-bottom:18px">
+    <div style="font-size:36px">🎉</div>
+    <div style="font-size:20px;font-weight:700;margin-top:6px">Level Up!</div>
+    <div style="font-size:13px;color:var(--text2);margin-top:4px">You reached Level ${levelUps[levelUps.length-1].level}</div>
+  </div>`;
+  levelUps.forEach(lu=>{
+    const claimed=_levelupClaimed.has(lu.level);
+    html+=`<div class="reward-row">
+      <div class="reward-row-icon">⭐</div>
+      <div class="reward-row-info">
+        <div class="reward-row-name">Level ${lu.level} — ${lu.benefit}</div>
+        <div class="reward-row-sub">+${lu.coins} coins on claim</div>
+      </div>
+      <button class="reward-claim-btn" onclick="claimLevelUpReward(${lu.level},${lu.coins},'${lu.benefit}',${JSON.stringify(levelUps).replace(/'/g,'"')})" ${claimed?'disabled':''}>
+        ${claimed?'Claimed ✓':'Claim'}
+      </button>
+    </div>`;
+  });
+  html+=`<button class="report-proceed-btn" onclick="closeLevelUpModal()" ${!allClaimed?'disabled':''} style="${!allClaimed?'opacity:0.45;cursor:not-allowed;margin-top:16px':'margin-top:16px'}">
+    ${!allClaimed?`Claim all rewards (${_levelupClaimed.size}/${levelUps.length})`:'Continue →'}
+  </button>`;
+  document.getElementById('levelup-modal-content').innerHTML=html;
+}
+
+function claimLevelUpReward(level, coins, benefit, levelUps){
+  if(_levelupClaimed.has(level))return;
+  _levelupClaimed.add(level);
+  player.coins+=coins;
+  showToast(`⭐ Level ${level} reward: +${coins} coins!`);
+  // Check if benefit is a pack — queue it to open
+  const rarity=['cosmic','mythic','legendary','epic','rare','uncommon','common'].find(r=>benefit.toLowerCase().includes(r));
+  if(rarity&&benefit.toLowerCase().includes('pack')){
+    _pendingBoxOpens.push(rarity);
+  }
+  updateNavStats();
+  savePlayerState();
+  renderLevelUpModal(levelUps);
+}
+
+function closeLevelUpModal(){
+  document.getElementById('levelup-modal').classList.remove('open');
+  // Open any pending pack rewards
+  if(_pendingBoxOpens.length>0){
+    const rarity=_pendingBoxOpens.shift();
+    setTimeout(()=>openBox(rarity),300);
+  }
+}
+
+
 // ══════════════ ADMIN TOOLS ══════════════
 async function adminSimulateDayEnd(){
   // Use yesterday's task completion stats
@@ -2981,14 +3057,9 @@ async function adminResetStats(){
 async function adminGiveXP(){
   const amt=parseInt(document.getElementById('admin-xp-amt').value)||0;
   if(amt<=0)return;
-  const oldLv=getLevel();
-  player.totalXP+=amt;
-  const newLv=getLevel();
+  await awardXP(amt,'Admin');
   await savePlayerState();
-  updateNavStats();
   if(document.getElementById('page-game').classList.contains('active'))renderGamePage();
-  if(newLv>oldLv)showToast(`⭐ +${amt} XP — Level up! Now Level ${newLv}`);
-  else showToast(`⭐ +${amt} XP (${player.totalXP} total)`);
 }
 async function adminGiveCoins(){
   const amt=parseInt(document.getElementById('admin-coins-amt').value)||0;
