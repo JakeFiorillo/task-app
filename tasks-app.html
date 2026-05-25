@@ -1209,7 +1209,14 @@ function getVisibleTasks(){
       if((t.missed||isTaskOverdue(t))&&t.freq==='once'){
         if(!t.date)return false;
         const dayAfterEnd=dateOffset_from(range.end,1);
-        if(t.date>=range.start&&t.date<=range.end)return true;
+        if(t.date>=range.start&&t.date<=range.end){
+          // Exclude pre-4AM tasks that belong to the day before range.start
+          if(t.date===range.start&&t.time){
+            const[h]=t.time.split(':').map(Number);
+            if(h<4)return false; // belongs to previous period
+          }
+          return true;
+        }
         if(t.date===dayAfterEnd&&t.time){const[h]=t.time.split(':').map(Number);if(h<4)return true;}
         return false;
       }
@@ -1227,7 +1234,13 @@ function getVisibleTasks(){
       return false;
     }
     if(t.freq!=='once')return true;
-    return t.date&&t.date>=range.start&&t.date<=range.end;
+    if(!t.date)return false;
+    if(t.date>=range.start&&t.date<=range.end){
+      // Exclude pre-4AM tasks on the first day of the range — they belong to the previous period
+      if(t.date===range.start&&t.time&&parseInt(t.time.split(':')[0])<4)return false;
+      return true;
+    }
+    return false;
   });
   if(activeFilters.has('incomplete'))list=list.filter(t=>!t.done);
   if(activeFilters.has('due'))list.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
@@ -1327,8 +1340,12 @@ function updateProgress(){
     const inRange=tasks.filter(t=>{
       if(t.freq!=='once')return true;
       if(!t.date)return false;
-      if(t.date>=range.start&&t.date<=range.end)return true;
-      // Pre-4AM tasks on next day belong to this range
+      if(t.date>=range.start&&t.date<=range.end){
+        // Exclude pre-4AM tasks on range start — they belong to previous period
+        if(t.date===range.start&&t.time&&parseInt(t.time.split(':')[0])<4)return false;
+        return true;
+      }
+      // Pre-4AM tasks on next day belong to this range's last day
       if(t.date===dayAfterEnd&&t.time){
         const[h]=t.time.split(':').map(Number);
         if(h<4)return true;
