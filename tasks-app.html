@@ -530,6 +530,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="nav-arrows">
         <div class="nav-arrow" onclick="shiftView(-1)"><i class="ti ti-chevron-left"></i></div>
         <div class="nav-arrow" onclick="shiftView(1)"><i class="ti ti-chevron-right"></i></div>
+        <div class="nav-arrow" id="btn-go-current" onclick="goToCurrent()" style="display:none;font-size:10px;font-weight:600;width:auto;padding:0 8px;color:var(--accent);border-color:var(--accent)">Now</div>
       </div>
       <div class="view-tabs">
         <div class="view-tab active" id="tab-day" onclick="setTab('day')">Day</div>
@@ -539,7 +540,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <button class="add-btn" onclick="openAddModal()"><i class="ti ti-plus"></i>Add Task</button>
     </div>
     <div class="progress-section">
-      <div class="progress-meta"><span class="progress-label">Daily progress</span><span class="progress-count" id="progress-text">0 of 0 completed</span></div>
+      <div class="progress-meta"><span class="progress-label" id="progress-label">Daily progress</span><span class="progress-count" id="progress-text">0 of 0 completed</span></div>
       <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     </div>
     <div class="filter-bar">
@@ -994,32 +995,41 @@ let player={
   dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
 };
 
-function todayStr(){
-  // Use local date, but account for 4AM boundary:
-  // If it's between midnight and 4AM, we're still on the "previous" day
+// Central 4AM-aware date helper — the whole app uses this
+function get4AMDate(offsetDays=0){
   const d=new Date();
-  if(d.getHours()<4){
-    // Treat as previous day
-    d.setDate(d.getDate()-1);
-  }
+  // If before 4AM, treat as previous day
+  if(d.getHours()<4) d.setDate(d.getDate()-1);
+  if(offsetDays) d.setDate(d.getDate()+offsetDays);
   const y=d.getFullYear();
   const m=String(d.getMonth()+1).padStart(2,'0');
   const day=String(d.getDate()).padStart(2,'0');
   return`${y}-${m}-${day}`;
 }
+function todayStr(){ return get4AMDate(0); }
+function dateOffset(days){ return get4AMDate(days); }
 
-// Raw calendar date without 4AM adjustment (for DB storage)
+// Raw calendar date for DB day-reset detection only
 function calendarDateStr(){
   const d=new Date();
   return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function dateOffset(days){
-  const base=new Date();
-  base.setDate(base.getDate()+days);
-  const y=base.getFullYear();
-  const m=String(base.getMonth()+1).padStart(2,'0');
-  const d=String(base.getDate()).padStart(2,'0');
-  return`${y}-${m}-${d}`;
+
+// Is a given time string (HH:MM) in the past right now?
+function timeHasPassed(timeStr){
+  if(!timeStr)return false;
+  const[h,m]=timeStr.split(':').map(Number);
+  const taskTime=new Date();taskTime.setHours(h,m,0,0);
+  return new Date()>taskTime;
+}
+
+// Is a task currently overdue (missed by date or by time)?
+function isTaskOverdue(t){
+  if(t.done||t.missed||t.freq!=='once'||!t.date)return false;
+  const today=todayStr();
+  if(t.date<today)return true;
+  if(t.date===today&&t.time&&timeHasPassed(t.time))return true;
+  return false;
 }
 
 let tasks=[];
@@ -1097,20 +1107,8 @@ function getTodayTasks(){
 }
 function getCatById(id){return categories.find(c=>c.id===id)||{name:id,color:'#aaa'};}
 function formatDisplayDate(ds){if(!ds)return'';const[y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);const td=new Date();td.setHours(0,0,0,0);const tm=new Date(td);tm.setDate(td.getDate()+1);if(dt.getTime()===td.getTime())return'Today';if(dt.getTime()===tm.getTime())return'Tomorrow';return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
-function isOverdue(t){
-  if(t.done||t.missed||t.freq!=='once'||!t.date)return false;
-  const today=todayStr();
-  if(t.date<today)return true;
-  // Same day but time has passed
-  if(t.date===today&&t.time){
-    const[h,m]=t.time.split(':').map(Number);
-    const now=new Date();
-    const taskDate=new Date();
-    taskDate.setHours(h,m,0,0);
-    return now>taskDate;
-  }
-  return false;
-}
+// isOverdue now handled by isTaskOverdue
+function isOverdue(t){return isTaskOverdue(t);}
 function formatTime(ts){if(!ts)return'';if(settings.timeFormat==='12'){const[h,m]=ts.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}return ts;}
 function showToast(msg){const el=document.getElementById('toast');el.innerHTML=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 function updateNavStats(){document.getElementById('nav-xp').textContent=player.totalXP;document.getElementById('nav-coins').textContent=player.coins;document.getElementById('nav-streak').textContent=player.streak;document.getElementById('lottery-coins-val').textContent=player.coins;document.getElementById('shop-coins-label').textContent=`You have ${player.coins} coins`;}
@@ -1167,7 +1165,9 @@ function showPage(name){
 
 // ══════════════ TASKS ══════════════
 function getViewRange(){
-  const base=new Date();base.setHours(0,0,0,0);
+  const base=new Date();
+  if(base.getHours()<4)base.setDate(base.getDate()-1);
+  base.setHours(0,0,0,0);
   if(currentView==='today'){base.setDate(base.getDate()+viewOffset);const ds=base.toISOString().split('T')[0];return{start:ds,end:ds,label:viewOffset===0?'Today':base.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})};}
   if(currentView==='week'){const s=new Date(base);const dow=base.getDay()||7;s.setDate(base.getDate()-(dow-1)+viewOffset*7);const e=new Date(s);e.setDate(s.getDate()+6);return{start:s.toISOString().split('T')[0],end:e.toISOString().split('T')[0],label:`Week of ${s.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`};}
   if(currentView==='month'){const s=new Date(base.getFullYear(),base.getMonth()+viewOffset,1);const e=new Date(s.getFullYear(),s.getMonth()+1,0);return{start:s.toISOString().split('T')[0],end:e.toISOString().split('T')[0],label:s.toLocaleDateString('en-US',{month:'long',year:'numeric'})};}
@@ -1184,22 +1184,11 @@ function getVisibleTasks(){
     if(currentView==='today'){
       // Recurring tasks always show in today view
       if(t.freq!=='once')return true;
-      // One-time tasks: show if due today (4AM-adjusted)
+      // One-time tasks: show if due today and not yet overdue
       if(!t.date)return false;
       if(t.date===range.end){
-        // Same day — exclude if time already passed
-        if(t.time){
-          const[h,m]=t.time.split(':').map(Number);
-          const taskTime=new Date();taskTime.setHours(h,m,0,0);
-          if(new Date()>taskTime)return false;
-        }
-        return true;
-      }
-      // Next calendar day but due before 4AM — show on today's view
-      const nextDay=dateOffset(1);
-      if(t.date===nextDay&&t.time){
-        const[h]=t.time.split(':').map(Number);
-        if(h<4)return true;
+        // Due today — only show if time hasn't passed yet (or no time set)
+        return!t.time||!timeHasPassed(t.time);
       }
       return false;
     }
@@ -1221,11 +1210,15 @@ function render(){
 function updateBadges(){
   const t=todayStr();
   // Week end = this Sunday (Mon-Sun week)
-  const we=(()=>{const d=new Date();const dow=d.getDay()||7;d.setDate(d.getDate()+(7-dow));return d.toISOString().split('T')[0];})();
-  // Week start = this Monday
-  const ws=(()=>{const d=new Date();const dow=d.getDay()||7;d.setDate(d.getDate()-(dow-1));return d.toISOString().split('T')[0];})();
-  const me=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().split('T')[0];})();
-  const ms=(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1).toISOString().split('T')[0];})();
+  // All badge calcs use 4AM-aware base date
+  const baseD=new Date();if(baseD.getHours()<4)baseD.setDate(baseD.getDate()-1);
+  const dow=baseD.getDay()||7;
+  const weD=new Date(baseD);weD.setDate(baseD.getDate()+(7-dow));
+  const wsD=new Date(baseD);wsD.setDate(baseD.getDate()-(dow-1));
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const we=fmt(weD);const ws=fmt(wsD);
+  const me=fmt(new Date(baseD.getFullYear(),baseD.getMonth()+1,0));
+  const ms=fmt(new Date(baseD.getFullYear(),baseD.getMonth(),1));
   // Only count incomplete tasks that actually appear in each view
   const incomplete=x=>!x.done&&!x.missed&&!(isOverdue(x)&&x.freq==='once');
   const fitsToday=x=>x.freq!=='once'||(x.date&&x.date===t);
@@ -1242,21 +1235,18 @@ function updateBadges(){
 }
 
 function updateUpcoming(){
-  const now=new Date();
-  const t2=todayStr();
+  const today=todayStr();
   const upcoming=tasks
     .filter(x=>{
-      if(x.done||x.missed)return false;
-      // Check if overdue by date
-      if(x.freq==='once'&&x.date&&x.date<t2)return false;
-      // Check if overdue by time (today but time already passed)
-      if(x.freq==='once'&&x.date===t2&&x.time){
-        const[h,m]=x.time.split(':').map(Number);
-        const taskTime=new Date();taskTime.setHours(h,m,0,0);
-        if(now>taskTime)return false;
-      }
-      // Include pinned tasks (recurring ok) or future one-time tasks
-      return x.pinned||(x.date&&x.date>=t2&&x.freq==='once');
+      if(x.done||x.missed||isTaskOverdue(x))return false;
+      // Pinned non-recurring tasks: show if not overdue
+      if(x.pinned&&x.freq!=='once')return true;
+      if(x.pinned&&x.freq==='once'&&x.date&&x.date>=today)return true;
+      // Future one-time tasks
+      if(x.freq==='once'&&x.date&&x.date>today)return true;
+      // Today's tasks that haven't passed yet
+      if(x.freq==='once'&&x.date===today&&(!x.time||!timeHasPassed(x.time)))return true;
+      return false;
     })
     .sort((a,b)=>{
       if(a.pinned&&!b.pinned)return -1;
@@ -1281,10 +1271,37 @@ function updateUpcoming(){
 }
 
 function updateProgress(){
-  const tod=getTodayTasks();const done=tod.filter(t=>t.done).length;const total=tod.length;
+  const range=getViewRange();
+  const today=todayStr();
+  let done=0, total=0, label='Progress';
+
+  if(viewOffset===0&&currentView==='today'){
+    // Current day — use getTodayTasks for accuracy
+    const tod=getTodayTasks();
+    done=tod.filter(t=>t.done).length;
+    total=tod.length;
+    label='Daily progress';
+  } else {
+    // Past/future day, week, or month — count tasks in that range
+    const inRange=tasks.filter(t=>{
+      if(t.missed)return false;
+      if(t.freq!=='once')return true; // recurring tasks always count
+      return t.date&&t.date>=range.start&&t.date<=range.end;
+    });
+    done=inRange.filter(t=>t.done).length;
+    total=inRange.length;
+    const labels={today:'Day',week:'Week',month:'Month',all:'All'};
+    const viewKey=currentView==='today'?'today':currentView==='week'?'week':currentView==='month'?'month':'all';
+    label=viewOffset<0?`Past ${labels[viewKey]||'Period'}`
+      :viewOffset>0?`Upcoming ${labels[viewKey]||'Period'}`
+      :`${labels[viewKey]||'Period'} progress`;
+  }
+
   const pct=total?Math.round((done/total)*100):0;
   document.getElementById('progress-fill').style.width=pct+'%';
   document.getElementById('progress-text').textContent=`${done} of ${total} completed`;
+  const lbl=document.getElementById('progress-label');
+  if(lbl) lbl.textContent=label;
 }
 
 function renderTasks(){
@@ -1401,9 +1418,21 @@ function toggleSub(tid,i){
   render();
 }
 function toggleFilter(f){activeFilters.has(f)?activeFilters.delete(f):activeFilters.add(f);document.getElementById('filter-'+f).classList.toggle('active',activeFilters.has(f));render();}
-function setView(v){currentView=v;viewOffset=0;document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));document.getElementById('view-'+v)?.classList.add('active');const m={today:'day',week:'week',month:'month'};if(m[v]){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+m[v])?.classList.add('active');}render();}
+function setView(v){currentView=v;viewOffset=0;const btn=document.getElementById('btn-go-current');if(btn)btn.style.display='none';document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));document.getElementById('view-'+v)?.classList.add('active');const m={today:'day',week:'week',month:'month'};if(m[v]){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+m[v])?.classList.add('active');}render();}
 function setTab(t){document.querySelectorAll('.view-tab').forEach(el=>el.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');setView({day:'today',week:'week',month:'month'}[t]);}
-function shiftView(dir){viewOffset+=dir;render();}
+function shiftView(dir){
+  viewOffset+=dir;
+  // Show/hide "Now" button
+  const btn=document.getElementById('btn-go-current');
+  if(btn) btn.style.display=viewOffset!==0?'flex':'none';
+  render();
+}
+function goToCurrent(){
+  viewOffset=0;
+  const btn=document.getElementById('btn-go-current');
+  if(btn) btn.style.display='none';
+  render();
+}
 
 // ══════════════ PROGRESS PAGE ══════════════
 function renderGamePage(){
@@ -2674,23 +2703,12 @@ window.addEventListener('beforeunload',()=>{ if(currentUser) savePlayerState(); 
 
 // Check for any tasks that have become overdue since last session and mark them missed
 function markOverdueTasks(){
-  const today=todayStr();
-  const now=new Date();
   let changed=false;
   tasks.forEach(t=>{
     if(t.freq!=='once'||t.done||t.missed||!t.date)return;
-    let isNowOverdue=false;
-    if(t.date<today){
-      isNowOverdue=true;
-    } else if(t.date===today&&t.time){
-      const[h,m]=t.time.split(':').map(Number);
-      const taskTime=new Date();
-      taskTime.setHours(h,m,0,0);
-      if(now>taskTime) isNowOverdue=true;
-    }
-    if(isNowOverdue){
+    if(isTaskOverdue(t)){
       t.missed=true;
-      t.pinned=false; // unpin missed tasks
+      t.pinned=false;
       changed=true;
       saveTask(t);
     }
