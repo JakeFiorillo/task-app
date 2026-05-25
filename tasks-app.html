@@ -103,6 +103,8 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .progress-count { font-size:12px; font-weight:500; }
 .progress-track { height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; }
 .progress-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s ease; }
+.progress-track { position:relative; }
+.progress-missed { position:absolute; top:0; height:100%; background:repeating-linear-gradient(90deg,var(--accent-mid) 0px,var(--accent-mid) 6px,transparent 6px,transparent 10px); opacity:0.7; transition:left 0.4s ease,width 0.4s ease; border-radius:0; }
 
 .filter-bar { display:flex; align-items:center; gap:6px; padding:10px 18px 8px; flex-wrap:wrap; }
 .filter-btn { display:flex; align-items:center; gap:4px; padding:4px 11px; border-radius:var(--radius); font-size:12px; cursor:pointer; background:var(--bg); border:0.5px solid var(--border); color:var(--text2); transition:all 0.12s; user-select:none; }
@@ -541,7 +543,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     </div>
     <div class="progress-section">
       <div class="progress-meta"><span class="progress-label" id="progress-label">Daily progress</span><span class="progress-count" id="progress-text">0 of 0 completed</span></div>
-      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div><div class="progress-missed" id="progress-missed" style="left:0%;width:0%"></div></div>
     </div>
     <div class="filter-bar">
       <span style="font-size:11px;color:var(--text3);margin-right:2px">Sort/Filter:</span>
@@ -1245,13 +1247,18 @@ function updateUpcoming(){
   const today=todayStr();
   const upcoming=tasks
     .filter(x=>{
-      if(x.done||x.missed||isTaskOverdue(x))return false;
-      // Pinned non-recurring tasks: show if not overdue
+      if(x.done||x.missed)return false;
+      // Hard date check — never show past-date tasks
+      if(x.freq==='once'&&x.date&&x.date<today)return false;
+      // Hard time check — never show today's tasks where time has passed
+      if(x.freq==='once'&&x.date===today&&x.time&&timeHasPassed(x.time))return false;
+      // Pinned recurring tasks always show
       if(x.pinned&&x.freq!=='once')return true;
+      // Pinned future one-time tasks
       if(x.pinned&&x.freq==='once'&&x.date&&x.date>=today)return true;
-      // Future one-time tasks
+      // Future one-time tasks (strictly after today)
       if(x.freq==='once'&&x.date&&x.date>today)return true;
-      // Today's tasks that haven't passed yet
+      // Today's one-time tasks not yet past
       if(x.freq==='once'&&x.date===today&&(!x.time||!timeHasPassed(x.time)))return true;
       return false;
     })
@@ -1280,23 +1287,24 @@ function updateUpcoming(){
 function updateProgress(){
   const range=getViewRange();
   const today=todayStr();
-  let done=0, total=0, label='Progress';
+  let doneTasks=[], missedTasks=[], pendingTasks=[];
+  let label='Progress';
 
   if(viewOffset===0&&currentView==='today'){
-    // Current day — use getTodayTasks for accuracy
     const tod=getTodayTasks();
-    done=tod.filter(t=>t.done).length;
-    total=tod.length;
+    doneTasks=tod.filter(t=>t.done);
+    missedTasks=tod.filter(t=>!t.done&&(t.missed||isTaskOverdue(t)));
+    pendingTasks=tod.filter(t=>!t.done&&!t.missed&&!isTaskOverdue(t));
     label='Daily progress';
   } else {
-    // Past/future day, week, or month — count tasks in that range
+    // Get all tasks in range including missed/incomplete for history
     const inRange=tasks.filter(t=>{
-      if(t.missed)return false;
-      if(t.freq!=='once')return true; // recurring tasks always count
+      if(t.freq!=='once')return true;
       return t.date&&t.date>=range.start&&t.date<=range.end;
     });
-    done=inRange.filter(t=>t.done).length;
-    total=inRange.length;
+    doneTasks=inRange.filter(t=>t.done);
+    missedTasks=inRange.filter(t=>!t.done&&(t.missed||isTaskOverdue(t)));
+    pendingTasks=inRange.filter(t=>!t.done&&!t.missed&&!isTaskOverdue(t));
     const labels={today:'Day',week:'Week',month:'Month',all:'All'};
     const viewKey=currentView==='today'?'today':currentView==='week'?'week':currentView==='month'?'month':'all';
     label=viewOffset<0?`Past ${labels[viewKey]||'Period'}`
@@ -1304,9 +1312,21 @@ function updateProgress(){
       :`${labels[viewKey]||'Period'} progress`;
   }
 
-  const pct=total?Math.round((done/total)*100):0;
-  document.getElementById('progress-fill').style.width=pct+'%';
-  document.getElementById('progress-text').textContent=`${done} of ${total} completed`;
+  const total=doneTasks.length+missedTasks.length+pendingTasks.length;
+  const done=doneTasks.length;
+  const missed=missedTasks.length;
+  const donePct=total?Math.round((done/total)*100):0;
+  const missedPct=total?Math.round((missed/total)*100):0;
+
+  // Three-segment bar: done (solid) | missed (dashed) | pending (empty bg)
+  document.getElementById('progress-fill').style.width=donePct+'%';
+  const missedEl=document.getElementById('progress-missed');
+  if(missedEl){
+    missedEl.style.left=donePct+'%';
+    missedEl.style.width=missedPct+'%';
+  }
+  document.getElementById('progress-text').textContent=
+    `${done} of ${total} completed${missed>0?' · '+missed+' missed':''}`;
   const lbl=document.getElementById('progress-label');
   if(lbl) lbl.textContent=label;
 }
