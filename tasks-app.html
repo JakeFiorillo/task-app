@@ -1078,7 +1078,23 @@ function getCoinLevel(lv){return COIN_LEVELS.find(c=>lv>=c.minLv&&lv<=c.maxLv)||
 function getWeeklyTier(lv){return LEVEL_DATA[lv-1]?.weeklyTier||1;}
 function getStreakInfo(){const i=Math.min(player.streak,35)-1;return i>=0?STREAK_DATA[i]:{mult:1.0,pct:70};}
 function calcBaseXP(done,total){if(!total)return 0;const c=Math.min(total,20)-1;const r=Math.min(done,total,20)-1;if(r<0)return 0;return XP_TABLE[r]?.[c]||0;}
-function getTodayTasks(){const t=todayStr();return tasks.filter(x=>x.freq==='daily'||x.freq==='weekly'||x.freq==='monthly'||(x.date&&x.date<=t));}
+function getTodayTasks(){
+  const t=todayStr();
+  const now=new Date();
+  return tasks.filter(x=>{
+    if(x.missed) return false; // missed tasks don't count toward today's progress
+    if(x.freq==='daily'||x.freq==='weekly'||x.freq==='monthly') return true;
+    if(x.freq!=='once'||!x.date) return false;
+    if(x.date===t) return true;
+    // Next calendar day but due before 4AM counts as today
+    const nextDay=dateOffset(1);
+    if(x.date===nextDay&&x.time){
+      const[h]=x.time.split(':').map(Number);
+      if(h<4) return true;
+    }
+    return false;
+  });
+}
 function getCatById(id){return categories.find(c=>c.id===id)||{name:id,color:'#aaa'};}
 function formatDisplayDate(ds){if(!ds)return'';const[y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);const td=new Date();td.setHours(0,0,0,0);const tm=new Date(td);tm.setDate(td.getDate()+1);if(dt.getTime()===td.getTime())return'Today';if(dt.getTime()===tm.getTime())return'Tomorrow';return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function isOverdue(t){
@@ -2487,6 +2503,9 @@ async function runDayReset(lastDayPct, lastDayDone, lastDayTotal){
   });
   // Save the reset state immediately
   await savePlayerState();
+  // Re-render immediately so progress bar and task list reflect the new day
+  render();
+  updateNavStats();
 
   // ── Build XP/streak/reward data for the report modal ──
   const baseXP=calcBaseXP(lastDayDone||0, lastDayTotal||0);
