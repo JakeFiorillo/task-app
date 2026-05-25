@@ -916,6 +916,7 @@ const WEEKLY_TIERS={
 };
 
 const BOX_COSTS={common:15,uncommon:30,rare:50,epic:85,legendary:140,mythic:220,cosmic:400};
+const BOX_XP={common:3,uncommon:7,rare:15,epic:31,legendary:63,mythic:127,cosmic:255};
 const BOX_UNLOCK_LEVELS={common:1,uncommon:2,rare:5,epic:10,legendary:13,mythic:15,cosmic:18};
 
 // Drop rate tables per box rarity
@@ -1659,12 +1660,28 @@ function renderShop(){
   document.getElementById('box-shop').innerHTML=boxRarities.map(r=>{
     const ulv=BOX_UNLOCK_LEVELS[r];const cost=BOX_COSTS[r];const unlocked=lv>=ulv;
     const oddsBtn=unlocked?`<button class="odds-btn" tabindex="0">?${buildOddsTooltip(r)}</button>`:'';
-    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
+    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div style="display:flex;gap:8px;align-items:center"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<div style="font-size:11px;color:var(--accent);font-weight:600">+${BOX_XP[r]} XP</div>`:''}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
   }).join('');
   // Utilities section removed
 }
-function craftBox(r){if((player.dupePoints[r]||0)<100)return;player.dupePoints[r]-=100;showToast(`Crafted a ${r} box!`);openBox(r);}
-function buyBox(r,cost){if(player.coins<cost)return;player.coins-=cost;updateNavStats();openBox(r);}
+function craftBox(r){
+  if((player.dupePoints[r]||0)<100)return;
+  player.dupePoints[r]-=100;
+  const xp=BOX_XP[r]||0;
+  player.totalXP+=xp;
+  showToast(`Crafted a ${r} box! +${xp} XP`);
+  updateNavStats();
+  openBox(r);
+}
+function buyBox(r,cost){
+  if(player.coins<cost)return;
+  player.coins-=cost;
+  const xp=BOX_XP[r]||0;
+  player.totalXP+=xp;
+  updateNavStats();
+  savePlayerState();
+  openBox(r);
+}
 function buyStreakSaver(){if(player.coins<25)return;player.coins-=25;updateNavStats();showToast('🛡️ Streak Saver purchased!');renderShop();}
 
 // Pick a specific card for "Card" lottery prizes
