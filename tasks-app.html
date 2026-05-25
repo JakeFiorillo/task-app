@@ -2221,7 +2221,7 @@ function lotteryCard(l,idx,isWeekly){
       <div style="filter:blur(2px);opacity:0.4;pointer-events:none;">
         <div class="lottery-top">
           <div>
-            <div class="lottery-reward-name">${l.isRandom?l.name:'Guaranteed Card'}</div>
+            <div class="lottery-reward-name">${l.name}</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
               <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
               ${prizeDisplay}
@@ -2250,7 +2250,7 @@ function lotteryCard(l,idx,isWeekly){
   return`<div class="lottery-card ${isWeekly?'weekly-card':''}">
     <div class="lottery-top">
       <div>
-        <div class="lottery-reward-name">${l.isRandom?l.name:'Guaranteed Card'}</div>
+        <div class="lottery-reward-name">${l.name}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
           <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
           ${prizeDisplay}
@@ -2752,6 +2752,32 @@ function getTodayCompletionPct(){
 }
 
 // ── ENTER / SIGN OUT ──
+function syncSettingsUI(){
+  // Dropdowns
+  const tf=document.getElementById('setting-timeformat');
+  if(tf)tf.value=settings.timeFormat||'12';
+  const bg=document.getElementById('setting-bg');
+  if(bg)bg.value=settings.bg||'purple';
+  // Timezone — find closest option
+  const tz=document.getElementById('setting-timezone');
+  if(tz){
+    const val=String(settings.timezone||0);
+    let bestOpt=null,bestDiff=99;
+    for(const opt of tz.options){
+      const diff=Math.abs(parseFloat(opt.value)-parseFloat(val));
+      if(diff<bestDiff){bestDiff=diff;bestOpt=opt;}
+    }
+    if(bestOpt)bestOpt.selected=true;
+  }
+  // Toggles
+  ['largeText','colorBlind'].forEach(key=>{
+    const track=document.getElementById('toggle-'+key);
+    const label=document.getElementById('toggle-'+key+'-label');
+    if(track){if(settings[key]){track.classList.add('on');}else{track.classList.remove('on');}}
+    if(label)label.textContent=settings[key]?'On':'Off';
+  });
+}
+
 function enterApp(){
   document.getElementById('auth-screen').style.display='none';
   const name=currentUser?._displayName||currentUser?.user_metadata?.display_name||'';
@@ -2759,6 +2785,7 @@ function enterApp(){
   if(nameInput)nameInput.value=name;
   const emailInput=document.getElementById('setting-email');
   if(emailInput)emailInput.value=currentUser?.email||'';
+  syncSettingsUI();
   buildCatSelect();
   render();
   resetInactivityTimer();
