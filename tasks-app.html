@@ -2074,7 +2074,14 @@ function renderDailyReport(){
     html+=`</div>`;
   }
 
-  html+=`<button class="report-proceed-btn" onclick="proceedFromReport()">Claim & Continue →</button>`;
+  // Check if all claimable rewards have been claimed
+  const totalLevelRewards=d.levelUps?d.levelUps.length:0;
+  const totalWeeklyRewards=d.newWeeklyRewards?d.newWeeklyRewards.length:0;
+  const allClaimed=_reportLevelRewardsClaimed.size>=totalLevelRewards&&_reportWeeklyRewardsClaimed.size>=totalWeeklyRewards;
+  const hasUnclaimed=totalLevelRewards+totalWeeklyRewards>0;
+  const btnDisabled=hasUnclaimed&&!allClaimed;
+  const btnLabel=btnDisabled?`Claim all rewards to continue (${_reportLevelRewardsClaimed.size+_reportWeeklyRewardsClaimed.size}/${totalLevelRewards+totalWeeklyRewards} claimed)`:'Continue →';
+  html+=`<button class="report-proceed-btn" onclick="proceedFromReport()" ${btnDisabled?'disabled':''} style="${btnDisabled?'opacity:0.45;cursor:not-allowed;':''}">${btnLabel}</button>`;
   document.getElementById('daily-report-modal').innerHTML=html;
 }
 
