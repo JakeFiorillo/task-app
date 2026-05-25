@@ -995,12 +995,23 @@ let player={
 };
 
 function todayStr(){
-  // Use local date not UTC so tasks line up with the user's actual calendar day
+  // Use local date, but account for 4AM boundary:
+  // If it's between midnight and 4AM, we're still on the "previous" day
   const d=new Date();
+  if(d.getHours()<4){
+    // Treat as previous day
+    d.setDate(d.getDate()-1);
+  }
   const y=d.getFullYear();
   const m=String(d.getMonth()+1).padStart(2,'0');
   const day=String(d.getDate()).padStart(2,'0');
   return`${y}-${m}-${day}`;
+}
+
+// Raw calendar date without 4AM adjustment (for DB storage)
+function calendarDateStr(){
+  const d=new Date();
+  return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function dateOffset(days){
   const base=new Date();
@@ -1070,7 +1081,20 @@ function calcBaseXP(done,total){if(!total)return 0;const c=Math.min(total,20)-1;
 function getTodayTasks(){const t=todayStr();return tasks.filter(x=>x.freq==='daily'||x.freq==='weekly'||x.freq==='monthly'||(x.date&&x.date<=t));}
 function getCatById(id){return categories.find(c=>c.id===id)||{name:id,color:'#aaa'};}
 function formatDisplayDate(ds){if(!ds)return'';const[y,m,d]=ds.split('-').map(Number);const dt=new Date(y,m-1,d);const td=new Date();td.setHours(0,0,0,0);const tm=new Date(td);tm.setDate(td.getDate()+1);if(dt.getTime()===td.getTime())return'Today';if(dt.getTime()===tm.getTime())return'Tomorrow';return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
-function isOverdue(t){return!t.done&&t.date&&t.freq==='once'&&t.date<todayStr();}
+function isOverdue(t){
+  if(t.done||t.missed||t.freq!=='once'||!t.date)return false;
+  const today=todayStr();
+  if(t.date<today)return true;
+  // Same day but time has passed
+  if(t.date===today&&t.time){
+    const[h,m]=t.time.split(':').map(Number);
+    const now=new Date();
+    const taskDate=new Date();
+    taskDate.setHours(h,m,0,0);
+    return now>taskDate;
+  }
+  return false;
+}
 function formatTime(ts){if(!ts)return'';if(settings.timeFormat==='12'){const[h,m]=ts.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}return ts;}
 function showToast(msg){const el=document.getElementById('toast');el.innerHTML=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
 function updateNavStats(){document.getElementById('nav-xp').textContent=player.totalXP;document.getElementById('nav-coins').textContent=player.coins;document.getElementById('nav-streak').textContent=player.streak;document.getElementById('lottery-coins-val').textContent=player.coins;document.getElementById('shop-coins-label').textContent=`You have ${player.coins} coins`;}
@@ -1137,13 +1161,29 @@ function getViewRange(){
 function getVisibleTasks(){
   const range=getViewRange();
   let list=tasks.filter(t=>{
-    if(currentView==='missed') return t.missed===true&&!t.done;
+    if(currentView==='missed') return (t.missed||isOverdue(t))&&!t.done&&t.freq==='once';
     if(currentView==='all')return true;
     if(currentView==='today'){
       // Recurring tasks always show in today view
       if(t.freq!=='once')return true;
-      // One-time tasks: only show if due exactly today, not overdue (overdue goes to missed view)
-      return t.date && t.date===range.end;
+      // One-time tasks: show if due today (4AM-adjusted)
+      if(!t.date)return false;
+      if(t.date===range.end){
+        // Same day — exclude if time already passed
+        if(t.time){
+          const[h,m]=t.time.split(':').map(Number);
+          const taskTime=new Date();taskTime.setHours(h,m,0,0);
+          if(new Date()>taskTime)return false;
+        }
+        return true;
+      }
+      // Next calendar day but due before 4AM — show on today's view
+      const nextDay=dateOffset(1);
+      if(t.date===nextDay&&t.time){
+        const[h]=t.time.split(':').map(Number);
+        if(h<4)return true;
+      }
+      return false;
     }
     if(t.freq!=='once')return true;
     return t.date&&t.date>=range.start&&t.date<=range.end;
@@ -1177,7 +1217,7 @@ function updateBadges(){
   document.getElementById('badge-week').textContent=tasks.filter(x=>incomplete(x)&&fitsWeek(x)).length;
   document.getElementById('badge-month').textContent=tasks.filter(x=>incomplete(x)&&fitsMonth(x)).length;
   document.getElementById('badge-all').textContent=tasks.filter(x=>!x.done&&!x.missed).length;
-  const missedCount=tasks.filter(x=>x.missed&&!x.done).length;
+  const missedCount=tasks.filter(x=>(x.missed||isOverdue(x))&&!x.done&&x.freq==='once').length;
   document.getElementById('badge-missed').textContent=missedCount;
   const missedEl=document.getElementById('view-missed');
   if(missedEl) missedEl.style.display=missedCount>0?'flex':'none';
@@ -2389,8 +2429,8 @@ async function loadUserDataFromDB(){
         dupePoints:s.dupe_points||{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
       });
       const today=todayStr();
-      const lastReset=s.last_day_reset||today;
-      if(lastReset!==today){
+      const lastReset=s.last_day_reset||calendarDateStr();
+      if(lastReset!==calendarDateStr()){
         // Store report data — will be shown after enterApp() renders the UI
         await runDayReset(s.last_day_pct||0, s.last_day_done||0, s.last_day_total||0);
         window._pendingDailyReport=true;
@@ -2495,7 +2535,7 @@ async function savePlayerState(){
     daily_low_used:player.dailyLowUsed, daily_med_used:player.dailyMedUsed, daily_high_used:player.dailyHighUsed,
     weekly_pool:player.weeklyPool, weekly_achieved:player.weeklyAchieved, streak_saver_used_week:player.streakSaverUsedWeek,
     dupe_points:player.dupePoints,
-    last_day_reset:todayStr(), last_day_pct:getTodayCompletionPct(),
+    last_day_reset:calendarDateStr(), last_day_pct:getTodayCompletionPct(),
     last_day_done:getTodayTasks().filter(t=>t.done).length,
     last_day_total:getTodayTasks().length,
     updated_at:new Date().toISOString(),
@@ -2561,6 +2601,8 @@ function enterApp(){
   buildCatSelect();
   render();
   resetInactivityTimer();
+  // Mark any newly overdue tasks as missed
+  setTimeout(()=>markOverdueTasks(), 200);
   // Show daily report if one is pending from day reset
   setTimeout(()=>showPendingReport(), 400);
 }
@@ -2603,6 +2645,21 @@ setInterval(()=>{ if(currentUser) savePlayerState(); }, 60000);
 // Save on page unload
 window.addEventListener('beforeunload',()=>{ if(currentUser) savePlayerState(); });
 
+
+
+// Check for any tasks that have become overdue since last session and mark them missed
+function markOverdueTasks(){
+  const today=todayStr();
+  let changed=false;
+  tasks.forEach(t=>{
+    if(t.freq==='once'&&!t.done&&!t.missed&&t.date&&t.date<today){
+      t.missed=true;
+      changed=true;
+      saveTask(t); // save to DB
+    }
+  });
+  if(changed) render();
+}
 
 // ── RESCHEDULE MISSED TASK ──
 function openRescheduleModal(id){
