@@ -765,6 +765,13 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   </div>
 </div>
 </div>
+<!-- LEVEL UP MODAL -->
+<div class="modal-overlay" id="levelup-modal" style="z-index:450">
+  <div class="modal" style="width:420px;max-height:80vh;overflow-y:auto">
+    <div id="levelup-modal-content"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="reschedule-modal" onclick="closeModalOutside(event,'reschedule-modal')">
   <div class="modal" style="width:340px">
     <div class="modal-title">Reschedule Task</div>
@@ -2970,13 +2977,17 @@ async function awardXP(amount, source=''){
 
 let _levelupClaimed=new Set();
 
+let _currentLevelUps=[];
+
 function showLevelUpModal(levelUps){
   _levelupClaimed=new Set();
-  renderLevelUpModal(levelUps);
+  _currentLevelUps=levelUps;
+  renderLevelUpModal();
   document.getElementById('levelup-modal').classList.add('open');
 }
 
-function renderLevelUpModal(levelUps){
+function renderLevelUpModal(){
+  const levelUps=_currentLevelUps;
   const allClaimed=_levelupClaimed.size>=levelUps.length;
   let html=`<div style="text-align:center;margin-bottom:18px">
     <div style="font-size:36px">🎉</div>
@@ -2991,35 +3002,33 @@ function renderLevelUpModal(levelUps){
         <div class="reward-row-name">Level ${lu.level} — ${lu.benefit}</div>
         <div class="reward-row-sub">+${lu.coins} coins on claim</div>
       </div>
-      <button class="reward-claim-btn" onclick="claimLevelUpReward(${lu.level},${lu.coins},'${lu.benefit}',${JSON.stringify(levelUps).replace(/'/g,'"')})" ${claimed?'disabled':''}>
+      <button class="reward-claim-btn" onclick="claimLevelUpReward(${lu.level},${lu.coins},'${lu.benefit}')" ${claimed?'disabled':''}>
         ${claimed?'Claimed ✓':'Claim'}
       </button>
     </div>`;
   });
-  html+=`<button class="report-proceed-btn" onclick="closeLevelUpModal()" ${!allClaimed?'disabled':''} style="${!allClaimed?'opacity:0.45;cursor:not-allowed;margin-top:16px':'margin-top:16px'}">
+  html+=`<button class="report-proceed-btn" onclick="closeLevelUpModal()" ${!allClaimed?'disabled':''} style="${!allClaimed?'opacity:0.45;cursor:not-allowed;':''}margin-top:16px">
     ${!allClaimed?`Claim all rewards (${_levelupClaimed.size}/${levelUps.length})`:'Continue →'}
   </button>`;
   document.getElementById('levelup-modal-content').innerHTML=html;
 }
 
-function claimLevelUpReward(level, coins, benefit, levelUps){
+function claimLevelUpReward(level, coins, benefit){
   if(_levelupClaimed.has(level))return;
   _levelupClaimed.add(level);
   player.coins+=coins;
   showToast(`⭐ Level ${level} reward: +${coins} coins!`);
-  // Check if benefit is a pack — queue it to open
   const rarity=['cosmic','mythic','legendary','epic','rare','uncommon','common'].find(r=>benefit.toLowerCase().includes(r));
   if(rarity&&benefit.toLowerCase().includes('pack')){
     _pendingBoxOpens.push(rarity);
   }
   updateNavStats();
   savePlayerState();
-  renderLevelUpModal(levelUps);
+  renderLevelUpModal();
 }
 
 function closeLevelUpModal(){
   document.getElementById('levelup-modal').classList.remove('open');
-  // Open any pending pack rewards
   if(_pendingBoxOpens.length>0){
     const rarity=_pendingBoxOpens.shift();
     setTimeout(()=>openBox(rarity),300);
