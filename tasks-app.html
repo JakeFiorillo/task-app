@@ -618,11 +618,11 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <div class="page-title">Shop</div>
     <div class="page-sub" id="shop-coins-label">You have 142 coins</div>
     <div class="dupe-section">
-      <div class="dupe-title"><i class="ti ti-copy"></i> Craft Boxes from Duplicate Points (100 pts each)</div>
+      <div class="dupe-title"><i class="ti ti-copy"></i> Craft Packs from Duplicate Points (100 pts each)</div>
       <div id="dupe-craft-list"></div>
     </div>
     <div class="shop-section">
-      <div class="shop-section-title"><i class="ti ti-package"></i>Collectable Boxes</div>
+      <div class="shop-section-title"><i class="ti ti-package"></i>Collectable Packs</div>
       <div class="shop-grid" id="box-shop"></div>
     </div>
   </div>
@@ -879,23 +879,23 @@ const PRIORITY_SHAPES={high:'▲',medium:'●',low:'▼'};
 
 const LEVEL_DATA=[
   {level:1, xpNeeded:0,    totalXP:0,     benefit:'Basics Unlocked at Start',         coins:20, weeklyTier:1},
-  {level:2, xpNeeded:100,  totalXP:100,   benefit:'Uncommon Collectable Boxes',        coins:20, weeklyTier:1},
+  {level:2, xpNeeded:100,  totalXP:100,   benefit:'Uncommon Collectable Packs',        coins:20, weeklyTier:1},
   {level:3, xpNeeded:150,  totalXP:250,   benefit:'Daily Lotteries',                   coins:25, weeklyTier:1},
   {level:4, xpNeeded:200,  totalXP:450,   benefit:'Weekly Reward Tier 2 Unlocked',     coins:25, weeklyTier:2},
-  {level:5, xpNeeded:300,  totalXP:750,   benefit:'Rare Collectable Boxes',            coins:25, weeklyTier:2},
+  {level:5, xpNeeded:300,  totalXP:750,   benefit:'Rare Collectable Packs',            coins:25, weeklyTier:2},
   {level:6, xpNeeded:400,  totalXP:1150,  benefit:'Coin Task Increases',               coins:35, weeklyTier:2},
   {level:7, xpNeeded:500,  totalXP:1650,  benefit:'Weekly Lotteries',                  coins:35, weeklyTier:2},
-  {level:8, xpNeeded:650,  totalXP:2300,  benefit:'Epic Collectable Boxes',            coins:35, weeklyTier:2},
+  {level:8, xpNeeded:650,  totalXP:2300,  benefit:'Epic Collectable Packs',            coins:35, weeklyTier:2},
   {level:9, xpNeeded:800,  totalXP:3100,  benefit:'Weekly Reward Tier 3 Unlocked',     coins:50, weeklyTier:3},
   {level:10,xpNeeded:950,  totalXP:4050,  benefit:'Free Epic Card (user chooses)',     coins:50, weeklyTier:3},
   {level:11,xpNeeded:1150, totalXP:5200,  benefit:'Coin Task Increases',               coins:50, weeklyTier:3},
-  {level:12,xpNeeded:1350, totalXP:6550,  benefit:'Legendary Collectable Boxes',       coins:70, weeklyTier:3},
+  {level:12,xpNeeded:1350, totalXP:6550,  benefit:'Legendary Collectable Packs',       coins:70, weeklyTier:3},
   {level:13,xpNeeded:1550, totalXP:8100,  benefit:'Free Legendary Card (user chooses)',coins:70, weeklyTier:3},
   {level:14,xpNeeded:1800, totalXP:9900,  benefit:'Weekly Reward Tier 4 Unlocked',     coins:70, weeklyTier:4},
-  {level:15,xpNeeded:2050, totalXP:11950, benefit:'Mythic Collectable Boxes',          coins:100,weeklyTier:4},
+  {level:15,xpNeeded:2050, totalXP:11950, benefit:'Mythic Collectable Packs',          coins:100,weeklyTier:4},
   {level:16,xpNeeded:2300, totalXP:14250, benefit:'Coin Task Increases',               coins:100,weeklyTier:4},
   {level:17,xpNeeded:2600, totalXP:16850, benefit:'Free Mythic Card (user chooses)',   coins:100,weeklyTier:4},
-  {level:18,xpNeeded:2900, totalXP:19750, benefit:'Cosmic Collectable Boxes',          coins:150,weeklyTier:4},
+  {level:18,xpNeeded:2900, totalXP:19750, benefit:'Cosmic Collectable Packs',          coins:150,weeklyTier:4},
   {level:19,xpNeeded:3200, totalXP:22950, benefit:'Weekly Reward Tier 5 Unlocked',     coins:150,weeklyTier:5},
   {level:20,xpNeeded:3550, totalXP:26500, benefit:'Free Cosmic Card (user chooses)',   coins:150,weeklyTier:5},
 ];
@@ -908,19 +908,19 @@ const COIN_LEVELS=[
 ];
 
 const WEEKLY_TIERS={
-  1:[{pct:75,reward:'10 coins'},{pct:150,reward:'Common Box'},{pct:250,reward:'Uncommon Box'},{pct:375,reward:'25 coins'},{pct:550,reward:'Rare Box'}],
-  2:[{pct:75,reward:'20 coins'},{pct:150,reward:'2× Common Box'},{pct:250,reward:'Uncommon Box'},{pct:375,reward:'50 coins'},{pct:550,reward:'2× Rare Box'}],
-  3:[{pct:75,reward:'30 coins'},{pct:150,reward:'Uncommon Box'},{pct:250,reward:'3× Uncommon Box'},{pct:375,reward:'75 coins'},{pct:550,reward:'Epic Box'}],
-  4:[{pct:100,reward:'40 coins'},{pct:200,reward:'2× Uncommon Box'},{pct:300,reward:'2× Rare Box'},{pct:450,reward:'100 coins'},{pct:600,reward:'2× Epic Box'}],
-  5:[{pct:100,reward:'50 coins'},{pct:200,reward:'Rare Box'},{pct:300,reward:'3× Rare Box'},{pct:450,reward:'125 coins'},{pct:600,reward:'Legendary Box'}],
+  1:[{pct:75,reward:'10 coins'},{pct:150,reward:'Common Pack'},{pct:250,reward:'Uncommon Pack'},{pct:375,reward:'25 coins'},{pct:550,reward:'Rare Pack'}],
+  2:[{pct:75,reward:'20 coins'},{pct:150,reward:'2× Common Pack'},{pct:250,reward:'Uncommon Pack'},{pct:375,reward:'50 coins'},{pct:550,reward:'2× Rare Pack'}],
+  3:[{pct:75,reward:'30 coins'},{pct:150,reward:'Uncommon Pack'},{pct:250,reward:'3× Uncommon Pack'},{pct:375,reward:'75 coins'},{pct:550,reward:'Epic Pack'}],
+  4:[{pct:100,reward:'40 coins'},{pct:200,reward:'2× Uncommon Pack'},{pct:300,reward:'2× Rare Pack'},{pct:450,reward:'100 coins'},{pct:600,reward:'2× Epic Pack'}],
+  5:[{pct:100,reward:'50 coins'},{pct:200,reward:'Rare Pack'},{pct:300,reward:'3× Rare Pack'},{pct:450,reward:'125 coins'},{pct:600,reward:'Legendary Pack'}],
 };
 
-const BOX_COSTS={common:15,uncommon:30,rare:50,epic:85,legendary:140,mythic:220,cosmic:400};
-const BOX_XP={common:3,uncommon:7,rare:15,epic:31,legendary:63,mythic:127,cosmic:255};
-const BOX_UNLOCK_LEVELS={common:1,uncommon:2,rare:5,epic:10,legendary:13,mythic:15,cosmic:18};
+const PACK_COSTS={common:15,uncommon:30,rare:50,epic:85,legendary:140,mythic:220,cosmic:400};
+const PACK_XP={common:3,uncommon:7,rare:15,epic:31,legendary:63,mythic:127,cosmic:255};
+const PACK_UNLOCK_LEVELS={common:1,uncommon:2,rare:5,epic:10,legendary:13,mythic:15,cosmic:18};
 
 // Drop rate tables per box rarity
-const BOX_DROPS={
+const PACK_DROPS={
   common:   [{r:'common',w:75},{r:'uncommon',w:20},{r:'rare',w:5}],
   uncommon: [{r:'common',w:40},{r:'uncommon',w:45},{r:'rare',w:12},{r:'epic',w:3}],
   rare:     [{r:'common',w:15},{r:'uncommon',w:30},{r:'rare',w:45},{r:'epic',w:8},{r:'legendary',w:2}],
@@ -1064,20 +1064,20 @@ function makeLotteries(){
   const now=new Date();
   function hUTC(h){const t=new Date();t.setUTCHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.round((t-now)/3600000);}
   const dPool=[
-    {name:'Common Box',cost:5,maxEntries:7,winners:10},
+    {name:'Common Pack',cost:5,maxEntries:7,winners:10},
     {name:'Common Card',cost:10,maxEntries:6,winners:10},
-    {name:'Uncommon Box',cost:5,maxEntries:7,winners:8},
+    {name:'Uncommon Pack',cost:5,maxEntries:7,winners:8},
     {name:'Uncommon Card',cost:10,maxEntries:6,winners:8},
-    {name:'Rare Box',cost:10,maxEntries:6,winners:7},
+    {name:'Rare Pack',cost:10,maxEntries:6,winners:7},
     {name:'Rare Card',cost:15,maxEntries:5,winners:7},
-    {name:'Epic Box',cost:10,maxEntries:6,winners:5},
-    {name:'Legendary Box',cost:15,maxEntries:5,winners:3},
+    {name:'Epic Pack',cost:10,maxEntries:6,winners:5},
+    {name:'Legendary Pack',cost:15,maxEntries:5,winners:3},
   ];
   const wPool=[
-    {name:'Epic Box',cost:15,maxEntries:4,winners:8},
-    {name:'Legendary Box',cost:20,maxEntries:4,winners:5},
-    {name:'Mythic Box',cost:25,maxEntries:3,winners:3},
-    {name:'Cosmic Box',cost:35,maxEntries:2,winners:2},
+    {name:'Epic Pack',cost:15,maxEntries:4,winners:8},
+    {name:'Legendary Pack',cost:20,maxEntries:4,winners:5},
+    {name:'Mythic Pack',cost:25,maxEntries:3,winners:3},
+    {name:'Cosmic Pack',cost:35,maxEntries:2,winners:2},
     {name:'Cosmic Card',cost:40,maxEntries:1,winners:1},
   ];
   const sh=a=>[...a].sort(()=>0.5-Math.random());
@@ -1580,7 +1580,7 @@ function renderCollection(){
 
 // ══════════════ BOX OPENING ══════════════
 function rollCard(rarity){
-  const drops=BOX_DROPS[rarity]||BOX_DROPS.common;
+  const drops=PACK_DROPS[rarity]||PACK_DROPS.common;
   const total=drops.reduce((s,d)=>s+d.w,0);let roll=Math.random()*total;
   for(const d of drops){roll-=d.w;if(roll<=0){return d.r;}}return drops[drops.length-1].r;
 }
@@ -1642,7 +1642,7 @@ async function closeBoxOpen(){
 // Spawn one new daily lottery (to add after one expires)
 // Build odds tooltip HTML for a box rarity
 function buildOddsTooltip(rarity){
-  const drops=BOX_DROPS[rarity]||[];
+  const drops=PACK_DROPS[rarity]||[];
   const total=drops.reduce((s,d)=>s+d.w,0);
   const rows=drops.map(d=>`<div class="odds-row"><span class="odds-rarity" style="color:${RARITY_COLORS[d.r]}">${d.r.charAt(0).toUpperCase()+d.r.slice(1)}</span><span class="odds-pct">${Math.round((d.w/total)*100)}%</span></div>`).join('');
   return`<div class="odds-tooltip"><div style="font-weight:700;margin-bottom:6px;border-bottom:0.5px solid rgba(255,255,255,0.2);padding-bottom:4px">Drop Rates</div>${rows}</div>`;
@@ -1658,18 +1658,18 @@ function renderShop(){
   }).join('');
   const boxRarities=['common','uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('box-shop').innerHTML=boxRarities.map(r=>{
-    const ulv=BOX_UNLOCK_LEVELS[r];const cost=BOX_COSTS[r];const unlocked=lv>=ulv;
+    const ulv=PACK_UNLOCK_LEVELS[r];const cost=PACK_COSTS[r];const unlocked=lv>=ulv;
     const oddsBtn=unlocked?`<button class="odds-btn" tabindex="0">?${buildOddsTooltip(r)}</button>`:'';
-    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Box</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div style="display:flex;gap:8px;align-items:center"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<div style="font-size:11px;color:var(--accent);font-weight:600">+${BOX_XP[r]} XP</div>`:''}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
+    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Pack</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div style="display:flex;gap:8px;align-items:center"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<div style="font-size:11px;color:var(--accent);font-weight:600">+${PACK_XP[r]} XP</div>`:''}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
   }).join('');
   // Utilities section removed
 }
 async function craftBox(r){
   if((player.dupePoints[r]||0)<100)return;
   player.dupePoints[r]-=100;
-  const xp=BOX_XP[r]||0;
+  const xp=PACK_XP[r]||0;
   player.totalXP+=xp;
-  showToast(`Crafted a ${r} box! +${xp} XP`);
+  showToast(`Crafted a ${r} pack! +${xp} XP`);
   updateNavStats();
   await savePlayerState();
   openBox(r);
@@ -1677,9 +1677,9 @@ async function craftBox(r){
 async function buyBox(r,cost){
   if(player.coins<cost)return;
   player.coins-=cost;
-  const xp=BOX_XP[r]||0;
+  const xp=PACK_XP[r]||0;
   player.totalXP+=xp;
-  showToast(`+${xp} XP from ${r.charAt(0).toUpperCase()+r.slice(1)} Box!`);
+  showToast(`+${xp} XP from ${r.charAt(0).toUpperCase()+r.slice(1)} Pack!`);
   updateNavStats();
   await savePlayerState();
   openBox(r);
@@ -1696,20 +1696,20 @@ function pickSpecificCard(rarity){
 
 // Lottery pools
 const DAILY_POOL=[
-  {name:'Common Box',                  isRandom:true, rarity:'common',   cost:5, maxEntries:7,winners:10},
+  {name:'Common Pack',                  isRandom:true, rarity:'common',   cost:5, maxEntries:7,winners:10},
   {name:pickSpecificCard('common'),    isRandom:false,rarity:'common',   cost:10,maxEntries:6,winners:10},
-  {name:'Uncommon Box',                isRandom:true, rarity:'uncommon', cost:5, maxEntries:7,winners:8},
+  {name:'Uncommon Pack',                isRandom:true, rarity:'uncommon', cost:5, maxEntries:7,winners:8},
   {name:pickSpecificCard('uncommon'),  isRandom:false,rarity:'uncommon', cost:10,maxEntries:6,winners:8},
-  {name:'Rare Box',                    isRandom:true, rarity:'rare',     cost:10,maxEntries:6,winners:7},
+  {name:'Rare Pack',                    isRandom:true, rarity:'rare',     cost:10,maxEntries:6,winners:7},
   {name:pickSpecificCard('rare'),      isRandom:false,rarity:'rare',     cost:15,maxEntries:5,winners:7},
-  {name:'Epic Box',                    isRandom:true, rarity:'epic',     cost:10,maxEntries:6,winners:5},
-  {name:'Legendary Box',               isRandom:true, rarity:'legendary',cost:15,maxEntries:5,winners:3},
+  {name:'Epic Pack',                    isRandom:true, rarity:'epic',     cost:10,maxEntries:6,winners:5},
+  {name:'Legendary Pack',               isRandom:true, rarity:'legendary',cost:15,maxEntries:5,winners:3},
 ];
 const WEEKLY_POOL=[
-  {name:'Epic Box',                    isRandom:true, rarity:'epic',     cost:15,maxEntries:4,winners:8},
-  {name:'Legendary Box',               isRandom:true, rarity:'legendary',cost:20,maxEntries:4,winners:5},
-  {name:'Mythic Box',                  isRandom:true, rarity:'mythic',   cost:25,maxEntries:3,winners:3},
-  {name:'Cosmic Box',                  isRandom:true, rarity:'cosmic',   cost:35,maxEntries:2,winners:2},
+  {name:'Epic Pack',                    isRandom:true, rarity:'epic',     cost:15,maxEntries:4,winners:8},
+  {name:'Legendary Pack',               isRandom:true, rarity:'legendary',cost:20,maxEntries:4,winners:5},
+  {name:'Mythic Pack',                  isRandom:true, rarity:'mythic',   cost:25,maxEntries:3,winners:3},
+  {name:'Cosmic Pack',                  isRandom:true, rarity:'cosmic',   cost:35,maxEntries:2,winners:2},
   {name:pickSpecificCard('cosmic'),    isRandom:false,rarity:'cosmic',   cost:40,maxEntries:1,winners:1},
 ];
 
@@ -1853,10 +1853,8 @@ async function fetchLotteriesFromDB(){
   }
   console.log('Found',dbLotteries.length,'active lotteries');
 
-  // Handle expired ones
+  // Filter to active only — edge function handles expired ones
   const now=new Date();
-  const expired=dbLotteries.filter(l=>new Date(l.closes_at)<=now);
-  for(const l of expired) await handleExpiredLottery(l);
   const active=dbLotteries.filter(l=>new Date(l.closes_at)>now);
   if(active.length===0){lotteries={daily:[],weekly:[]};return;}
 
@@ -1894,7 +1892,7 @@ async function handleExpiredLottery(lottery){
     const shuffled=[...entries].sort(()=>0.5-Math.random());
     const winnerIds=[...new Set(shuffled.slice(0,Math.min(lottery.winners,shuffled.length)).map(e=>e.user_id))];
     const rewards=winnerIds.map(uid=>({
-      user_id:uid, reward_type:lottery.is_random?'box':'card',
+      user_id:uid, reward_type:lottery.is_random?'pack':'card',
       reward_value:lottery.rarity, rarity:lottery.rarity,
       lottery_name:lottery.name, claimed:false,
     }));
@@ -2083,7 +2081,7 @@ function claimLevelReward(level,coins,benefit){
     :benefit.toLowerCase().includes('rare')?'rare'
     :benefit.toLowerCase().includes('uncommon')?'uncommon'
     :benefit.toLowerCase().includes('common')?'common':null;
-  if(rarity&&benefit.toLowerCase().includes('box')){
+  if(rarity&&benefit.toLowerCase().includes('pack')){
     // Queue box open after report closes
     _pendingBoxOpens.push(rarity);
   }
@@ -2101,7 +2099,7 @@ function claimWeeklyReward(pct,reward){
     showToast(`🏆 Weekly reward: +${amt} coins!`);
   } else {
     // It's a box — parse count and rarity
-    const match=reward.match(/(\d+)?×?\s*(\w+)\s+box/i);
+    const match=reward.match(/(\d+)?×?\s*(\w+)\s+pack/i);
     if(match){
       const count=parseInt(match[1]||1);
       const rarity=match[2].toLowerCase();
@@ -2152,7 +2150,7 @@ async function proceedFromReport(){
 async function showNextLotteryReward(){
   if(_pendingLotteryRewards.length===0)return;
   const reward=_pendingLotteryRewards.shift();
-  if(reward.reward_type==='box'||reward.reward_type==='card'){
+  if(reward.reward_type==='pack'||reward.reward_type==='card'){
     openBox(reward.rarity);
     // After box close, next lottery reward shown via closeBoxOpen
   } else if(reward.reward_type==='coins'){
