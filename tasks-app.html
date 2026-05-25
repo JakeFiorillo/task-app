@@ -1210,14 +1210,10 @@ function getVisibleTasks(){
         if(!t.date)return false;
         const dayAfterEnd=dateOffset_from(range.end,1);
         if(t.date>=range.start&&t.date<=range.end){
-          // Exclude pre-4AM tasks that belong to the day before range.start
-          if(t.date===range.start&&t.time){
-            const[h]=t.time.split(':').map(Number);
-            if(h<4)return false; // belongs to previous period
-          }
+          if(t.date===range.start&&t.time&&parseInt(t.time.split(':')[0])<4)return false;
           return true;
         }
-        if(t.date===dayAfterEnd&&t.time){const[h]=t.time.split(':').map(Number);if(h<4)return true;}
+        if(t.date===dayAfterEnd&&t.time&&parseInt(t.time.split(':')[0])<4)return true;
         return false;
       }
     }
@@ -1240,6 +1236,9 @@ function getVisibleTasks(){
       if(t.date===range.start&&t.time&&parseInt(t.time.split(':')[0])<4)return false;
       return true;
     }
+    // Pre-4AM tasks on the day after range.end belong to this period's last day
+    const dayAfterRangeEnd=dateOffset_from(range.end,1);
+    if(t.date===dayAfterRangeEnd&&t.time&&parseInt(t.time.split(':')[0])<4)return true;
     return false;
   });
   if(activeFilters.has('incomplete'))list=list.filter(t=>!t.done);
