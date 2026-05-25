@@ -1178,6 +1178,8 @@ function getVisibleTasks(){
   const range=getViewRange();
   let list=tasks.filter(t=>{
     if(currentView==='missed') return (t.missed||isOverdue(t))&&!t.done&&t.freq==='once';
+    // Exclude missed/overdue tasks from all other views
+    if(t.missed||(isOverdue(t)&&t.freq==='once')) return false;
     if(currentView==='all')return true;
     if(currentView==='today'){
       // Recurring tasks always show in today view
@@ -2498,6 +2500,7 @@ async function runDayReset(lastDayPct, lastDayDone, lastDayTotal){
   tasks.forEach(t=>{
     if(t.freq==='once'&&!t.done&&!t.missed&&t.date&&t.date<today){
       t.missed=true;
+      t.pinned=false; // unpin missed tasks
       saveTask(t);
     }
   });
@@ -2670,10 +2673,8 @@ function markOverdueTasks(){
     if(t.freq!=='once'||t.done||t.missed||!t.date)return;
     let isNowOverdue=false;
     if(t.date<today){
-      // Previous day — definitely overdue
       isNowOverdue=true;
     } else if(t.date===today&&t.time){
-      // Same day — check if time has passed
       const[h,m]=t.time.split(':').map(Number);
       const taskTime=new Date();
       taskTime.setHours(h,m,0,0);
@@ -2681,6 +2682,7 @@ function markOverdueTasks(){
     }
     if(isNowOverdue){
       t.missed=true;
+      t.pinned=false; // unpin missed tasks
       changed=true;
       saveTask(t);
     }
