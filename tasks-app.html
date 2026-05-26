@@ -2888,8 +2888,14 @@ function enterApp(){
   resetInactivityTimer();
   // Mark any newly overdue tasks as missed
   setTimeout(()=>markOverdueTasks(), 200);
-  // Show daily report if one is pending from day reset
-  setTimeout(()=>showPendingReport(), 400);
+  // Show daily report if pending, otherwise show any lottery rewards directly
+  setTimeout(()=>{
+    if(_reportData){
+      showPendingReport();
+    } else if(_pendingLotteryRewards.length>0){
+      showNextLotteryReward();
+    }
+  }, 400);
 }
 
 async function signOut(){
