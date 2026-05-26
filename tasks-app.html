@@ -2333,24 +2333,30 @@ async function loadPastLotteries(){
     grid.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">No lotteries concluded in the last 48 hours.</div>';
     return;
   }
-  // Get winners for these lotteries
+  // Get user's own entries and rewards for these lotteries
   const lotteryIds=pastLotteries.map(l=>l.id);
-  const {data:rewards}=await sb.from('pending_rewards')
-    .select('lottery_name,user_id,rarity').in('lottery_name',pastLotteries.map(l=>l.name));
-  // Get winner display names
-  const winnerUserIds=[...new Set((rewards||[]).map(r=>r.user_id))];
-  const {data:profiles}=await sb.from('profiles').select('id,display_name').in('id',winnerUserIds);
-  const nameMap={};
-  (profiles||[]).forEach(p=>nameMap[p.id]=p.display_name);
+  const {data:myEntries}=currentUser?await sb.from('lottery_entries')
+    .select('lottery_id').eq('user_id',currentUser.id).in('lottery_id',lotteryIds):{data:[]};
+  const {data:myRewards}=currentUser?await sb.from('pending_rewards')
+    .select('lottery_name').eq('user_id',currentUser.id):{data:[]};
+  const enteredIds=new Set((myEntries||[]).map(r=>r.lottery_id));
+  const wonNames=new Set((myRewards||[]).map(r=>r.lottery_name));
 
   grid.innerHTML=pastLotteries.map(l=>{
     const rc=RARITY_COLORS[l.rarity]||'var(--accent)';
     const rl=l.rarity?l.rarity.charAt(0).toUpperCase()+l.rarity.slice(1):'';
     const closeTime=tsToDayLocal(l.closes_at)+' '+tsToLocal(l.closes_at);
-    const lotteryWinners=(rewards||[]).filter(r=>r.lottery_name===l.name);
-    const winnerNames=lotteryWinners.map(r=>nameMap[r.user_id]||'Unknown').filter(Boolean);
-    const uniqueWinners=[...new Set(winnerNames)];
-    return`<div class="lottery-card" style="margin-bottom:10px;opacity:0.85">
+    const entered=enteredIds.has(l.id);
+    const won=wonNames.has(l.name);
+    let resultBadge='';
+    if(won){
+      resultBadge=`<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#f0fdf4;border-radius:var(--radius);border:0.5px solid #86efac"><i class="ti ti-trophy" style="color:#059669"></i><span style="font-size:12px;font-weight:600;color:#059669">You won this lottery!</span></div>`;
+    } else if(entered){
+      resultBadge=`<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fff1f2;border-radius:var(--radius);border:0.5px solid #fda4af"><i class="ti ti-x" style="color:#e11d48"></i><span style="font-size:12px;font-weight:600;color:#e11d48">You entered but didn't win</span></div>`;
+    } else {
+      resultBadge=`<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border)"><i class="ti ti-minus" style="color:var(--text3)"></i><span style="font-size:12px;color:var(--text3)">You didn't enter</span></div>`;
+    }
+    return`<div class="lottery-card" style="margin-bottom:10px;opacity:0.9">
       <div class="lottery-top">
         <div>
           <div class="lottery-reward-name">${l.name}</div>
@@ -2361,13 +2367,7 @@ async function loadPastLotteries(){
         </div>
         <span style="font-size:11px;color:var(--text3);white-space:nowrap">Closed ${closeTime}</span>
       </div>
-      <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">🏆 Winners</div>
-        ${uniqueWinners.length>0
-          ?uniqueWinners.map(n=>`<div style="font-size:13px;color:var(--text);padding:3px 0;display:flex;align-items:center;gap:6px"><i class="ti ti-crown" style="color:#b45309;font-size:13px"></i>${n}</div>`).join('')
-          :'<div style="font-size:12px;color:var(--text3)">No winners — no entries were submitted.</div>'
-        }
-      </div>
+      <div style="margin-top:10px">${resultBadge}</div>
     </div>`;
   }).join('');
 }
