@@ -668,29 +668,40 @@ body.large-text .task-name { font-size:16px; }
     <div class="page-title" style="margin-bottom:16px">Settings</div>
     <div class="settings-section">
       <div class="settings-section-title">Account</div>
-      <div class="setting-row">
-        <div class="setting-info">
-          <div class="setting-label">Display Name</div>
-          <div class="setting-desc" id="name-change-desc">Your name shown in the app</div>
+      <div class="setting-row" style="align-items:flex-start;gap:24px">
+        <!-- Left column: name, email, sign out -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:0">
+          <div style="padding:12px 0;border-bottom:0.5px solid var(--border)">
+            <div class="setting-label">Display Name</div>
+            <div class="setting-desc" id="name-change-desc">First change is free · 2-30 characters</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+              <input type="text" id="setting-name" style="flex:1;padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+              <button class="shop-buy-btn" onclick="saveDisplayName()" id="name-save-btn" style="background:var(--accent);white-space:nowrap">Save</button>
+            </div>
+          </div>
+          <div style="padding:12px 0;border-bottom:0.5px solid var(--border)">
+            <div class="setting-label">Email</div>
+            <div class="setting-desc">Cannot be changed after signup</div>
+            <input type="text" id="setting-email" value="" disabled style="margin-top:8px;width:100%;padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font-family:inherit;opacity:0.7" />
+          </div>
+          <div style="padding:12px 0">
+            <div class="setting-label">Sign Out</div>
+            <div class="setting-desc">Save your data and return to the login screen</div>
+            <button class="shop-buy-btn" onclick="signOut()" style="background:#6b6388;margin-top:8px">Sign Out</button>
+          </div>
         </div>
-        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="setting-name" style="min-width:160px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
-          <button class="shop-buy-btn" onclick="saveDisplayName()" id="name-save-btn" style="background:var(--accent);white-space:nowrap">Save</button>
-        </div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Email</div><div class="setting-desc">Cannot be changed after signup</div></div>
-        <div class="setting-control"><input type="text" id="setting-email" value="" disabled style="min-width:160px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font-family:inherit;opacity:0.7" /></div>
-      </div>
-      <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
-        <div class="setting-info"><div class="setting-label">Change Password</div><div class="setting-desc">Enter your current password then choose a new one</div></div>
-        <div style="display:flex;flex-direction:column;gap:8px;width:100%">
-          <input type="password" id="pw-current" placeholder="Current password" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;max-width:340px" />
-          <input type="password" id="pw-new" placeholder="New password (min 8 chars + number/symbol)" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;max-width:340px" />
-          <input type="password" id="pw-confirm" placeholder="Confirm new password" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;max-width:340px" />
-          <div id="pw-error" style="font-size:12px;color:#A32D2D;background:#FCEBEB;border:0.5px solid #F09595;border-radius:var(--radius);padding:6px 10px;display:none"></div>
-          <div id="pw-success" style="font-size:12px;color:#059669;background:#f0fdf4;border:0.5px solid #86efac;border-radius:var(--radius);padding:6px 10px;display:none"></div>
-          <button class="shop-buy-btn" onclick="changePassword()" style="background:var(--accent);width:fit-content">Update Password</button>
+        <!-- Right column: change password -->
+        <div style="flex:1;padding:12px 0">
+          <div class="setting-label">Change Password</div>
+          <div class="setting-desc">Enter your current password then choose a new one</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <input type="password" id="pw-current" placeholder="Current password" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+            <input type="password" id="pw-new" placeholder="New password (min 8 chars + number/symbol)" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+            <input type="password" id="pw-confirm" placeholder="Confirm new password" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+            <div id="pw-error" style="font-size:12px;color:#A32D2D;background:#FCEBEB;border:0.5px solid #F09595;border-radius:var(--radius);padding:6px 10px;display:none"></div>
+            <div id="pw-success" style="font-size:12px;color:#059669;background:#f0fdf4;border:0.5px solid #86efac;border-radius:var(--radius);padding:6px 10px;display:none"></div>
+            <button class="shop-buy-btn" onclick="changePassword()" style="background:var(--accent);width:fit-content">Update Password</button>
+          </div>
         </div>
       </div>
     </div>
