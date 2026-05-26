@@ -1967,13 +1967,10 @@ async function seedLotteriesIfNeeded(){
 async function fetchLotteriesFromDB(){
   const {data:dbLotteries,error}=await sb.from('lotteries')
     .select('*').eq('is_active',true).order('closes_at');
-  console.log('fetchLotteries: data=',dbLotteries?.length,'error=',error?.message);
   if(error){console.error('Lottery fetch error:',error.message);lotteries={daily:[],weekly:[]};return;}
   if(!dbLotteries||dbLotteries.length===0){
-    console.log('No active lotteries in DB');
     lotteries={daily:[],weekly:[]};return;
   }
-  console.log('Raw lotteries from DB:',dbLotteries.map(l=>l.slot_key+':'+l.name+':'+l.is_weekly));
 
   // Show all active lotteries from DB — edge function handles expiry and spawning
   const active=dbLotteries;
@@ -2001,7 +1998,6 @@ async function fetchLotteriesFromDB(){
   });
   lotteries.daily=active.filter(l=>!l.is_weekly).map(l=>mapLottery(l,false));
   lotteries.weekly=active.filter(l=>l.is_weekly).map(l=>mapLottery(l,true));
-  console.log('Daily lotteries:',lotteries.daily.length,'Weekly:',lotteries.weekly.length);
 }
 
 // Draw winners, distribute pending rewards, spawn next lottery
