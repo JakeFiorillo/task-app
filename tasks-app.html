@@ -999,15 +999,41 @@ const XP_TABLE=[
 ];
 
 const STREAK_DATA=[
-  {day:1,mult:1.05,pct:70},{day:2,mult:1.10,pct:70},{day:3,mult:1.15,pct:70},{day:4,mult:1.20,pct:70},
-  {day:5,mult:1.25,pct:75},{day:6,mult:1.30,pct:75},{day:7,mult:1.34,pct:75},{day:8,mult:1.38,pct:75},
-  {day:9,mult:1.42,pct:80},{day:10,mult:1.46,pct:80},{day:11,mult:1.50,pct:80},{day:12,mult:1.53,pct:80},
-  {day:13,mult:1.56,pct:84},{day:14,mult:1.59,pct:84},{day:15,mult:1.62,pct:84},{day:16,mult:1.65,pct:84},
-  {day:17,mult:1.68,pct:88},{day:18,mult:1.71,pct:88},{day:19,mult:1.74,pct:88},{day:20,mult:1.76,pct:88},
-  {day:21,mult:1.78,pct:90},{day:22,mult:1.80,pct:90},{day:23,mult:1.82,pct:90},{day:24,mult:1.84,pct:90},
-  {day:25,mult:1.86,pct:92},{day:26,mult:1.88,pct:92},{day:27,mult:1.90,pct:92},{day:28,mult:1.92,pct:92},
-  {day:29,mult:1.94,pct:94},{day:30,mult:1.95,pct:94},{day:31,mult:1.96,pct:94},{day:32,mult:1.97,pct:94},
-  {day:33,mult:1.98,pct:95},{day:34,mult:1.99,pct:95},{day:35,mult:2.00,pct:95},
+  {day:1, mult:1.05,pct:70,minTasks:5},
+  {day:2, mult:1.10,pct:70,minTasks:5},
+  {day:3, mult:1.15,pct:70,minTasks:5},
+  {day:4, mult:1.20,pct:70,minTasks:5},
+  {day:5, mult:1.25,pct:75,minTasks:5},
+  {day:6, mult:1.30,pct:75,minTasks:5},
+  {day:7, mult:1.34,pct:75,minTasks:5},
+  {day:8, mult:1.38,pct:75,minTasks:6},
+  {day:9, mult:1.42,pct:80,minTasks:6},
+  {day:10,mult:1.46,pct:80,minTasks:6},
+  {day:11,mult:1.50,pct:80,minTasks:6},
+  {day:12,mult:1.53,pct:80,minTasks:6},
+  {day:13,mult:1.56,pct:84,minTasks:6},
+  {day:14,mult:1.59,pct:84,minTasks:6},
+  {day:15,mult:1.62,pct:84,minTasks:7},
+  {day:16,mult:1.65,pct:84,minTasks:7},
+  {day:17,mult:1.68,pct:88,minTasks:7},
+  {day:18,mult:1.71,pct:88,minTasks:7},
+  {day:19,mult:1.74,pct:88,minTasks:7},
+  {day:20,mult:1.76,pct:88,minTasks:7},
+  {day:21,mult:1.78,pct:90,minTasks:8},
+  {day:22,mult:1.80,pct:90,minTasks:8},
+  {day:23,mult:1.82,pct:90,minTasks:8},
+  {day:24,mult:1.84,pct:90,minTasks:8},
+  {day:25,mult:1.86,pct:92,minTasks:8},
+  {day:26,mult:1.88,pct:92,minTasks:9},
+  {day:27,mult:1.90,pct:92,minTasks:9},
+  {day:28,mult:1.92,pct:92,minTasks:9},
+  {day:29,mult:1.94,pct:94,minTasks:9},
+  {day:30,mult:1.95,pct:94,minTasks:9},
+  {day:31,mult:1.96,pct:94,minTasks:10},
+  {day:32,mult:1.97,pct:94,minTasks:10},
+  {day:33,mult:1.98,pct:95,minTasks:10},
+  {day:34,mult:1.99,pct:95,minTasks:10},
+  {day:35,mult:2.00,pct:95,minTasks:10},
 ];
 
 const CAT_COLORS=['#9b87d6','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c','#a78bfa','#f472b6','#2dd4bf','#94a3b8'];
@@ -1569,7 +1595,7 @@ function renderGamePage(){
   const si=getStreakInfo();
   document.getElementById('g-streak').textContent=player.streak;
   document.getElementById('streak-mult-label').textContent=`${si.mult.toFixed(2)}x XP multiplier`;
-  document.getElementById('streak-pct-label').textContent=`Need ${si.pct}% completion to maintain`;
+  document.getElementById('streak-pct-label').textContent=`Need ${si.pct}% completion · ${si.minTasks} min tasks`;
   const cl=getCoinLevel(lv);
   document.getElementById('g-coins').textContent=player.coins;
   document.getElementById('coin-pool-val').textContent=`${player.coinPool}/${cl.maxPool}`;
@@ -2055,10 +2081,14 @@ function renderDailyReport(){
       <div class="streak-status-text">
         <div class="streak-status-title">${d.keptStreak
           ?`Streak kept! Now ${d.newStreakIfKept} days 🎉`
-          :`Streak ${d.currentStreak>0?'lost':''}${d.currentStreak===0?'still at 0':''}` }</div>
+          :`Streak ${d.currentStreak>0?'lost':'still at 0'}`}</div>
         <div class="streak-status-sub">${d.keptStreak
-          ?`You completed ${d.pctDone}% — needed ${d.neededPct}%`
-          :`You completed ${d.pctDone}% — needed ${d.neededPct}%. Your streak will go from ${d.currentStreak} → ${d.newStreakIfLost}.`}</div>
+          ?`You completed ${d.pctDone}% with ${d.total} tasks — both requirements met`
+          :!d.metMin
+            ?`Not enough tasks — needed ${d.minTasks}, had ${d.total}. Your streak will go from ${d.currentStreak} → ${d.newStreakIfLost}.`
+            :`You completed ${d.pctDone}% — needed ${d.neededPct}%. Your streak will go from ${d.currentStreak} → ${d.newStreakIfLost}.`
+        }</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Requirements: ${d.neededPct}% completion · ${d.minTasks} minimum tasks</div>
       </div>
       ${!d.keptStreak&&d.currentStreak>0&&!player.streakSaverUsedWeek&&!_reportStreakSaverUsed&&player.coins>=25
         ?`<button class="streak-saver-btn" onclick="useStreakSaverInReport()">🛡️ Use Streak Saver (25 coins)</button>`
@@ -2688,8 +2718,8 @@ async function handleSignup(){
     btn.disabled=false;btn.textContent='Create Account';
     enterApp();
   } catch(e){
-    console.error('Signup error:',e);
-    showAuthError('signup','Something went wrong. Please try again.');
+    console.error('Signup error full:',e, e?.message, e?.stack);
+    showAuthError('signup','Something went wrong: '+(e?.message||JSON.stringify(e)));
     btn.disabled=false;btn.textContent='Create Account';
   }
 }
@@ -2824,7 +2854,10 @@ async function runDayReset(lastDayPct, lastDayDone, lastDayTotal){
   const earnedXP=Math.round(baseXP*streakMult);
   const pctDone=lastDayTotal>0?Math.round(((lastDayDone||0)/lastDayTotal)*100):0;
   const neededPct=si.pct;
-  const keptStreak=pctDone>=neededPct;
+  const minTasks=si.minTasks||5;
+  const metPct=pctDone>=neededPct;
+  const metMin=(lastDayTotal||0)>=minTasks;
+  const keptStreak=metPct&&metMin;
   const newStreakIfKept=Math.min(player.streak+1,35);
   const newStreakIfLost=Math.floor(player.streak*(1-0.4));
   const newWeeklyPool=Math.min(player.weeklyPool+pctDone,700);
@@ -2845,7 +2878,8 @@ async function runDayReset(lastDayPct, lastDayDone, lastDayTotal){
     baseXP, streakMult, earnedXP,
     keptStreak, newStreakIfKept, newStreakIfLost,
     currentStreak:player.streak,
-    neededPct, cl, newWeeklyPool, newWeeklyRewards,
+    neededPct, minTasks, metPct, metMin,
+    cl, newWeeklyPool, newWeeklyRewards,
     levelUps, oldLv, newLv, newTotalXP,
   });
 }
