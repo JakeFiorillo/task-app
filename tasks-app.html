@@ -669,16 +669,29 @@ body.large-text .task-name { font-size:16px; }
     <div class="settings-section">
       <div class="settings-section-title">Account</div>
       <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Display Name</div><div class="setting-desc">Your name shown in the app</div></div>
-        <div class="setting-control"><input type="text" id="setting-name" value="Player One" /></div>
+        <div class="setting-info">
+          <div class="setting-label">Display Name</div>
+          <div class="setting-desc" id="name-change-desc">Your name shown in the app</div>
+        </div>
+        <div class="setting-control" style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="setting-name" style="min-width:160px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none" />
+          <button class="shop-buy-btn" onclick="saveDisplayName()" id="name-save-btn" style="background:var(--accent);white-space:nowrap">Save</button>
+        </div>
       </div>
       <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Email</div><div class="setting-desc">Account email address</div></div>
-        <div class="setting-control"><input type="text" id="setting-email" value="" /></div>
+        <div class="setting-info"><div class="setting-label">Email</div><div class="setting-desc">Cannot be changed after signup</div></div>
+        <div class="setting-control"><input type="text" id="setting-email" value="" disabled style="min-width:160px;padding:6px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font-family:inherit;opacity:0.7" /></div>
       </div>
-      <div class="setting-row">
-        <div class="setting-info"><div class="setting-label">Sign Out</div><div class="setting-desc">Save your data and return to the login screen</div></div>
-        <div class="setting-control"><button class="shop-buy-btn" onclick="signOut()" style="background:#6b6388">Sign Out</button></div>
+      <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div class="setting-info"><div class="setting-label">Change Password</div><div class="setting-desc">Enter your current password then choose a new one</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;width:100%">
+          <input type="password" id="pw-current" placeholder="Current password" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;max-width:340px" />
+          <input type="password" id="pw-new" placeholder="New password (min 8 chars + number/symbol)" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;max-width:340px" />
+          <input type="password" id="pw-confirm" placeholder="Confirm new password" style="padding:7px 11px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;max-width:340px" />
+          <div id="pw-error" style="font-size:12px;color:#A32D2D;background:#FCEBEB;border:0.5px solid #F09595;border-radius:var(--radius);padding:6px 10px;display:none"></div>
+          <div id="pw-success" style="font-size:12px;color:#059669;background:#f0fdf4;border:0.5px solid #86efac;border-radius:var(--radius);padding:6px 10px;display:none"></div>
+          <button class="shop-buy-btn" onclick="changePassword()" style="background:var(--accent);width:fit-content">Update Password</button>
+        </div>
       </div>
     </div>
     <div class="settings-section">
@@ -1069,7 +1082,7 @@ let player={
   totalXP:0, coins:100, streak:0,
   coinPool:100, coinsEarnedToday:0,
   dailyLowUsed:0, dailyMedUsed:0, dailyHighUsed:0,
-  weeklyPool:0, weeklyAchieved:[], streakSaverUsedWeek:false,
+  weeklyPool:0, weeklyAchieved:[], streakSaverUsedWeek:false, nameChanged:false,
   dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
 };
 
@@ -2766,7 +2779,7 @@ async function loadUserDataFromDB(){
         totalXP:s.total_xp||0, coins:s.coins||100, streak:s.streak||0,
         coinPool:s.coin_pool||100, coinsEarnedToday:s.coins_earned_today||0,
         dailyLowUsed:s.daily_low_used||0, dailyMedUsed:s.daily_med_used||0, dailyHighUsed:s.daily_high_used||0,
-        weeklyPool:s.weekly_pool||0, weeklyAchieved:s.weekly_achieved||[], streakSaverUsedWeek:s.streak_saver_used_week||false,
+        weeklyPool:s.weekly_pool||0, weeklyAchieved:s.weekly_achieved||[], streakSaverUsedWeek:s.streak_saver_used_week||false, nameChanged:s.name_changed||false,
         dupePoints:s.dupe_points||{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
       });
       const today=todayStr();
@@ -2892,7 +2905,7 @@ async function savePlayerState(){
     total_xp:player.totalXP, coins:player.coins, streak:player.streak,
     coin_pool:player.coinPool, coins_earned_today:player.coinsEarnedToday,
     daily_low_used:player.dailyLowUsed, daily_med_used:player.dailyMedUsed, daily_high_used:player.dailyHighUsed,
-    weekly_pool:player.weeklyPool, weekly_achieved:player.weeklyAchieved, streak_saver_used_week:player.streakSaverUsedWeek,
+    weekly_pool:player.weeklyPool, weekly_achieved:player.weeklyAchieved, streak_saver_used_week:player.streakSaverUsedWeek, name_changed:player.nameChanged,
     dupe_points:player.dupePoints,
     last_day_reset:calendarDateStr(), last_day_pct:getTodayCompletionPct(),
     last_day_done:getTodayTasks().filter(t=>t.done).length,
@@ -2950,7 +2963,7 @@ function getTodayCompletionPct(){
 }
 
 // ── ENTER / SIGN OUT ──
-function syncSettingsUI(){
+function syncSettingsUI(){updateNameChangeUI();
   // Dropdowns
   const tf=document.getElementById('setting-timeformat');
   if(tf)tf.value=settings.timeFormat||'12';
@@ -3000,6 +3013,93 @@ function enterApp(){
       showNextLotteryReward();
     }
   }, 600);
+}
+
+
+// ── ACCOUNT SETTINGS ──
+
+// Basic profanity filter — blocks common offensive words
+function isAppropiateName(name){
+  const banned=['fuck','shit','ass','bitch','cunt','damn','dick','piss','cock','whore','slut','fag','nigger','nigga','retard','bastard','crap'];
+  const lower=name.toLowerCase().replace(/[^a-z0-9]/g,'');
+  return!banned.some(w=>lower.includes(w));
+}
+
+async function saveDisplayName(){
+  const input=document.getElementById('setting-name');
+  const newName=input.value.trim();
+  if(!newName){showToast('Please enter a display name.');return;}
+  if(newName.length<2||newName.length>30){showToast('Name must be 2-30 characters.');return;}
+  if(!isAppropiateName(newName)){showToast('⚠️ That name is not allowed. Please choose another.');return;}
+  if(!currentUser)return;
+
+  // Check current name
+  const {data:prof}=await sb.from('profiles').select('display_name').eq('id',currentUser.id).single();
+  const currentName=prof?.display_name||'';
+  if(newName===currentName){showToast('That is already your display name.');return;}
+
+  // Cost check
+  const cost=player.nameChanged?50:0;
+  if(cost>0&&player.coins<cost){
+    showToast(`⚠️ Name changes cost ${cost} coins. You have ${player.coins}.`);return;
+  }
+
+  const btn=document.getElementById('name-save-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+
+  if(cost>0) player.coins-=cost;
+  player.nameChanged=true;
+
+  await sb.from('profiles').update({display_name:newName}).eq('id',currentUser.id);
+  await savePlayerState();
+  currentUser._displayName=newName;
+  updateNavStats();
+  updateNameChangeUI();
+  showToast(`✅ Display name updated${cost>0?' (-'+cost+' coins)':''}!`);
+  btn.disabled=false;btn.textContent='Save';
+}
+
+function updateNameChangeUI(){
+  const desc=document.getElementById('name-change-desc');
+  const btn=document.getElementById('name-save-btn');
+  if(!desc||!btn)return;
+  if(player.nameChanged){
+    desc.textContent='Costs 50 coins to change · 2-30 characters';
+    btn.textContent='Save (50 🪙)';
+  } else {
+    desc.textContent='First change is free · 2-30 characters';
+    btn.textContent='Save';
+  }
+}
+
+async function changePassword(){
+  const current=document.getElementById('pw-current').value;
+  const newPw=document.getElementById('pw-new').value;
+  const confirm=document.getElementById('pw-confirm').value;
+  const errEl=document.getElementById('pw-error');
+  const okEl=document.getElementById('pw-success');
+  errEl.style.display='none';okEl.style.display='none';
+
+  if(!current||!newPw||!confirm){errEl.textContent='Please fill in all fields.';errEl.style.display='block';return;}
+  if(newPw.length<8){errEl.textContent='New password must be at least 8 characters.';errEl.style.display='block';return;}
+  if(!/[\d\W]/.test(newPw)){errEl.textContent='New password must include a number or symbol.';errEl.style.display='block';return;}
+  if(newPw!==confirm){errEl.textContent='New passwords do not match.';errEl.style.display='block';return;}
+  if(newPw===current){errEl.textContent='New password must be different from current.';errEl.style.display='block';return;}
+
+  // Verify current password by trying to sign in
+  const email=currentUser?.email;
+  if(!email)return;
+  const {error:authErr}=await sb.auth.signInWithPassword({email,password:current});
+  if(authErr){errEl.textContent='Current password is incorrect.';errEl.style.display='block';return;}
+
+  // Update password
+  const {error:updateErr}=await sb.auth.updateUser({password:newPw});
+  if(updateErr){errEl.textContent='Failed to update password: '+updateErr.message;errEl.style.display='block';return;}
+
+  okEl.textContent='Password updated successfully!';okEl.style.display='block';
+  document.getElementById('pw-current').value='';
+  document.getElementById('pw-new').value='';
+  document.getElementById('pw-confirm').value='';
 }
 
 async function signOut(){
@@ -3223,7 +3323,7 @@ async function adminResetStats(){
     totalXP:0, coins:100, streak:0,
     coinPool:100, coinsEarnedToday:0,
     dailyLowUsed:0, dailyMedUsed:0, dailyHighUsed:0,
-    weeklyPool:0, weeklyAchieved:[], streakSaverUsedWeek:false,
+    weeklyPool:0, weeklyAchieved:[], streakSaverUsedWeek:false, nameChanged:false,
     dupePoints:{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
   });
   // Reset collection
