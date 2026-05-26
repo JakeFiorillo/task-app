@@ -1692,7 +1692,7 @@ function renderShop(){
   document.getElementById('box-shop').innerHTML=boxRarities.map(r=>{
     const ulv=PACK_UNLOCK_LEVELS[r];const cost=PACK_COSTS[r];const unlocked=lv>=ulv;
     const oddsBtn=unlocked?`<button class="odds-btn" tabindex="0">?${buildOddsTooltip(r)}</button>`:'';
-    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Pack</span>${oddsBtn}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div style="display:flex;gap:8px;align-items:center"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<div style="font-size:11px;color:var(--accent);font-weight:600">+${PACK_XP[r]} XP</div>`:''}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
+    return`<div class="shop-item ${unlocked?'':'locked-item'}"><div class="shop-item-icon">${RARITY_ICONS[r]}</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span class="shop-item-name">${r.charAt(0).toUpperCase()+r.slice(1)} Pack</span>${oddsBtn}${unlocked?`<span style="font-size:11px;color:var(--accent);font-weight:600">+${PACK_XP[r]} XP</span>`:''}</div><div class="shop-item-desc">${unlocked?`Opens to reveal a card. Hover ? to see drop rates.`:`Unlocks at Level ${ulv}`}</div><div class="shop-item-footer"><div class="shop-price"><i class="ti ti-coin"></i>${cost}</div>${unlocked?`<button class="shop-buy-btn" onclick="buyBox('${r}',${cost})" ${player.coins<cost?'disabled':''}>Buy & Open</button>`:`<span class="shop-locked-label">🔒 Lv ${ulv}</span>`}</div></div>`;
   }).join('');
   // Utilities section removed
 }
@@ -1700,18 +1700,47 @@ async function craftBox(r){
   if((player.dupePoints[r]||0)<100)return;
   player.dupePoints[r]-=100;
   const xp=PACK_XP[r]||0;
-  await awardXP(xp, r.charAt(0).toUpperCase()+r.slice(1)+' Pack craft');
+  const hadLevelUp=getLevel();
+  player.totalXP+=xp;
+  const newLv=getLevel();
   await savePlayerState();
-  openBox(r);
+  if(newLv>hadLevelUp){
+    _pendingBoxOpens.unshift(r);
+    showToast(`⭐ +${xp} XP from ${r.charAt(0).toUpperCase()+r.slice(1)} Pack craft!`);
+    updateNavStats();
+    const levelUps=[];
+    for(let l=hadLevelUp+1;l<=newLv;l++) levelUps.push(LEVEL_DATA[l-1]);
+    showLevelUpModal(levelUps);
+  } else {
+    showToast(`Crafted a ${r} pack! +${xp} XP`);
+    updateNavStats();
+    openBox(r);
+  }
 }
 async function buyBox(r,cost){
   if(player.coins<cost)return;
   player.coins-=cost;
   updateNavStats();
   const xp=PACK_XP[r]||0;
-  await awardXP(xp, r.charAt(0).toUpperCase()+r.slice(1)+' Pack');
+  // Queue the purchased pack first, then award XP (which may trigger level-up modal)
+  // The pack opens after the level-up modal if one appears
+  const hadLevelUp=getLevel();
+  player.totalXP+=xp;
+  const newLv=getLevel();
   await savePlayerState();
-  openBox(r);
+  if(newLv>hadLevelUp){
+    // Level up — queue purchased pack first, then show level-up modal
+    _pendingBoxOpens.unshift(r); // add to front so it opens first
+    showToast(`⭐ +${xp} XP from ${r.charAt(0).toUpperCase()+r.slice(1)} Pack!`);
+    updateNavStats();
+    const levelUps=[];
+    for(let l=hadLevelUp+1;l<=newLv;l++) levelUps.push(LEVEL_DATA[l-1]);
+    showLevelUpModal(levelUps);
+  } else {
+    showToast(`⭐ +${xp} XP from ${r.charAt(0).toUpperCase()+r.slice(1)} Pack!`);
+    updateNavStats();
+    openBox(r);
+  }
 }
 function buyStreakSaver(){if(player.coins<25)return;player.coins-=25;updateNavStats();showToast('🛡️ Streak Saver purchased!');renderShop();}
 
@@ -2186,9 +2215,14 @@ async function proceedFromReport(){
 async function showNextLotteryReward(){
   if(_pendingLotteryRewards.length===0)return;
   const reward=_pendingLotteryRewards.shift();
-  if(reward.reward_type==='pack'||reward.reward_type==='card'){
-    openBox(reward.rarity);
-    // After box close, next lottery reward shown via closeBoxOpen
+  if(reward.reward_type==='pack'){
+    // Random pack — open a pack of that rarity
+    showToast(`🏆 Lottery win: ${reward.lottery_name}! Opening now...`);
+    setTimeout(()=>openBox(reward.rarity),600);
+  } else if(reward.reward_type==='card'){
+    // Specific guaranteed card
+    showToast(`🏆 Lottery win: ${reward.lottery_name}! Opening now...`);
+    setTimeout(()=>openSpecificCard(reward.lottery_name, reward.rarity),600);
   } else if(reward.reward_type==='coins'){
     const amt=parseInt(reward.reward_value)||0;
     player.coins+=amt;
@@ -2197,6 +2231,31 @@ async function showNextLotteryReward(){
     showToast(`🏆 Lottery win: +${amt} coins from "${reward.lottery_name}"!`);
     setTimeout(()=>showNextLotteryReward(),1000);
   }
+}
+
+// Open a specific named card for guaranteed lottery wins
+function openSpecificCard(cardName, rarity){
+  let card=collection.find(c=>c.name===cardName);
+  if(!card){
+    const all=collection.filter(c=>c.rarity===rarity);
+    card=all[Math.floor(Math.random()*all.length)];
+  }
+  const isDupe=card.owned;
+  if(!isDupe){card.owned=true;addCardToCollection(card.id);}
+  else{
+    const dr=DUPE_REWARD[card.rarity];
+    if(dr){player.dupePoints[dr.target]=(player.dupePoints[dr.target]||0)+dr.pts;}
+    savePlayerState();
+  }
+  boxOpenRarity=rarity;
+  boxOpenCard={card,isDupe};
+  document.getElementById('box-open-title').textContent=`${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Pack`;
+  document.getElementById('box-card-inner').classList.remove('flipped');
+  document.getElementById('box-open-result').classList.remove('show');
+  document.getElementById('box-open-close').classList.remove('show');
+  document.getElementById('box-open-hint').style.display='block';
+  document.getElementById('box-card-front').innerHTML=`<div class="coll-card ${RARITY_CLASS[rarity]}" style="width:100%;height:100%;border-radius:14px;transform:none;aspect-ratio:unset;justify-content:center;"><div style="font-size:48px;margin-bottom:8px">${RARITY_ICONS[rarity]}</div><div style="font-size:13px;font-weight:700">${card.name}</div><div style="font-size:11px;opacity:0.7;margin-top:4px">${rarity.toUpperCase()}</div>${isDupe?'<div style="font-size:11px;margin-top:6px;color:#ea580c;font-weight:600">DUPLICATE</div>':''}</div>`;
+  document.getElementById('box-open-overlay').style.display='flex';
 }
 
 
@@ -2211,7 +2270,9 @@ async function checkPendingRewards(){
     await sb.from('pending_rewards').update({claimed:true}).eq('id',reward.id);
   }
   // Queue for delivery after daily report
-  _pendingLotteryRewards.push(...rewards);
+  // Normalize reward_type: 'box' is old name for 'pack'
+  const normalized=rewards.map(r=>({...r,reward_type:r.reward_type==='box'?'pack':r.reward_type}));
+  _pendingLotteryRewards.push(...normalized);
 }
 
 // ── Countdown ticker ──
