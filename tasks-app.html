@@ -1967,12 +1967,13 @@ async function seedLotteriesIfNeeded(){
 async function fetchLotteriesFromDB(){
   const {data:dbLotteries,error}=await sb.from('lotteries')
     .select('*').eq('is_active',true).order('closes_at');
+  console.log('fetchLotteries: data=',dbLotteries?.length,'error=',error?.message);
   if(error){console.error('Lottery fetch error:',error.message);lotteries={daily:[],weekly:[]};return;}
   if(!dbLotteries||dbLotteries.length===0){
-    console.log('No active lotteries in DB — will seed');
+    console.log('No active lotteries in DB');
     lotteries={daily:[],weekly:[]};return;
   }
-  console.log('Found',dbLotteries.length,'active lotteries');
+  console.log('Raw lotteries from DB:',dbLotteries.map(l=>l.slot_key+':'+l.name+':'+l.is_weekly));
 
   // Show all active lotteries from DB — edge function handles expiry and spawning
   const active=dbLotteries;
