@@ -1151,11 +1151,47 @@ let boxOpenRarity=null;
 let boxOpenCard=null;
 
 // Collection
+const CONSTELLATION_CARDS={
+  common:['Triangulum','Sagitta','Corvus','Lynx','Scutum','Vulpecula','Equuleus','Caelum','Horologium','Norma','Pictor','Sculptor','Circinus','Reticulum','Mensa','Microscopium','Telescopium','Antlia','Pyxis','Vela','Puppis','Carina','Volans','Chamaeleon','Musca','Crux','Columba','Lepus','Monoceros','Sextans'],
+  uncommon:['Cygnus','Lyra','Aquila','Perseus','Andromeda','Cassiopeia','Auriga','Boötes','Corona Borealis','Coma Berenices','Canes Venatici','Leo Minor','Camelopardalis','Lacerta','Volans','Serpens','Libra','Ara','Piscis Austrinus','Grus','Tucana','Pavo','Indus','Phoenix','Fornax','Eridanus','Canis Minor','Lupus','Centaurus','Corona Australis'],
+  rare:['Orion','Ursa Major','Ursa Minor','Draco','Hercules','Leo','Virgo','Aquarius','Capricornus','Gemini','Taurus','Aries','Pisces','Sagittarius','Scorpius','Cancer','Ophiuchus','Hydra','Pegasus','Aquila','Cetus','Lepus','Canis Major','Delphinus','Corvus'],
+  epic:['Perseus Field','Andromeda Chain','Cassiopeia Arc','Cepheus Drift','Auriga Cluster','Boötes Reach','Virgo Stream','Leo Triplet','Coma Drift','Pleiades Arc','Hyades Field','Praesepe Glow','Beehive Reach','Veil Region','Orion Field','Sword Belt','Hunter's Mark','River's End','The Keel','The Mast','Southern Birds','Northern Crown','Southern Crown','Great Bear Reach','Deep River'],
+  legendary:['The Great Hunter','The Winged Horse','River Eridanus','The Sea Monster','The Centaur's Path','The Dragon's Eye','The Swan's Flight','The Eagle's Dive','The Lyre's Song','The Bear's Guard','The Lion's Heart','The Scorpion's Sting','The Archer's Aim','The Bull's Charge','The Twins' Bond','The Maiden's Scales','The Water Bearer','The Sea Goat','The Fish's Tail','The Ram's Crest'],
+  mythic:['Orion's Belt','Perseus & Andromeda','The Milky Way Bridge','Cassiopeia's Throne','Cepheus's Crown','Medusa's Gaze','Pegasus's Wings','Hercules's Club','The Hydra's Heart','Draco's Coil','Boötes's Herdsman','Ariadne's Crown','Aquila's Ascent','Lyra's Harmony','Cygnus's Cross','The Ship Argo','Chiron's Wisdom','Ophiuchus's Serpent','Eridanus's Source','The Phoenix Rising'],
+  cosmic:['The Celestial Sphere','Edge of the Observable','The First Light','Cosmic Web Node','The Grand Attractor','Void Between Voids','The Primordial Sky','Birth of a Constellation','The Last Star','The Eternal Dark']
+};
+
 function makeCollection(){
-  const defs=[{key:'common',count:30},{key:'uncommon',count:30},{key:'rare',count:25},{key:'epic',count:25},{key:'legendary',count:20},{key:'mythic',count:20},{key:'cosmic',count:10}];
   const c=[];
-  defs.forEach(r=>{for(let i=1;i<=r.count;i++)c.push({id:`${r.key}-${i}`,rarity:r.key,name:`${r.key.charAt(0).toUpperCase()+r.key.slice(1)} Card ${i}`,owned:false});});
+  Object.entries(CONSTELLATION_CARDS).forEach(([rarity,names])=>{
+    names.forEach((name,i)=>{
+      c.push({id:`${rarity}-${i+1}`,rarity,name,owned:false});
+    });
+  });
   return c;
+}
+
+// Generate a deterministic constellation SVG based on card id
+function makeConstellationSVG(cardId, rarity, size=40){
+  const colors={common:'#9ca3af',uncommon:'#34d399',rare:'#60a5fa',epic:'#a78bfa',legendary:'#fbbf24',mythic:'#f87171',cosmic:'#e879f9'};
+  const color=colors[rarity]||'#9ca3af';
+  // Seed from card id for deterministic positions
+  let seed=0;for(let i=0;i<cardId.length;i++)seed=(seed*31+cardId.charCodeAt(i))&0xffffffff;
+  function rand(){seed=(seed*1664525+1013904223)&0xffffffff;return(seed>>>0)/0xffffffff;}
+  const starCounts={common:4,uncommon:5,rare:6,epic:7,legendary:8,mythic:9,cosmic:10};
+  const n=starCounts[rarity]||5;
+  const margin=8;const range=size-margin*2;
+  const stars=[];
+  for(let i=0;i<n;i++) stars.push({x:margin+rand()*range,y:margin+rand()*range,r:rand()<0.3?2.5:1.5});
+  // Connect stars in order to form a pattern
+  let lines='';
+  for(let i=0;i<stars.length-1;i++){
+    lines+=`<line x1="${stars[i].x.toFixed(1)}" y1="${stars[i].y.toFixed(1)}" x2="${stars[i+1].x.toFixed(1)}" y2="${stars[i+1].y.toFixed(1)}" stroke="${color}" stroke-width="0.8" opacity="0.5"/>`;
+  }
+  // Add one extra connection for visual interest
+  if(stars.length>3) lines+=`<line x1="${stars[0].x.toFixed(1)}" y1="${stars[0].y.toFixed(1)}" x2="${stars[Math.floor(stars.length/2)].x.toFixed(1)}" y2="${stars[Math.floor(stars.length/2)].y.toFixed(1)}" stroke="${color}" stroke-width="0.8" opacity="0.3"/>`;
+  const dots=stars.map(s=>`<circle cx="${s.x.toFixed(1)}" cy="${s.y.toFixed(1)}" r="${s.r}" fill="${color}" opacity="${s.r>2?'1':'0.8'}"/>`).join('');
+  return`<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">${lines}${dots}</svg>`;
 }
 let collection=makeCollection();
 
@@ -1667,7 +1703,7 @@ function renderCollection(){
   const rarityOrder=['common','uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('collection-display').innerHTML=rarityOrder.map(r=>{
     const cards=collection.filter(c=>c.rarity===r);const oc=cards.filter(c=>c.owned).length;
-    return`<div class="rarity-section"><div class="rarity-header"><span class="rarity-badge" style="background:${RARITY_COLORS[r]}22;color:${RARITY_COLORS[r]};border:1px solid ${RARITY_COLORS[r]}55">${r.toUpperCase()}</span><span class="rarity-count-label">${oc}/${cards.length}</span></div><div class="cards-grid">${cards.map(c=>`<div class="coll-card ${RARITY_CLASS[r]} ${c.owned?'':'locked'}"><div class="coll-card-icon">${c.owned?RARITY_ICONS[r]:'🔒'}</div><div><div class="coll-card-name">${c.owned?c.name:'???'}</div><div class="coll-card-rarity">${r}</div></div></div>`).join('')}</div></div>`;
+    return`<div class="rarity-section"><div class="rarity-header"><span class="rarity-badge" style="background:${RARITY_COLORS[r]}22;color:${RARITY_COLORS[r]};border:1px solid ${RARITY_COLORS[r]}55">${r.toUpperCase()}</span><span class="rarity-count-label">${oc}/${cards.length}</span></div><div class="cards-grid">${cards.map(c=>`<div class="coll-card ${RARITY_CLASS[r]} ${c.owned?'':'locked'}" title="${c.owned?c.name:'???'}"><div class="coll-card-icon">${c.owned?makeConstellationSVG(c.id,r):'🔒'}</div><div><div class="coll-card-name">${c.owned?c.name:'???'}</div><div class="coll-card-rarity">${r}</div></div></div>`).join('')}</div></div>`;
   }).join('');
 }
 
@@ -1691,7 +1727,7 @@ function openBox(rarity){
   document.getElementById('box-open-result').classList.remove('show');
   document.getElementById('box-open-close').classList.remove('show');
   document.getElementById('box-open-hint').style.display='block';
-  document.getElementById('box-card-front').innerHTML=`<div class="coll-card ${RARITY_CLASS[cardRarity]}" style="width:100%;height:100%;border-radius:14px;transform:none;aspect-ratio:unset;justify-content:center;"><div style="font-size:48px;margin-bottom:8px">${RARITY_ICONS[cardRarity]}</div><div style="font-size:13px;font-weight:700">${card.name}</div><div style="font-size:11px;opacity:0.7;margin-top:4px">${cardRarity.toUpperCase()}</div>${isDupe?'<div style="font-size:11px;margin-top:6px;color:#ea580c;font-weight:600">DUPLICATE</div>':''}</div>`;
+  document.getElementById('box-card-front').innerHTML=`<div class="coll-card ${RARITY_CLASS[cardRarity]}" style="width:100%;height:100%;border-radius:14px;transform:none;aspect-ratio:unset;justify-content:center;padding:16px;"><div style="margin-bottom:10px">${makeConstellationSVG(card.id,cardRarity,80)}</div><div style="font-size:13px;font-weight:700;text-align:center">${card.name}</div><div style="font-size:11px;opacity:0.7;margin-top:4px;text-align:center">${cardRarity.toUpperCase()}</div>${isDupe?'<div style="font-size:11px;margin-top:6px;color:#ea580c;font-weight:600;text-align:center">DUPLICATE</div>':''}</div>`;
   document.getElementById('box-open-overlay').style.display='flex';
 }
 function flipBoxCard(){
@@ -1809,10 +1845,9 @@ function buyStreakSaver(){if(player.coins<25)return;player.coins-=25;updateNavSt
 
 // Pick a specific card for "Card" lottery prizes
 function pickSpecificCard(rarity){
-  const all=collection.filter(c=>c.rarity===rarity);
-  if(!all.length)return`${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Card 1`;
-  const pick=all[Math.floor(Math.random()*all.length)];
-  return pick.name;
+  const names=CONSTELLATION_CARDS[rarity];
+  if(!names||!names.length)return`${rarity.charAt(0).toUpperCase()+rarity.slice(1)} Card 1`;
+  return names[Math.floor(Math.random()*names.length)];
 }
 
 // Lottery pools
@@ -2316,7 +2351,7 @@ function openSpecificCard(cardName, rarity){
   document.getElementById('box-open-result').classList.remove('show');
   document.getElementById('box-open-close').classList.remove('show');
   document.getElementById('box-open-hint').style.display='block';
-  document.getElementById('box-card-front').innerHTML=`<div class="coll-card ${RARITY_CLASS[rarity]}" style="width:100%;height:100%;border-radius:14px;transform:none;aspect-ratio:unset;justify-content:center;"><div style="font-size:48px;margin-bottom:8px">${RARITY_ICONS[rarity]}</div><div style="font-size:13px;font-weight:700">${card.name}</div><div style="font-size:11px;opacity:0.7;margin-top:4px">${rarity.toUpperCase()}</div>${isDupe?'<div style="font-size:11px;margin-top:6px;color:#ea580c;font-weight:600">DUPLICATE</div>':''}</div>`;
+  document.getElementById('box-card-front').innerHTML=`<div class="coll-card ${RARITY_CLASS[rarity]}" style="width:100%;height:100%;border-radius:14px;transform:none;aspect-ratio:unset;justify-content:center;padding:16px;"><div style="margin-bottom:10px">${makeConstellationSVG(card.id,rarity,80)}</div><div style="font-size:13px;font-weight:700;text-align:center">${card.name}</div><div style="font-size:11px;opacity:0.7;margin-top:4px;text-align:center">${rarity.toUpperCase()}</div>${isDupe?'<div style="font-size:11px;margin-top:6px;color:#ea580c;font-weight:600;text-align:center">DUPLICATE</div>':''}</div>`;
   document.getElementById('box-open-overlay').style.display='flex';
 }
 
