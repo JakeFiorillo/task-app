@@ -2262,16 +2262,15 @@ function openSpecificCard(cardName, rarity){
 // Check for pending rewards — queue them for after the daily report
 async function checkPendingRewards(){
   if(!currentUser)return;
-  const {data:rewards}=await sb.from('pending_rewards')
+  const {data:rewards,error}=await sb.from('pending_rewards')
     .select('*').eq('user_id',currentUser.id).eq('claimed',false);
+  console.log('checkPendingRewards: found',rewards?.length,'rewards, error=',error?.message);
   if(!rewards||rewards.length===0)return;
-  // Mark all as claimed in DB
   for(const reward of rewards){
     await sb.from('pending_rewards').update({claimed:true}).eq('id',reward.id);
   }
-  // Queue for delivery after daily report
-  // Normalize reward_type: 'box' is old name for 'pack'
   const normalized=rewards.map(r=>({...r,reward_type:r.reward_type==='box'?'pack':r.reward_type}));
+  console.log('Queued rewards:',normalized.map(r=>r.reward_type+':'+r.rarity));
   _pendingLotteryRewards.push(...normalized);
 }
 
@@ -2884,18 +2883,22 @@ function enterApp(){
   if(emailInput)emailInput.value=currentUser?.email||'';
   syncSettingsUI();
   buildCatSelect();
+  // Always start on tasks page
+  showPage('tasks');
+  setView('today');
   render();
   resetInactivityTimer();
   // Mark any newly overdue tasks as missed
   setTimeout(()=>markOverdueTasks(), 200);
   // Show daily report if pending, otherwise show any lottery rewards directly
   setTimeout(()=>{
+    console.log('enterApp timeout: _reportData=',!!_reportData,'_pendingLotteryRewards=',_pendingLotteryRewards.length);
     if(_reportData){
       showPendingReport();
     } else if(_pendingLotteryRewards.length>0){
       showNextLotteryReward();
     }
-  }, 400);
+  }, 600);
 }
 
 async function signOut(){
