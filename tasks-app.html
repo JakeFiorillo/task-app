@@ -1974,10 +1974,8 @@ async function fetchLotteriesFromDB(){
   }
   console.log('Found',dbLotteries.length,'active lotteries');
 
-  // Filter to active only — edge function handles expired ones
-  const now=new Date();
-  const active=dbLotteries.filter(l=>new Date(l.closes_at)>now);
-  if(active.length===0){lotteries={daily:[],weekly:[]};return;}
+  // Show all active lotteries from DB — edge function handles expiry and spawning
+  const active=dbLotteries;
 
   // Entry counts
   const activeIds=active.map(l=>l.id);
