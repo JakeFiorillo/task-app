@@ -46,6 +46,16 @@ body.large-text .modal-title { font-size:18px; }
 body.large-text .report-title { font-size:22px; }
 body.large-text .report-stat-label, body.large-text .report-stat-val { font-size:15px; }
 body.large-text .shop-item { font-size:14px; }
+body.large-text .shop-item-name { font-size:15px !important; }
+body.large-text .shop-item-desc { font-size:13px !important; }
+body.large-text .shop-buy-btn { font-size:13px !important; }
+body.large-text .dupe-label { font-size:14px !important; }
+body.large-text .craft-btn { font-size:13px !important; }
+body.large-text .coll-card-name { font-size:13px !important; }
+body.large-text .coll-card-rarity { font-size:12px !important; }
+body.large-text .cards-grid { grid-template-columns:repeat(auto-fill,minmax(145px,1fr)) !important; }
+body.large-text .rarity-header { font-size:14px !important; }
+body.large-text .rarity-count-label { font-size:13px !important; }
 body.large-text .lottery-card { font-size:14px; }
 body.large-text .sidebar-label { font-size:12px; }
 body.large-text .sidebar-badge { font-size:11px; }
@@ -306,11 +316,11 @@ body.large-text .sidebar-badge { font-size:11px; }
 .rarity-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
 .rarity-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px; }
 .rarity-count-label { font-size:12px; color:var(--text2); }
-.cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(115px,1fr)); gap:8px; }
-.coll-card { border-radius:var(--radius-lg); padding:12px 8px 8px; text-align:center; border:1.5px solid; transition:transform 0.15s,box-shadow 0.15s; position:relative; aspect-ratio:2/3; display:flex; flex-direction:column; align-items:center; justify-content:space-between; }
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; }
+.coll-card { border-radius:var(--radius-lg); padding:10px 8px 8px; text-align:center; border:1.5px solid; transition:transform 0.15s,box-shadow 0.15s; position:relative; aspect-ratio:3/4; display:flex; flex-direction:column; align-items:center; justify-content:space-between; }
 .coll-card:hover:not(.locked) { transform:translateY(-3px); box-shadow:0 6px 18px rgba(0,0,0,0.1); }
 .coll-card.locked { filter:grayscale(1); opacity:0.3; }
-.coll-card-icon { font-size:26px; display:flex; align-items:center; justify-content:center; }
+.coll-card-icon { font-size:26px; display:flex; align-items:center; justify-content:center; flex:1; width:100%; }
 .coll-card-name { font-size:10px; font-weight:600; line-height:1.3; }
 .coll-card-rarity { font-size:9px; opacity:0.7; margin-top:2px; }
 .r-common { border-color:#d1d5db; background:#f9fafb; color:#374151; }
@@ -1772,7 +1782,7 @@ function renderCollection(){
   const rarityOrder=['common','uncommon','rare','epic','legendary','mythic','cosmic'];
   document.getElementById('collection-display').innerHTML=rarityOrder.map(r=>{
     const cards=collection.filter(c=>c.rarity===r);const oc=cards.filter(c=>c.owned).length;
-    return`<div class="rarity-section"><div class="rarity-header"><span class="rarity-badge" style="background:${RARITY_COLORS[r]}22;color:${RARITY_COLORS[r]};border:1px solid ${RARITY_COLORS[r]}55">${r.toUpperCase()}</span><span class="rarity-count-label">${oc}/${cards.length}</span></div><div class="cards-grid">${cards.map(c=>`<div class="coll-card ${RARITY_CLASS[r]} ${c.owned?'':'locked'}" title="${c.owned?c.name:'???'}"><div class="coll-card-icon">${c.owned?makeConstellationSVG(c.id,r,56):'🔒'}</div><div><div class="coll-card-name">${c.owned?c.name:'???'}</div><div class="coll-card-rarity">${r}</div></div></div>`).join('')}</div></div>`;
+    return`<div class="rarity-section"><div class="rarity-header"><span class="rarity-badge" style="background:${RARITY_COLORS[r]}22;color:${RARITY_COLORS[r]};border:1px solid ${RARITY_COLORS[r]}55">${r.toUpperCase()}</span><span class="rarity-count-label">${oc}/${cards.length}</span></div><div class="cards-grid">${cards.map(c=>`<div class="coll-card ${RARITY_CLASS[r]} ${c.owned?'':'locked'}" title="${c.owned?c.name:'???'}"><div class="coll-card-icon">${c.owned?makeConstellationSVG(c.id,r,90):'🔒'}</div><div><div class="coll-card-name">${c.owned?c.name:'???'}</div><div class="coll-card-rarity">${r}</div></div></div>`).join('')}</div></div>`;
   }).join('');
 }
 
