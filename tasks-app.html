@@ -635,10 +635,23 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <div class="lottery-coins-label">Your coins</div>
       <div class="lottery-coins-val"><i class="ti ti-coin"></i><span id="lottery-coins-val">142</span></div>
     </div>
-    <div class="lottery-section-title">📅 Daily Lotteries</div>
-    <div class="lottery-grid" id="daily-lottery-grid"></div>
-    <div class="lottery-section-title">⭐ Weekly Lotteries</div>
-    <div class="lottery-grid" id="weekly-lottery-grid"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:4px;background:var(--bg2);padding:3px;border-radius:var(--radius);margin-bottom:16px;width:fit-content">
+      <div class="view-tab active" id="lottery-tab-active" onclick="switchLotteryTab('active')" style="padding:5px 16px">Active</div>
+      <div class="view-tab" id="lottery-tab-past" onclick="switchLotteryTab('past')" style="padding:5px 16px">Past 48h</div>
+    </div>
+    <!-- Active lotteries -->
+    <div id="lottery-active-panel">
+      <div class="lottery-section-title">📅 Daily Lotteries</div>
+      <div class="lottery-grid" id="daily-lottery-grid"></div>
+      <div class="lottery-section-title">⭐ Weekly Lotteries</div>
+      <div class="lottery-grid" id="weekly-lottery-grid"></div>
+    </div>
+    <!-- Past lotteries -->
+    <div id="lottery-past-panel" style="display:none">
+      <div class="lottery-section-title">🏁 Concluded in Last 48 Hours</div>
+      <div id="past-lottery-grid"></div>
+    </div>
   </div>
 </div>
 
@@ -2264,14 +2277,69 @@ async function checkPendingRewards(){
   if(!currentUser)return;
   const {data:rewards,error}=await sb.from('pending_rewards')
     .select('*').eq('user_id',currentUser.id).eq('claimed',false);
-  console.log('checkPendingRewards: found',rewards?.length,'rewards, error=',error?.message);
   if(!rewards||rewards.length===0)return;
   for(const reward of rewards){
     await sb.from('pending_rewards').update({claimed:true}).eq('id',reward.id);
   }
   const normalized=rewards.map(r=>({...r,reward_type:r.reward_type==='box'?'pack':r.reward_type}));
-  console.log('Queued rewards:',normalized.map(r=>r.reward_type+':'+r.rarity));
   _pendingLotteryRewards.push(...normalized);
+}
+
+function switchLotteryTab(tab){
+  document.getElementById('lottery-tab-active').classList.toggle('active', tab==='active');
+  document.getElementById('lottery-tab-past').classList.toggle('active', tab==='past');
+  document.getElementById('lottery-active-panel').style.display=tab==='active'?'block':'none';
+  document.getElementById('lottery-past-panel').style.display=tab==='past'?'block':'none';
+  if(tab==='past') loadPastLotteries();
+}
+
+async function loadPastLotteries(){
+  const grid=document.getElementById('past-lottery-grid');
+  grid.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading...</div>';
+  const cutoff=new Date(Date.now()-48*3600*1000).toISOString();
+  const {data:pastLotteries,error}=await sb.from('lotteries')
+    .select('*').eq('is_active',false).gte('closes_at',cutoff).order('closes_at',{ascending:false});
+  if(error||!pastLotteries?.length){
+    grid.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">No lotteries concluded in the last 48 hours.</div>';
+    return;
+  }
+  // Get winners for these lotteries
+  const lotteryIds=pastLotteries.map(l=>l.id);
+  const {data:rewards}=await sb.from('pending_rewards')
+    .select('lottery_name,user_id,rarity').in('lottery_name',pastLotteries.map(l=>l.name));
+  // Get winner display names
+  const winnerUserIds=[...new Set((rewards||[]).map(r=>r.user_id))];
+  const {data:profiles}=await sb.from('profiles').select('id,display_name').in('id',winnerUserIds);
+  const nameMap={};
+  (profiles||[]).forEach(p=>nameMap[p.id]=p.display_name);
+
+  grid.innerHTML=pastLotteries.map(l=>{
+    const rc=RARITY_COLORS[l.rarity]||'var(--accent)';
+    const rl=l.rarity?l.rarity.charAt(0).toUpperCase()+l.rarity.slice(1):'';
+    const closeTime=tsToDayLocal(l.closes_at)+' '+tsToLocal(l.closes_at);
+    const lotteryWinners=(rewards||[]).filter(r=>r.lottery_name===l.name);
+    const winnerNames=lotteryWinners.map(r=>nameMap[r.user_id]||'Unknown').filter(Boolean);
+    const uniqueWinners=[...new Set(winnerNames)];
+    return`<div class="lottery-card" style="margin-bottom:10px;opacity:0.85">
+      <div class="lottery-top">
+        <div>
+          <div class="lottery-reward-name">${l.name}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:${rc}22;color:${rc};border:1px solid ${rc}44">${rl.toUpperCase()}</span>
+            <span style="font-size:10px;color:var(--text3)">${l.is_weekly?'⭐ Weekly':'📅 Daily'}</span>
+          </div>
+        </div>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap">Closed ${closeTime}</span>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">🏆 Winners</div>
+        ${uniqueWinners.length>0
+          ?uniqueWinners.map(n=>`<div style="font-size:13px;color:var(--text);padding:3px 0;display:flex;align-items:center;gap:6px"><i class="ti ti-crown" style="color:#b45309;font-size:13px"></i>${n}</div>`).join('')
+          :'<div style="font-size:12px;color:var(--text3)">No winners — no entries were submitted.</div>'
+        }
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── Countdown ticker ──
@@ -2892,7 +2960,6 @@ function enterApp(){
   setTimeout(()=>markOverdueTasks(), 200);
   // Show daily report if pending, otherwise show any lottery rewards directly
   setTimeout(()=>{
-    console.log('enterApp timeout: _reportData=',!!_reportData,'_pendingLotteryRewards=',_pendingLotteryRewards.length);
     if(_reportData){
       showPendingReport();
     } else if(_pendingLotteryRewards.length>0){
