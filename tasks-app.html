@@ -1375,7 +1375,18 @@ function showPage(name){
   if(name==='game')renderGamePage();
   if(name==='collection')renderCollection();
   if(name==='shop')renderShop();
-  if(name==='lottery'){loadLotteries();}
+  if(name==='lottery'){
+    loadLotteries();
+    // Poll every 30s to pick up new lotteries after expiry
+    clearInterval(_lotteryPollInterval);
+    _lotteryPollInterval=setInterval(()=>{
+      if(document.getElementById('page-lottery').classList.contains('active')){
+        fetchLotteriesFromDB().then(()=>renderLotteries());
+      }
+    },30000);
+  } else {
+    clearInterval(_lotteryPollInterval);
+  }
 }
 
 // ══════════════ TASKS ══════════════
@@ -2543,9 +2554,8 @@ function startLotteryCountdown(){
         const urgent=secs<7200;
         el.textContent=formatCountdown(secs);
         el.parentElement.className='lottery-time'+(urgent?' urgent':'');
-      if(secs<=0&&!el.dataset.expired){
-        el.dataset.expired='1';
-        setTimeout(()=>loadLotteries(), 5000); // wait 5s for edge function to process
+      if(secs<=0){
+        // Don't trigger reload here — polling handles it
       }
       }
     });
@@ -2649,6 +2659,8 @@ function renderLotteries(){
 }
 
 // Load lotteries from DB then render
+let _lotteryPollInterval=null;
+
 async function loadLotteries(){
   document.getElementById('daily-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading lotteries...</div>';
   document.getElementById('weekly-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading...</div>';
