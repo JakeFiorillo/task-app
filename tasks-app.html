@@ -2662,7 +2662,6 @@ function renderLotteries(){
 let _lotteryPollInterval=null;
 
 async function loadLotteries(showLoading=true){
-  console.trace('loadLotteries called');
   if(showLoading){
     document.getElementById('daily-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading lotteries...</div>';
     document.getElementById('weekly-lottery-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading...</div>';
