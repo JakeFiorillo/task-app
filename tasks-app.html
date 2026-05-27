@@ -2543,7 +2543,10 @@ function startLotteryCountdown(){
         const urgent=secs<7200;
         el.textContent=formatCountdown(secs);
         el.parentElement.className='lottery-time'+(urgent?' urgent':'');
-        if(secs<=0) loadLotteries(); // refresh when one expires
+      if(secs<=0&&!el.dataset.expired){
+        el.dataset.expired='1';
+        setTimeout(()=>loadLotteries(), 5000); // wait 5s for edge function to process
+      }
       }
     });
   },1000);
