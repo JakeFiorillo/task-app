@@ -138,7 +138,7 @@ body.large-text .sidebar-badge { font-size:11px; }
 .nav-arrow:hover { background:var(--accent-light); color:var(--accent); }
 .view-tabs { display:flex; gap:2px; background:var(--bg2); padding:3px; border-radius:var(--radius); }
 .view-tab { padding:4px 11px; font-size:12px; border-radius:6px; cursor:pointer; color:var(--text2); transition:all 0.12s; user-select:none; }
-.view-tab.active { background:var(--bg); color:var(--text); font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+.view-tab.active { background:var(--accent); color:#ffffff; font-weight:500; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
 .add-btn { display:flex; align-items:center; gap:5px; padding:6px 13px; background:var(--accent); color:var(--btn-text); border-radius:var(--radius); font-size:12px; font-weight:500; cursor:pointer; border:none; white-space:nowrap; transition:opacity 0.15s; }
 .add-btn:hover { opacity:0.85; }
 
@@ -1147,7 +1147,7 @@ const CAT_COLORS=['#9b87d6','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c','#
 
 // Full color themes
 const THEMES={
-  dark:  {bg:'#111827',bg2:'#0d1117',bg3:'#0a0d14',sb:'#0d1117',accent:'#7c3aed',accentLight:'#1e1640',accentMid:'#a78bfa',accentDark:'#5b21b6',btnText:'#ffffff',border:'#1f2a3d',border2:'#2a3650',text:'#f0f2ff',text2:'#dde1f0',text3:'#a8b0c8'},
+  dark:  {bg:'#111827',bg2:'#0d1117',bg3:'#0a0d14',sb:'#0d1117',accent:'#7c3aed',accentLight:'#2d1f5e',accentMid:'#a78bfa',accentDark:'#a78bfa',btnText:'#ffffff',border:'#1f2a3d',border2:'#2a3650',text:'#f0f2ff',text2:'#dde1f0',text3:'#a8b0c8'},
   purple:{bg:'#ffffff',bg2:'#f3f0fb',bg3:'#ede8f7',sb:'#f3f0fb',accent:'#9b87d6',accentLight:'#ebe5fa',accentMid:'#c4b8ef',accentDark:'#7c5cbf',btnText:'#ffffff',border:'rgba(120,100,180,0.13)',border2:'rgba(120,100,180,0.26)'},
   blue:  {bg:'#ffffff',bg2:'#eff6ff',bg3:'#dbeafe',sb:'#eff6ff',accent:'#3b82f6',accentLight:'#dbeafe',accentMid:'#93c5fd',accentDark:'#1d4ed8',btnText:'#ffffff',border:'rgba(59,130,246,0.13)',border2:'rgba(59,130,246,0.26)'},
   green: {bg:'#ffffff',bg2:'#f0fdf4',bg3:'#dcfce7',sb:'#f0fdf4',accent:'#22c55e',accentLight:'#dcfce7',accentMid:'#86efac',accentDark:'#15803d',btnText:'#ffffff',border:'rgba(34,197,94,0.13)',border2:'rgba(34,197,94,0.26)'},
@@ -1388,6 +1388,16 @@ function applyTheme(name){
   r.setProperty('--accent-mid',t.accentMid);r.setProperty('--accent-dark',t.accentDark);
   r.setProperty('--btn-text',t.btnText);
   r.setProperty('--border',t.border);r.setProperty('--border2',t.border2);
+  // Set text colors — dark theme needs bright text, light themes need dark text
+  if(name==='dark'){
+    r.setProperty('--text','#f0f2ff');
+    r.setProperty('--text2','#dde1f0');
+    r.setProperty('--text3','#a8b0c8');
+  } else {
+    r.setProperty('--text','#2a2040');
+    r.setProperty('--text2','#6b6388');
+    r.setProperty('--text3','#a89fc2');
+  }
   document.querySelector('.sidebar').style.background=t.sb;
   saveSetting('bg',name);
 }
