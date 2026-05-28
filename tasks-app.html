@@ -1158,6 +1158,8 @@ const THEMES={
 
 // ══════════════ STATE ══════════════
 let settings={timeFormat:'12',weekStart:0,colorBlind:false,largeText:false,bg:'dark',timezone:-(new Date().getTimezoneOffset()/60)};
+// Apply dark theme immediately so page doesn't flash light
+applyTheme('dark');
 let categories=[
   {id:'work',   name:'Work',    color:'#60a5fa'},
   {id:'health', name:'Health',  color:'#34d399'},
@@ -1398,7 +1400,8 @@ function applyTheme(name){
     r.setProperty('--text2','#6b6388');
     r.setProperty('--text3','#a89fc2');
   }
-  document.querySelector('.sidebar').style.background=t.sb;
+  const sb=document.querySelector('.sidebar');
+  if(sb) sb.style.background=t.sb;
   saveSetting('bg',name);
 }
 
@@ -3028,7 +3031,7 @@ async function loadUserDataFromDB(){
       Object.assign(settings,{
         timeFormat:s.time_format||'12', weekStart:s.week_start||0,
         colorBlind:s.color_blind||false, largeText:s.large_text||false,
-        bg:s.theme||'purple', timezone:s.timezone||0,
+        bg:s.theme||'dark', timezone:s.timezone||0,
       });
       applyTheme(settings.bg);
       document.body.classList.toggle('large-text', !!settings.largeText);
@@ -3183,7 +3186,7 @@ function syncSettingsUI(){updateNameChangeUI();
   const tf=document.getElementById('setting-timeformat');
   if(tf)tf.value=settings.timeFormat||'12';
   const bg=document.getElementById('setting-bg');
-  if(bg)bg.value=settings.bg||'purple';
+  if(bg)bg.value=settings.bg||'dark';
   // Timezone — find closest option
   const tz=document.getElementById('setting-timezone');
   if(tz){
