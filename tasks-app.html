@@ -387,7 +387,7 @@ body.large-text .sidebar-badge { font-size:11px; }
 .lottery-card { background:var(--bg2); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:14px; }
 .lottery-card.weekly-card { border-color:var(--accent-mid); background:var(--bg); }
 .lottery-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
-.lottery-reward-name { font-size:13px; font-weight:600; }
+.lottery-reward-name { font-size:13px; font-weight:600; color:var(--text); }
 .weekly-badge { font-size:10px; font-weight:700; background:var(--accent); color:var(--btn-text); padding:2px 7px; border-radius:7px; }
 .lottery-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
 .lottery-meta-chip { font-size:11px; color:var(--text2); display:flex; align-items:center; gap:3px; }
@@ -477,6 +477,35 @@ body.large-text .sidebar-badge { font-size:11px; }
 
 .toast { position:fixed; bottom:20px; right:20px; background:var(--text); color:white; padding:10px 16px; border-radius:var(--radius-lg); font-size:13px; font-weight:500; z-index:400; transform:translateY(60px); opacity:0; transition:all 0.3s; display:flex; align-items:center; gap:7px; max-width:320px; }
 .toast.show { transform:translateY(0); opacity:1; }
+[data-theme="dark"] select { background:var(--bg2); color:var(--text); border-color:var(--border2); }
+[data-theme="dark"] select option { background:#0d1117; color:#f0f2ff; }
+[data-theme="dark"] input::placeholder { color:var(--text3); }
+[data-theme="dark"] .view-tab { color:var(--text2); }
+[data-theme="dark"] .view-tab.active { color:#ffffff; background:var(--accent); }
+[data-theme="dark"] .lottery-reward-name { color:var(--text) !important; }
+[data-theme="dark"] .shop-item-name { color:var(--text) !important; }
+[data-theme="dark"] .setting-label { color:var(--text) !important; }
+[data-theme="dark"] .page-title { color:var(--text) !important; }
+[data-theme="dark"] .page-subtitle { color:var(--text2) !important; }
+[data-theme="dark"] .coll-subtitle { color:var(--text2) !important; }
+[data-theme="dark"] .coll-title { color:var(--text) !important; }
+[data-theme="dark"] .rarity-count-label { color:var(--text2) !important; }
+[data-theme="dark"] .task-name:not(.done-text) { color:var(--text) !important; }
+[data-theme="dark"] .upcoming-name { color:var(--text) !important; }
+[data-theme="dark"] .upcoming-date { color:var(--text2) !important; }
+[data-theme="dark"] .progress-count { color:var(--text2) !important; }
+[data-theme="dark"] .sidebar-item { color:var(--text2) !important; }
+[data-theme="dark"] .sidebar-item.active { color:var(--accent-mid) !important; }
+[data-theme="dark"] .shop-subtitle { color:var(--text2) !important; }
+[data-theme="dark"] .shop-item-desc { color:var(--text2) !important; }
+[data-theme="dark"] .lottery-meta { color:var(--text2) !important; }
+[data-theme="dark"] .dupe-label { color:var(--text2) !important; }
+[data-theme="dark"] .setting-desc { color:var(--text2) !important; }
+[data-theme="dark"] .settings-section-title { color:var(--text2) !important; }
+[data-theme="dark"] .stat-label { color:var(--text2) !important; }
+[data-theme="dark"] .weekly-reward-label { color:var(--text2) !important; }
+[data-theme="dark"] .summary-label { color:var(--text2) !important; }
+[data-theme="dark"] .nav-logo { color:var(--accent-mid) !important; }
 </style>
 </head>
 <body>
@@ -1118,7 +1147,7 @@ const CAT_COLORS=['#9b87d6','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c','#
 
 // Full color themes
 const THEMES={
-  dark:  {bg:'#111827',bg2:'#0d1117',bg3:'#0a0d14',sb:'#0d1117',accent:'#7c3aed',accentLight:'#1e1640',accentMid:'#a78bfa',accentDark:'#5b21b6',btnText:'#ffffff',border:'#1f2a3d',border2:'#2a3650'},
+  dark:  {bg:'#111827',bg2:'#0d1117',bg3:'#0a0d14',sb:'#0d1117',accent:'#7c3aed',accentLight:'#1e1640',accentMid:'#a78bfa',accentDark:'#5b21b6',btnText:'#ffffff',border:'#1f2a3d',border2:'#2a3650',text:'#f0f2ff',text2:'#dde1f0',text3:'#a8b0c8'},
   purple:{bg:'#ffffff',bg2:'#f3f0fb',bg3:'#ede8f7',sb:'#f3f0fb',accent:'#9b87d6',accentLight:'#ebe5fa',accentMid:'#c4b8ef',accentDark:'#7c5cbf',btnText:'#ffffff',border:'rgba(120,100,180,0.13)',border2:'rgba(120,100,180,0.26)'},
   blue:  {bg:'#ffffff',bg2:'#eff6ff',bg3:'#dbeafe',sb:'#eff6ff',accent:'#3b82f6',accentLight:'#dbeafe',accentMid:'#93c5fd',accentDark:'#1d4ed8',btnText:'#ffffff',border:'rgba(59,130,246,0.13)',border2:'rgba(59,130,246,0.26)'},
   green: {bg:'#ffffff',bg2:'#f0fdf4',bg3:'#dcfce7',sb:'#f0fdf4',accent:'#22c55e',accentLight:'#dcfce7',accentMid:'#86efac',accentDark:'#15803d',btnText:'#ffffff',border:'rgba(34,197,94,0.13)',border2:'rgba(34,197,94,0.26)'},
