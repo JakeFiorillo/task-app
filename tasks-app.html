@@ -3001,8 +3001,8 @@ async function loadUserDataFromDB(){
         dupePoints:s.dupe_points||{uncommon:0,rare:0,epic:0,legendary:0,mythic:0,cosmic:0},
       });
       const today=todayStr();
-      const lastReset=s.last_day_reset||calendarDateStr();
-      if(lastReset!==calendarDateStr()){
+      const lastReset=s.last_day_reset||todayStr();
+      if(lastReset!==todayStr()){
         // Store report data — will be shown after enterApp() renders the UI
         await runDayReset(s.last_day_pct||0, s.last_day_done||0, s.last_day_total||0);
         window._pendingDailyReport=true;
@@ -3125,7 +3125,7 @@ async function savePlayerState(){
     daily_low_used:player.dailyLowUsed, daily_med_used:player.dailyMedUsed, daily_high_used:player.dailyHighUsed,
     weekly_pool:player.weeklyPool, weekly_achieved:player.weeklyAchieved, streak_saver_used_week:player.streakSaverUsedWeek, name_changed:player.nameChanged,
     dupe_points:player.dupePoints,
-    last_day_reset:calendarDateStr(), last_day_pct:getTodayCompletionPct(),
+    last_day_reset:todayStr(), last_day_pct:getTodayCompletionPct(),
     last_day_done:getTodayTasks().filter(t=>t.done).length,
     last_day_total:getTodayTasks().length,
     updated_at:new Date().toISOString(),
