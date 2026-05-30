@@ -1206,10 +1206,13 @@ function calendarDateStr(){
 }
 
 
-// For recurring tasks, only consider done if completed today
+// For recurring tasks, only consider done if completed today AND viewing today
 function isTaskDone(t){
   if(!t.done) return false;
   if(t.freq==='once') return true;
+  // Recurring: only show as done when viewing the current day AND completed today
+  if(!t.lastDoneDate) return false;
+  if(viewOffset!==0) return false; // never show recurring as done in past/future views
   return t.lastDoneDate===todayStr();
 }
 
