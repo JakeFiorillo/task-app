@@ -960,7 +960,11 @@ body.large-text .sidebar-badge { font-size:11px; }
   <div class="confirm-modal">
     <div class="confirm-title">Delete task?</div>
     <div class="confirm-body" id="confirm-body"></div>
-    <div class="modal-actions"><button class="btn-cancel" onclick="closeConfirmModal()">Cancel</button><button class="btn-delete" onclick="confirmDelete()">Delete</button></div>
+    <div class="modal-actions" id="confirm-yes-btn"><button class="btn-cancel" onclick="closeConfirmModal()">Cancel</button><button class="btn-delete" onclick="confirmDelete()">Delete</button></div>
+    <div id="confirm-recurring-btns" style="display:none;flex-direction:column;gap:8px;margin-top:14px">
+      <button class="btn-delete" onclick="confirmDeleteRecurringAll()" style="width:100%">Delete permanently (remove task)</button>
+      <button class="btn-cancel" onclick="closeConfirmModal()" style="width:100%;text-align:center">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -1730,6 +1734,8 @@ async function confirmTaskComplete(){
   const id=pendingTaskId;pendingTaskId=null;
   const t=tasks.find(t=>t.id===id);if(!t)return;
   t.done=true;
+  // For recurring tasks, store the date it was completed so day reset knows
+  if(t.freq!=='once') t.lastDoneDate=todayStr();
   if(t.pinned){t.pinned=false;} // unpin completed tasks
   const lv=getLevel();const cl=getCoinLevel(lv);
   const limits={low:cl.maxLow,medium:cl.maxMed,high:cl.maxHigh};
@@ -2866,10 +2872,49 @@ function closeCatModal(){document.getElementById('cat-modal').classList.remove('
 async function saveCategory(){const name=document.getElementById('cat-name').value.trim();if(!name)return;const id=name.toLowerCase().replace(/\s+/g,'-')+'-'+Date.now();const cat={id,name,color:selectedColor};categories.push(cat);await saveCategoryToDB(cat);closeCatModal();buildCatSelect();render();}
 
 // ══════════════ DELETE ══════════════
-function openDeleteConfirm(id){const t=tasks.find(t=>t.id===id);if(!t)return;deleteTargetId=id;document.getElementById('confirm-body').textContent=`"${t.name}" will be permanently removed.`;document.getElementById('confirm-modal').classList.add('open');}
+function openDeleteConfirm(id){
+  const t=tasks.find(t=>t.id===id);if(!t)return;
+  deleteTargetId=id;
+  if(t.freq!=='once'){
+    // Recurring task — ask if they want to delete just today or all instances
+    document.getElementById('confirm-body').innerHTML=`"${t.name}" is a recurring task.<br><br>What would you like to do?`;
+    document.getElementById('confirm-modal').classList.add('open');
+    // Replace confirm button with two options
+    document.getElementById('confirm-yes-btn').style.display='none';
+    document.getElementById('confirm-recurring-btns').style.display='flex';
+  } else {
+    document.getElementById('confirm-body').textContent=`"${t.name}" will be permanently removed.`;
+    document.getElementById('confirm-modal').classList.add('open');
+    document.getElementById('confirm-yes-btn').style.display='';
+    document.getElementById('confirm-recurring-btns').style.display='none';
+  }
+}
 function closeConfirmModal(){document.getElementById('confirm-modal').classList.remove('open');deleteTargetId=null;}
-async function confirmDelete(){if(deleteTargetId!==null){await deleteTaskFromDB(deleteTargetId);tasks=tasks.filter(t=>t.id!==deleteTargetId);deleteTargetId=null;}closeConfirmModal();render();}
-function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='cat-modal')closeCatModal();if(id==='confirm-modal')closeConfirmModal();if(id==='level-modal')closeLevelModal();if(id==='reschedule-modal')closeRescheduleModal();}}
+async function confirmDelete(){
+  if(deleteTargetId!==null){
+    await deleteTaskFromDB(deleteTargetId);
+    tasks=tasks.filter(t=>t.id!==deleteTargetId);
+    deleteTargetId=null;
+  }
+  closeConfirmModal();render();
+}
+
+async function confirmDeleteRecurringAll(){
+  if(deleteTargetId!==null){
+    await deleteTaskFromDB(deleteTargetId);
+    tasks=tasks.filter(t=>t.id!==deleteTargetId);
+    deleteTargetId=null;
+  }
+  closeConfirmModal();render();
+  showToast('Recurring task deleted permanently.');
+}
+
+function closeConfirmModal(){
+  document.getElementById('confirm-modal').classList.remove('open');
+  document.getElementById('confirm-yes-btn').style.display='';
+  document.getElementById('confirm-recurring-btns').style.display='none';
+  deleteTargetId=null;
+}function closeModalOutside(e,id){if(e.target.id===id){if(id==='task-modal')closeTaskModal();if(id==='cat-modal')closeCatModal();if(id==='confirm-modal')closeConfirmModal();if(id==='level-modal')closeLevelModal();if(id==='reschedule-modal')closeRescheduleModal();}}
 
 
 
@@ -3016,7 +3061,17 @@ async function loadUserDataFromDB(){
         freq:t.freq, date:t.due_date, time:t.due_time||'',
         done:t.done, subtasks:t.subtasks||[],
         notes:t.notes||'', pinned:t.pinned||false, missed:t.missed||false,
+        lastDoneDate:t.last_done_date||null,
       }));
+      // Reset recurring tasks that were completed on a previous 4AM-day
+      const today=todayStr();
+      tasks.forEach(t=>{
+        if(t.freq!=='once'&&t.done&&t.lastDoneDate&&t.lastDoneDate!==today){
+          t.done=false;
+          t.lastDoneDate=null;
+          saveTask(t);
+        }
+      });
       nextId=tasks.length>0?Math.max(...tasks.map(t=>t.id))+1:1;
     }
 
@@ -3139,6 +3194,7 @@ async function saveTask(taskObj){
     priority:taskObj.priority, freq:taskObj.freq, due_date:taskObj.date||null,
     due_time:taskObj.time||null, done:taskObj.done, subtasks:taskObj.subtasks,
     notes:taskObj.notes||null, pinned:taskObj.pinned||false, missed:taskObj.missed||false,
+    last_done_date:taskObj.lastDoneDate||null,
   };
   if(taskObj._isNew){
     const {data}=await sb.from('tasks').insert(row).select().single();
