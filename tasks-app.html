@@ -1205,6 +1205,14 @@ function calendarDateStr(){
   return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+
+// For recurring tasks, only consider done if completed today
+function isTaskDone(t){
+  if(!t.done) return false;
+  if(t.freq==='once') return true;
+  return t.lastDoneDate===todayStr();
+}
+
 // Is a given time string (HH:MM) in the past right now?
 function timeHasPassed(timeStr){
   if(!timeStr)return false;
@@ -1522,7 +1530,7 @@ function getVisibleTasks(){
     if(t.date===dayAfterRangeEnd&&t.time&&parseInt(t.time.split(':')[0])<4)return true;
     return false;
   });
-  if(activeFilters.has('incomplete'))list=list.filter(t=>!t.done);
+  if(activeFilters.has('incomplete'))list=list.filter(t=>!isTaskDone(t));
   if(activeFilters.has('due'))list.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
   if(activeFilters.has('priority'))list.sort((a,b)=>({high:0,medium:1,low:2}[a.priority]-{high:0,medium:1,low:2}[b.priority]));
   return{list,hasCategory:activeFilters.has('category')};
@@ -1547,7 +1555,7 @@ function updateBadges(){
   const me=fmt(new Date(baseD.getFullYear(),baseD.getMonth()+1,0));
   const ms=fmt(new Date(baseD.getFullYear(),baseD.getMonth(),1));
   // Only count incomplete tasks that actually appear in each view
-  const incomplete=x=>!x.done&&!x.missed&&!(isOverdue(x)&&x.freq==='once');
+  const incomplete=x=>!isTaskDone(x)&&!x.missed&&!(isOverdue(x)&&x.freq==='once');
   const fitsToday=x=>x.freq!=='once'||(x.date&&x.date===t);
   const fitsWeek=x=>x.freq!=='once'||(x.date&&x.date>=ws&&x.date<=we);
   const fitsMonth=x=>x.freq!=='once'||(x.date&&x.date>=ms&&x.date<=me);
@@ -1610,9 +1618,9 @@ function updateProgress(){
 
   if(viewOffset===0&&currentView==='today'){
     const tod=getTodayTasks();
-    doneTasks=tod.filter(t=>t.done);
-    missedTasks=tod.filter(t=>!t.done&&(t.missed||isTaskOverdue(t)));
-    pendingTasks=tod.filter(t=>!t.done&&!t.missed&&!isTaskOverdue(t));
+    doneTasks=tod.filter(t=>isTaskDone(t));
+    missedTasks=tod.filter(t=>!isTaskDone(t)&&(t.missed||isTaskOverdue(t)));
+    pendingTasks=tod.filter(t=>!isTaskDone(t)&&!t.missed&&!isTaskOverdue(t));
     label='Daily progress';
   } else {
     // Get all tasks in range including missed/incomplete for history
@@ -1632,9 +1640,9 @@ function updateProgress(){
       }
       return false;
     });
-    doneTasks=inRange.filter(t=>t.done);
-    missedTasks=inRange.filter(t=>!t.done&&(t.missed||isTaskOverdue(t)));
-    pendingTasks=inRange.filter(t=>!t.done&&!t.missed&&!isTaskOverdue(t));
+    doneTasks=inRange.filter(t=>isTaskDone(t));
+    missedTasks=inRange.filter(t=>!isTaskDone(t)&&(t.missed||isTaskOverdue(t)));
+    pendingTasks=inRange.filter(t=>!isTaskDone(t)&&!t.missed&&!isTaskOverdue(t));
     const labels={today:'Day',week:'Week',month:'Month',all:'All'};
     const viewKey=currentView==='today'?'today':currentView==='week'?'week':currentView==='month'?'month':'all';
     label=viewOffset<0?`Past ${labels[viewKey]||'Period'}`
@@ -1693,8 +1701,9 @@ function makeCard(t){
   if(t.subtasks.length>0){const dc=t.subtasks.filter(s=>s.done).length;const pct=Math.round((dc/t.subtasks.length)*100);subs=`<div class="subtasks"><div class="subtask-progress-row"><div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div><span class="subtask-label">${dc}/${t.subtasks.length} done</span></div>${t.subtasks.map((s,i)=>`<div class="subtask-item"><div class="subtask-box ${s.done?'checked':''}" onclick="toggleSub(${t.id},${i})"></div><span class="subtask-text ${s.done?'done':''}">${s.text}</span></div>`).join('')}</div>`;}
   // In past views, lock incomplete tasks so they can't be checked off
   const isPastLocked = viewOffset<0 && !t.done && t.freq==='once';
-  const cbClass=t.done?'checked':isPastLocked?'locked-check':'';
-  const cbClick=t.done||isPastLocked?'':`onclick="requestTaskComplete(${t.id})"`;
+  const taskDone=isTaskDone(t);
+  const cbClass=taskDone?'checked':isPastLocked?'locked-check':'';
+  const cbClick=taskDone||isPastLocked?'':`onclick="requestTaskComplete(${t.id})"`;
   const notesHtml=t.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;white-space:pre-wrap">${t.notes}</div>`:'';
   const pinIcon=t.pinned?'ti-pin-filled':'ti-pin';
   const pinColor=t.pinned?'color:var(--accent)':'';
@@ -1717,7 +1726,7 @@ function makeCard(t){
   }
   // Completed and missed tasks cannot be edited or deleted
   const isLocked=t.done||t.missed||isPastLocked;
-  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick} title="${isPastLocked?'Cannot complete past tasks':''}"></div><div class="task-content"><div class="task-name ${t.done?'done-text':isPastLocked?'done-text':''}" style="display:flex;align-items:center;gap:5px;${isPastLocked?'opacity:0.55;':''}">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions">${!isLocked?`<button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button>`:''}</div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
+  card.innerHTML=`<div class="task-top"><div class="task-checkbox ${cbClass}" ${cbClick} title="${isPastLocked?'Cannot complete past tasks':''}"></div><div class="task-content"><div class="task-name ${taskDone?'done-text':isPastLocked?'done-text':''}" style="display:flex;align-items:center;gap:5px;${isPastLocked?'opacity:0.55;':''}">${t.pinned?`<i class="ti ti-pin-filled" style="font-size:11px;color:var(--accent);flex-shrink:0"></i>`:''}${t.name}${priorityDisplay}</div><div class="task-meta">${meta}</div>${notesHtml}</div><div class="task-actions">${!isLocked?`<button class="task-action-btn" onclick="togglePin(${t.id})" title="${t.pinned?'Unpin':'Pin'}" style="${pinColor}"><i class="ti ${pinIcon}"></i></button><button class="task-action-btn" onclick="openEditModal(${t.id})"><i class="ti ti-pencil"></i></button><button class="task-action-btn delete" onclick="openDeleteConfirm(${t.id})"><i class="ti ti-trash"></i></button>`:''}</div><div class="priority-dot" style="background:${PRIORITY_COLORS[t.priority]}"></div></div>${subs}`;
   return card;
 }
 
