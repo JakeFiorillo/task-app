@@ -1690,7 +1690,8 @@ function renderTasks(){
 function makeCard(t){
   const card=document.createElement('div');
   const overdue=isOverdue(t);
-  card.className='task-card'+(t.done?' done-card':'')+(overdue?' overdue':'');
+  const taskDoneState=isTaskDone(t);
+  card.className='task-card'+(taskDoneState?' done-card':'')+(overdue?' overdue':'');
   const ci=getCatById(t.cat);
   let dateLabel='';
   if(t.date){const disp=formatDisplayDate(t.date);const cls=overdue?'overdue-label':t.date===todayStr()?'today-label':'';dateLabel=`<span class="task-due ${cls}"><i class="ti ${overdue?'ti-alert-circle':'ti-calendar'}" style="font-size:10px"></i>&nbsp;${overdue?'Overdue · ':''}${disp}${t.time?' '+formatTime(t.time):''}</span>`;}
@@ -1700,8 +1701,8 @@ function makeCard(t){
   let subs='';
   if(t.subtasks.length>0){const dc=t.subtasks.filter(s=>s.done).length;const pct=Math.round((dc/t.subtasks.length)*100);subs=`<div class="subtasks"><div class="subtask-progress-row"><div class="subtask-track"><div class="subtask-fill" style="width:${pct}%"></div></div><span class="subtask-label">${dc}/${t.subtasks.length} done</span></div>${t.subtasks.map((s,i)=>`<div class="subtask-item"><div class="subtask-box ${s.done?'checked':''}" onclick="toggleSub(${t.id},${i})"></div><span class="subtask-text ${s.done?'done':''}">${s.text}</span></div>`).join('')}</div>`;}
   // In past views, lock incomplete tasks so they can't be checked off
-  const isPastLocked = viewOffset<0 && !t.done && t.freq==='once';
-  const taskDone=isTaskDone(t);
+  const isPastLocked = viewOffset<0 && !taskDoneState && t.freq==='once';
+  const taskDone=taskDoneState;
   const cbClass=taskDone?'checked':isPastLocked?'locked-check':'';
   const cbClick=taskDone||isPastLocked?'':`onclick="requestTaskComplete(${t.id})"`;
   const notesHtml=t.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;white-space:pre-wrap">${t.notes}</div>`:'';
