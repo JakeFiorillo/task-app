@@ -962,7 +962,8 @@ body.large-text .sidebar-badge { font-size:11px; }
     <div class="confirm-body" id="confirm-body"></div>
     <div class="modal-actions" id="confirm-yes-btn"><button class="btn-cancel" onclick="closeConfirmModal()">Cancel</button><button class="btn-delete" onclick="confirmDelete()">Delete</button></div>
     <div id="confirm-recurring-btns" style="display:none;flex-direction:column;gap:8px;margin-top:14px">
-      <button class="btn-delete" onclick="confirmDeleteRecurringAll()" style="width:100%">Delete permanently (remove task)</button>
+      <button class="btn-delete" onclick="confirmDeleteRecurringAll()" style="width:100%">Delete all instances</button>
+      <button class="btn-delete" onclick="deleteRecurringInstance()" style="width:100%;background:var(--bg3);color:var(--text2);border:0.5px solid var(--border2)">Delete just today</button>
       <button class="btn-cancel" onclick="closeConfirmModal()" style="width:100%;text-align:center">Cancel</button>
     </div>
   </div>
@@ -2910,6 +2911,19 @@ async function confirmDelete(){
     deleteTargetId=null;
   }
   closeConfirmModal();render();
+}
+
+async function deleteRecurringInstance(){
+  const t=tasks.find(t=>t.id===deleteTargetId);
+  if(t){
+    // Mark as done for today only — no coins/XP, resets tomorrow
+    t.done=true;
+    t.lastDoneDate=todayStr();
+    await saveTask(t);
+  }
+  closeConfirmModal();
+  render();
+  showToast('Removed for today — task returns tomorrow.');
 }
 
 async function confirmDeleteRecurringAll(){
